@@ -2,7 +2,7 @@ import scrapy
 from scrapy.http import HtmlResponse
 
 
-# scrapy crawl myspider00 -O mydata00.json
+# scrapy crawl po_cats -O po_cats.json
 class POCategories(scrapy.Spider):
     name = "po_cats"
     allowed_domains = ['www.pharmacyonline.com.au']
