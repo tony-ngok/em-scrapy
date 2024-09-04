@@ -1,4 +1,7 @@
-from asyncio import run
+import json
+from asyncio import run, sleep
+import os
+from random import uniform
 
 from pyppeteer import launch
 from pyppeteer.network_manager import Response
@@ -25,12 +28,12 @@ class PoProdLinks:
     async def start(self) -> None:
         self.browser = await launch(headless=False)
         self.page = await self.browser.newPage()
+        await self.page.setViewport({ 'width': 1366, 'height': 768 })
         await self.page.setExtraHTTPHeaders(self.HEADERS)
     
     async def goto_cat(self, cat: str) -> None:
         self.cat = cat
         def handle_response(response: Response):
-            print(response.url)
             if '/cs/v2/search' in response.url and response.headers.get('content-type') and 'json' in response.headers['content-type']:
                 self.contents = response
         self.page.on('response', handle_response)
@@ -46,17 +49,31 @@ class PoProdLinks:
             await self.goto_cat(self.cat+f'?Page={self.max_page}')
             cont_json = await self.contents.json()
             meta = cont_json['queryResults'][0]['meta']
-            # self.max_page = -(meta['totalResultsFound'] // -12)
 
         recs = cont_json['queryResults'][0]['records']
-        for rec in recs:
-            print(rec['url'])
+        for i, rec in enumerate(recs, start=1):
+            yield rec['url']
 
 async def main():
+    grandparent_directory = os.path.abspath(os.path.join(os.getcwd(), '..', '..'))
+    file_path_in = os.path.join(grandparent_directory, 'po_cats.json')
+    file_path_out = os.path.join(grandparent_directory, 'po_prod_links.json')
+
     ppl = PoProdLinks()
     await ppl.start()
-    await ppl.goto_cat('https://www.pharmacyonline.com.au/vitamins-supplements/vitamins-a-e')
-    await ppl.scrape_cats()
+    with open(file_path_in, 'r') as f_in, open(file_path_out, 'w') as f_out:
+        for i, l in enumerate(f_in):
+            print(i, l)
+            try:
+                cat_url = json.loads(l.strip()[:-1])['cat_link']
+                await ppl.goto_cat(cat_url)
+                async for l in ppl.scrape_cats():
+                    f_out.write(f'{{"prod_url": "{l}"}},\n')
+            except:
+                continue
+            
+            await sleep(uniform(0.5, 1.5))
+    
     await ppl.browser.close()
 
 if __name__ == '__main__':
