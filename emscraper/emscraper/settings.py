@@ -96,3 +96,6 @@ FEED_EXPORT_ENCODING = "utf-8"
 FEED_EXPORTERS = {
     'csv': 'emscraper.exporters.CsvCustomSeperator'
 }
+
+LOG_FILE = 'scrapy.log'
+LOG_LEVEL = 'INFO'
