@@ -14,9 +14,3 @@ class CsvCustomSeperator(CsvItemExporter):
         kwargs['quotechar'] = '"'
         kwargs['dialect'] = QuoteNonNumericDialect
         super(CsvCustomSeperator, self).__init__(*args, **kwargs)
-
-# settings.py
-# FEED_EXPORT_ENCODING = "utf-8"
-# FEED_EXPORTERS = {
-#     'csv': 'oliveyoung.exporters.CsvCustomSeperator'
-# }
