@@ -98,4 +98,4 @@ FEED_EXPORTERS = {
 }
 
 LOG_FILE = 'scrapy.log'
-LOG_LEVEL = 'INFO'
+LOG_LEVEL = 'DEBUG'
