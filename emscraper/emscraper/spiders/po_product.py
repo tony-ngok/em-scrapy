@@ -161,10 +161,10 @@ class POProductSpider(scrapy.Spider):
         
         # 没有图的商品卖不出去，只能扔掉
         images = ""
+        print(response.css('script[type="text/x-magento-init"]::text').getall())
         for scr in response.css('script[type="text/x-magento-init"]::text').getall():
             if 'mage/gallery/gallery' in scr:
                 img_match = findall(r'\"full\"\s*:\s*\"([^\"]*)\",', scr)
-                print(img_match)
                 if img_match:
                     images = ";".join([img.replace('\\/', '/') for img in img_match])
             if images:
