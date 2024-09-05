@@ -161,7 +161,10 @@ class POProductSpider(scrapy.Spider):
 
     def parse(self, response: HtmlResponse):
         """
-        从下载下来的HTML中解析数据字段
+        从下载下来的HTML中解析数据字段\n
+        注意事项：
+        1. 没有图的商品卖不出去，只能扔掉
+        2. 配送资料统一以国内邮寄为准（不考虑国际邮寄）
         """
         
         # print(response.body)
