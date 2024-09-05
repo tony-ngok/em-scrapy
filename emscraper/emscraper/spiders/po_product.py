@@ -1,6 +1,6 @@
 from html import unescape
 from json import load
-from re import findall
+from re import findall, sub
 
 from datetime import datetime
 
@@ -36,7 +36,8 @@ class POProductSpider(scrapy.Spider):
         self.start_urls = list(set(p['prod_url'] for p in produits))
 
     def start_requests(self):
-        for pu in self.start_urls[:10]:
+        # self.start_urls = ['https://www.pharmacyonline.com.au/promensil-menopause-tab-x-30']
+        for pu in self.start_urls[:20]:
             yield scrapy.Request(pu, headers=self.headers, meta={ 'url': pu }, callback=self.parse)
     
     def get_weight(self, txt: str):
@@ -112,6 +113,47 @@ class POProductSpider(scrapy.Spider):
 
         return dims_out
 
+    def parse_descr(self, response: HtmlResponse) -> str:
+        description = '<div class="po-descr">'
+
+        descr_sel = response.css('div.detailed > div > div')
+        if descr_sel:
+            for i, desc_div in enumerate(descr_sel):
+                # print(i)
+                # print(desc_div.get())
+                # print("----------------------------------------------------------------------------------------------------")
+                desc_id = desc_div.css('::attr(id)').get()
+                if 'reviews' in desc_id:
+                    continue
+                if 'tab-label' in desc_id:
+                    description += f'<h1>{desc_div.css('a::text').get().strip()}</h1>'
+                else:
+                    description += '<div>'
+                    for j, subd in enumerate(desc_div.css('.content > *')):
+                        # print(j)
+                        # print(subd.get())
+                        # print("====================================================================================================")
+                        if '<script>' in subd.get():
+                            continue
+                        if subd.css('::attr(class)') and ('description' in subd.css('::attr(class)').get()):
+                            description += '<div class="product attribute description">'
+                            for k, ssubd in enumerate(subd.css('.description > *')):
+                                # print(k)
+                                # print(ssubd.get())
+                                # print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+                                if 'promotion' in ssubd.css('::attr(class)').get():
+                                    continue
+                                description += ssubd.get()
+                            description += '</div>'
+                        else:
+                            description += subd.get()
+                    description += '</div>'
+        
+        description += '</div>'
+        description = description.replace('\n', ' ').replace('\r', ' ')
+
+        return description
+
     def parse(self, response: HtmlResponse):
         """
         从下载下来的HTML中解析数据字段
@@ -125,10 +167,8 @@ class POProductSpider(scrapy.Spider):
             existence = False
 
         title = unescape(response.css('span.base::text').get().strip())
-
-        description = '<div class="po-descr">'
-        # TODO
-        description += '</div>'
+        description = self.parse_descr(response)
+        print(description+'\n')
 
         upc = response.css('meta[itemprop="gtin14"]::attr(content)').get().strip()
         brand = response.css('div.brand::attr(data-brand)').get().strip()
