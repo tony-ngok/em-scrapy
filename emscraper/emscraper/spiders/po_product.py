@@ -37,7 +37,7 @@ class POProductSpider(scrapy.Spider):
         print(f'Total {len(self.start_urls):_} unique products'.replace("_", "."))
 
     def start_requests(self):
-        for pu in self.start_urls[:1]:
+        for pu in self.start_urls:
             print(pu)
             yield scrapy.Request(pu, headers=self.headers, meta={ 'url': pu }, callback=self.parse)
     
@@ -165,8 +165,7 @@ class POProductSpider(scrapy.Spider):
 
         # 没有图的商品卖不出去，只能扔掉
         images = ""
-        print(response.css("script").getall())
-        print(response.css('script[type="text/x-magento-init"]::text').getall())
+        # print(response.css('script[type="text/x-magento-init"]::text').getall())
         for scr in response.css('script[type="text/x-magento-init"]::text').getall():
             if 'mage/gallery/gallery' in scr:
                 img_match = findall(r'\"full\"\s*:\s*\"([^\"]*)\",', scr)
