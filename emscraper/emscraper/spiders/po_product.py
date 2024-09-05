@@ -25,7 +25,7 @@ class POProductSpider(scrapy.Spider):
         super().__init__(*args, **kwargs)
         self.headers = {
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8",
-            "Accept-Encoding": "gzip, deflate, br, zstd",
+            # "Accept-Encoding": "gzip, deflate, br, zstd", # 如果请求返回无法阅读的压缩内容，就不要这个请求头了
             "Accept-Language": "es-ES,es;q=0.8,en-GB;q=0.5,en;q=0.3",
             "Referer": "https://www.google.es",
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0"
@@ -37,7 +37,8 @@ class POProductSpider(scrapy.Spider):
         print(f'Total {len(self.start_urls):_} unique products'.replace("_", "."))
 
     def start_requests(self):
-        for pu in self.start_urls:
+        for pu in self.start_urls[:1]:
+            print(pu)
             yield scrapy.Request(pu, headers=self.headers, meta={ 'url': pu }, callback=self.parse)
     
     def get_weight(self, txt: str):
@@ -159,8 +160,12 @@ class POProductSpider(scrapy.Spider):
         从下载下来的HTML中解析数据字段
         """
         
+        # print(response.body)
+        # print(response.text)
+
         # 没有图的商品卖不出去，只能扔掉
         images = ""
+        print(response.css("script").getall())
         print(response.css('script[type="text/x-magento-init"]::text').getall())
         for scr in response.css('script[type="text/x-magento-init"]::text').getall():
             if 'mage/gallery/gallery' in scr:
