@@ -10,6 +10,10 @@ from scrapy.http import HtmlResponse
 
 # scrapy crawl po_product -O po_products.json
 class POProductSpider(scrapy.Spider):
+    """
+    商品明细页大部分内容为传统HTML，因此可直接用Scrapy抓取
+    """
+
     name = "po_product"
     allowed_domains = ['www.pharmacyonline.com.au']
     start_urls = []
@@ -25,7 +29,7 @@ class POProductSpider(scrapy.Spider):
         super().__init__(*args, **kwargs)
         self.headers = {
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8",
-            # "Accept-Encoding": "gzip, deflate, br, zstd", # 如果请求返回无法阅读的压缩内容，就不要这个请求头了
+            # "Accept-Encoding": "gzip, deflate, br, zstd", # 请求返回无法阅读的压缩内容：不要这个请求头了
             "Accept-Language": "es-ES,es;q=0.8,en-GB;q=0.5,en;q=0.3",
             "Referer": "https://www.google.es",
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0"

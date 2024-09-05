@@ -4,6 +4,10 @@ from scrapy.http import HtmlResponse
 
 # scrapy crawl po_cats -O po_cats.json
 class POCategories(scrapy.Spider):
+    """
+    首页子分类内容为传统HTML，因此可直接用Scrapy抓取
+    """
+    
     name = "po_cats"
     allowed_domains = ['www.pharmacyonline.com.au']
     start_urls = ['https://www.pharmacyonline.com.au/']
@@ -12,7 +16,7 @@ class POCategories(scrapy.Spider):
         super().__init__(*args, **kwargs)
         self.headers = {
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8",
-            "Accept-Encoding": "gzip, deflate, br, zstd",
+            "Accept-Encoding": "gzip, deflate, br, zstd", # 若发现请求回答内容奇怪，试着不用这个请求头
             "Accept-Language": "es-ES,es;q=0.8,en-GB;q=0.5,en;q=0.3",
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0"
         }

@@ -8,6 +8,10 @@ from pyppeteer.network_manager import Response
 
 
 class PoProdLinks:
+    """
+    分类内商品链接为JavaScript生成，故考虑用pyppeteer或Scrapy+Playwright抓取
+    """
+
     HEADERS = {
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8",
         "Accept-Encoding": "gzip, deflate, br, zstd",
