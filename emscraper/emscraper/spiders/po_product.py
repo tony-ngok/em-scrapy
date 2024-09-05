@@ -38,7 +38,6 @@ class POProductSpider(scrapy.Spider):
 
     def start_requests(self):
         for pu in self.start_urls:
-            print(pu)
             yield scrapy.Request(pu, headers=self.headers, meta={ 'url': pu }, callback=self.parse)
     
     def get_weight(self, txt: str):
@@ -165,6 +164,7 @@ class POProductSpider(scrapy.Spider):
         for scr in response.css('script[type="text/x-magento-init"]::text').getall():
             if 'mage/gallery/gallery' in scr:
                 img_match = findall(r'\"full\"\s*:\s*\"([^\"]*)\",', scr)
+                print(img_match)
                 if img_match:
                     images = ";".join([img.replace('\\/', '/') for img in img_match])
             if images:
