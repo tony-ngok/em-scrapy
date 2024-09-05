@@ -37,8 +37,7 @@ class POProductSpider(scrapy.Spider):
         print(f"Total {len(self.start_urls):_} unique products".replace("_", "."))
 
     def start_requests(self):
-        # self.start_urls = ['https://www.pharmacyonline.com.au/promensil-menopause-tab-x-30']
-        for pu in self.start_urls[:20]:
+        for pu in self.start_urls:
             print(pu)
             yield scrapy.Request(pu, headers=self.headers, meta={ 'url': pu }, callback=self.parse)
     
