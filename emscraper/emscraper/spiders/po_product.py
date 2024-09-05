@@ -3,9 +3,10 @@ from json import load
 from re import findall
 
 from datetime import datetime
-
 import scrapy
 from scrapy.http import HtmlResponse
+
+from emscraper.errored import urls
 
 
 # scrapy crawl po_product -O po_products.json
@@ -35,9 +36,10 @@ class POProductSpider(scrapy.Spider):
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0"
         }
 
-        with open('po_prod_links.json', 'r') as f:
-            produits = load(f)
-        self.start_urls = list(set(p['prod_url'] for p in produits))
+        # with open('po_prod_links.json', 'r') as f:
+        #     produits = load(f)
+        # self.start_urls = list(set(p['prod_url'] for p in produits))
+        self.start_urls = urls
         print(f'Total {len(self.start_urls):_} unique products'.replace("_", "."))
 
     def start_requests(self):
@@ -91,9 +93,9 @@ class POProductSpider(scrapy.Spider):
         units = [None, None, None]
         dims_out = [None, None, None]
 
-        match1 = findall(r'\b([\d\.]+)\s*([CcMm]*)\s*[Xx]\s*([\d\.]+)\s*([CcMm]*)\s*[Xx]\s*([\d\.]+)\s*([CcMm]+)\b', txt) # 长*宽*高
-        match2 = findall(r'\b([\d\.]+)\s*([CcMm]*)\s*[Xx]\s*([\d\.]+)\s*([CcMm]+)\b', txt) # 长*宽
-        match3 = findall(r'\b([\d\.]+)\s*([CcMm]+)\b', txt) # 长
+        match1 = findall(r'\b(\d*\.?\d+)\s*([CcMm]*)\s*[Xx]\s*(\d*\.?\d+)\s*([CcMm]*)\s*[Xx]\s*(\d*\.?\d+)\s*([CcMm]+)\b', txt) # 长*宽*高
+        match2 = findall(r'\b(\d*\.?\d+)\s*([CcMm]*)\s*[Xx]\s*([\d*\.?\d+)\s*([CcMm]+)\b', txt) # 长*宽
+        match3 = findall(r'\b(\d*\.?\d+)\s*([CcMm]+)\b', txt) # 长
 
         if match1:
             units[2] = match1[0][5].lower()
@@ -177,7 +179,7 @@ class POProductSpider(scrapy.Spider):
             if 'mage/gallery/gallery' in scr:
                 img_match = findall(r'\"full\"\s*:\s*\"([^\"]*)\",', scr)
                 if img_match:
-                    images = ";".join([img.replace('\\/', '/') for img in img_match])
+                    images = ";".join([img.replace('\\/', '/') for img in img_match if 'thumb_prescription_pharmacy' not in img])
             if images:
                 break
         if not images:
@@ -194,8 +196,15 @@ class POProductSpider(scrapy.Spider):
         description = self.parse_descr(response)
         # print(description+'\n')
 
-        upc = response.css('meta[itemprop="gtin14"]::attr(content)').get().strip()
-        brand = response.css('div.brand::attr(data-brand)').get().strip()
+        upc = None
+        upc_sel = response.css('meta[itemprop="gtin14"]::attr(content)')
+        if upc_sel:
+            upc = upc_sel.get().strip()
+       
+        brand = None
+        brand_sel = response.css('div.brand::attr(data-brand)')
+        if brand_sel:
+            brand = brand_sel.get().strip()
 
         categories = None
         for scr_txt in response.css('script::text').getall():
