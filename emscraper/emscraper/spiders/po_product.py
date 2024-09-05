@@ -1,6 +1,6 @@
 from html import unescape
 from json import load
-from re import findall, sub
+from re import findall
 
 from datetime import datetime
 
@@ -34,7 +34,7 @@ class POProductSpider(scrapy.Spider):
         with open('po_prod_links.json', 'r') as f:
             produits = load(f)
         self.start_urls = list(set(p['prod_url'] for p in produits))
-        print(f"Total {len(self.start_urls):_} unique products".replace("_", "."))
+        print(f'Total {len(self.start_urls):_} unique products'.replace("_", "."))
 
     def start_requests(self):
         for pu in self.start_urls:
@@ -127,7 +127,7 @@ class POProductSpider(scrapy.Spider):
                 if 'reviews' in desc_id:
                     continue
                 if 'tab-label' in desc_id:
-                    description += f'<h1>{desc_div.css('a::text').get().strip()}</h1>'
+                    description += f'<h1>{desc_div.css("a::text").get().strip()}</h1>'
                 else:
                     description += '<div>'
                     for j, subd in enumerate(desc_div.css('.content > *')):
