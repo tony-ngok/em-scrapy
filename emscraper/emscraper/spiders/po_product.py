@@ -34,10 +34,12 @@ class POProductSpider(scrapy.Spider):
         with open('po_prod_links.json', 'r') as f:
             produits = load(f)
         self.start_urls = list(set(p['prod_url'] for p in produits))
+        print(f"Total {len(self.start_urls):_} unique products".replace("_", "."))
 
     def start_requests(self):
         # self.start_urls = ['https://www.pharmacyonline.com.au/promensil-menopause-tab-x-30']
         for pu in self.start_urls[:20]:
+            print(pu)
             yield scrapy.Request(pu, headers=self.headers, meta={ 'url': pu }, callback=self.parse)
     
     def get_weight(self, txt: str):
@@ -59,7 +61,7 @@ class POProductSpider(scrapy.Spider):
                 weight = round(float(match1[0][0])*self.MG_TO_LB*am, 2)
         elif match2:
             am = float(match2[0][0])
-            un == match2[0][2].lower()
+            un = match2[0][2].lower()
             if un == 'l':
                 weight = round(float(match2[0][1])*self.L_TO_LB*am, 2)
             elif (un == 'ml') or (un == 'g'):
@@ -67,7 +69,7 @@ class POProductSpider(scrapy.Spider):
             elif (un == 'mg'):
                 weight = round(float(match2[0][1])*self.MG_TO_LB*am, 2)
         elif match3:
-            un == match3[0][1].lower()
+            un = match3[0][1].lower()
             if un == 'l':
                 weight = round(float(match3[0][0])*self.L_TO_LB, 2)
             elif (un == 'ml') or (un == 'g'):
@@ -159,6 +161,18 @@ class POProductSpider(scrapy.Spider):
         从下载下来的HTML中解析数据字段
         """
         
+        # 没有图的商品卖不出去，只能扔掉
+        images = ""
+        for scr in response.css('script[type="text/x-magento-init"]::text').getall():
+            if 'mage/gallery/gallery' in scr:
+                img_match = findall(r'\"full\"\s*:\s*\"([^\"]*)\",', scr)
+                if img_match:
+                    images = ";".join([img.replace('\\/', '/') for img in img_match])
+            if images:
+                break
+        if not images:
+            return
+
         prod_id = response.css('div[itemprop="sku"]::text').get().strip()
         
         existence = True
@@ -168,7 +182,7 @@ class POProductSpider(scrapy.Spider):
 
         title = unescape(response.css('span.base::text').get().strip())
         description = self.parse_descr(response)
-        print(description+'\n')
+        # print(description+'\n')
 
         upc = response.css('meta[itemprop="gtin14"]::attr(content)').get().strip()
         brand = response.css('div.brand::attr(data-brand)').get().strip()
@@ -185,12 +199,8 @@ class POProductSpider(scrapy.Spider):
             if categories is not None:
                 break
 
-        images = None
-        imgx_sel = response.css('img.zoomImg::attr(src)').getall()
-        if imgx_sel:
-            images = ";".join([img for img in imgx_sel])
-
-        price = round(float(response.css('meta[property="product:price:amount"]::attr(content)').get().strip())*self.AUD_RATE, 2)
+        price_aud = float(response.css('meta[property="product:price:amount"]::attr(content)').get().strip())
+        price = round(price_aud*self.AUD_RATE, 2)
 
         reviews = 0
         review_sel = response.css('div#bvseo-aggregateRatingSection > span.bvseo-reviewCount::text')
@@ -214,6 +224,7 @@ class POProductSpider(scrapy.Spider):
             "title": title,
             "title_en": title,
             "description": description,
+            "description_en": None,
             "summary": None,
             "sku": prod_id,
             "upc": upc,
@@ -226,11 +237,12 @@ class POProductSpider(scrapy.Spider):
             "available_qty": 0 if not existence else None,
             "options": None,
             "variants": None,
+            "has_only_default_variant": True,
             "returnable": False,
             "reviews": reviews,
             "rating": rating,
             "sold_count": None,
-            "shipping_fee": 6.67, # https://www.pharmacyonline.com.au/delivery
+            "shipping_fee": 6.67 if price_aud < 125.00 else 0.00, # https://www.pharmacyonline.com.au/delivery
             "shipping_days_min": None,
             "shipping_days_max": None,
             "weight": weight,
