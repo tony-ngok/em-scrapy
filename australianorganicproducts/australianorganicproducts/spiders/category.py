@@ -6,7 +6,7 @@ from scrapy.http import HtmlResponse
 class AopCategory(scrapy.Spider):
     name = "aop_category"
     allowed_domains = ["australianorganicproducts.com.au"]
-    start_urls = ["https://australianorganicproducts.com.au/collections"]
+    start_urls = ["https://australianorganicproducts.com.au/"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -20,5 +20,20 @@ class AopCategory(scrapy.Spider):
     def start_requests(self):
         yield scrapy.Request(self.start_urls[0], headers=self.headers, callback=self.parse)
     
+    def cat_filter(self, cat_str: str) -> bool:
+        """
+        过滤一般分类（分类```href```需以```"/collections/"```开始）
+        """
+
+        filters = {'best-sellers', 'sale', 'bulk-deals', 'clearance', 'new-organic-natural-products', 'back-in-stock'}
+        return cat_str in filters
+
     def parse(self, response: HtmlResponse):
-        pass
+        cat_hrefs = [href for href in response.css('nav.site-navigation a::attr(href)').getall()
+                     if href.startswith('/collections/') and (not self.cat_filter(href[13:]))]
+        print(f"Total {len(cat_hrefs):_} categories".replace('_', '.'))
+        
+        for href in cat_hrefs:
+            yield {
+                "cat_url": 'https://australianorganicproducts.com.au'+href
+            }

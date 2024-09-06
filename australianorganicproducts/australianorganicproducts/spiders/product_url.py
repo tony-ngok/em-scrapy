@@ -9,7 +9,7 @@ class AopProductUrl(scrapy.Spider):
     name = "aop_prod_url"
     allowed_domains = ["australianorganicproducts.com.au"]
     start_urls = []
-    prod_links = set()
+    prod_strs = set()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
