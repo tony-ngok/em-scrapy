@@ -96,5 +96,5 @@ FEED_EXPORTERS = {
     'csv': 'australianorganicproducts.exporters.CsvCustomSeperator'
 }
 
-LOG_FILE = '../../scrapy.log'
+LOG_FILE = 'scrapy.log'
 LOG_LEVEL = 'DEBUG'
