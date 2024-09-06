@@ -1,6 +1,9 @@
+from html import unescape
 from json import load, loads
+import re
 from re import findall
 
+from bs4 import BeautifulSoup
 from datetime import datetime
 import scrapy
 from scrapy.http import HtmlResponse
@@ -35,9 +38,22 @@ class AopProduct(scrapy.Spider):
             produits = load(f)
         self.start_urls = [p['prod_url'] for p in produits]
         print(f'Total {len(self.start_urls):_} products'.replace("_", "."))
-
-        self.errored = []
     
+    def get_description(self, txt: str) -> str:
+        """
+        解析格式为“标题+内容+标题+内容...”的商品描述，并过滤掉促销资讯
+        """
+
+        if txt:
+            txt = unescape(txt).replace('\n', ' ').replace('\r', ' ')
+            txt = ''.join([s.strip() for s in re.split(r'(?=<h[2-4][^>]*>)', txt) if s.strip()
+                            and 'Why buy from us?' not in s
+                            and 'discounted price' not in s
+                            and 'Click here' not in s
+                            and 'Range here' not in s])
+        
+        return f'<div class="aop-descr">{txt}</div>'
+
     def get_dims(self, txt: str) -> list:
         """
         获取商品长宽高
@@ -75,12 +91,14 @@ class AopProduct(scrapy.Spider):
         return dims_out
 
     def start_requests(self):
-        self.start_urls = [
-            "https://australianorganicproducts.com.au/products/biotta-organic-beetroot-juice-500ml",
-            "https://australianorganicproducts.com.au/products/noosa-basics-dental-floss-with-activated-charcoal-bamboo-fibre-35m",
-            "https://australianorganicproducts.com.au/products/tisserand-essential-oil-orange-round-9ml",
-            "https://australianorganicproducts.com.au/products/vego-whole-hazelnut-chocolate-bar-150g"
-        ]
+        # self.start_urls = [
+        #     "https://australianorganicproducts.com.au/collections/gluten-free/products/biotta-organic-beetroot-juice-500ml",
+        #     "https://australianorganicproducts.com.au/collections/floss/products/noosa-basics-dental-floss-with-activated-charcoal-bamboo-fibre-35m",
+        #     "https://australianorganicproducts.com.au/collections/gift-ideas/products/tisserand-essential-oil-orange-round-9ml",
+        #     "https://australianorganicproducts.com.au/collections/organic-natural-chocolate-online/products/vego-whole-hazelnut-chocolate-bar-150g",
+        #     "https://australianorganicproducts.com.au/collections/baby-oral-care/products/brauer-baby-child-teething"
+        # ] # test
+
         for i, pu in enumerate(self.start_urls, start=1):
             print(f"{i:_}".replace('_', '.'), pu)
             yield scrapy.Request(pu, headers=self.headers, meta={ 'url': pu }, callback=self.parse)
@@ -92,14 +110,15 @@ class AopProduct(scrapy.Spider):
         except:
             return
 
-        images = ";".join(img for img in prod_json.get('images', []))
+        images = ";".join('https:'+img for img in prod_json.get('images', []))
         if not images:
             return
 
         existence = prod_json['available']
         title = prod_json['title']
 
-        description = None # TODO
+        description = self.get_description(prod_json.get('description', ''))
+        # print(description+'\n') 
 
         options = [{
             "id": None,
@@ -112,7 +131,7 @@ class AopProduct(scrapy.Spider):
             "barcode": var.get('barcode'),
             "sku": var.get('sku', str(var['id'])),
             "option_values": [{
-                "name": opt,
+                "name": opt['name'],
                 "value": var[f'option{i}']
             } for i, opt in enumerate(options, start=1) if opt != "Title"],
             "images": "https:"+var.get('featured_image', {}).get('src') if var.get('featured_image') else None,
@@ -128,14 +147,11 @@ class AopProduct(scrapy.Spider):
         price = round(float(prod_json['price'])/100.0, 2)
 
         reviews = None
-        review_sel = response.css('div.product-app span.jdgm-prev-badge__text')
-        if review_sel:
-            reviews = int(review_sel.css('::text').get().strip().split()[0])
-        
         rating = None
-        rating_sel = response.css('div.product-app span.jdgm-prev-badge__stars')
-        if rating_sel:
-            rating = round(float(rating_sel.css('::attr(data-score)').get()), 2)
+        r_sel = response.css('div.product-app div.jdgm-prev-badge')
+        if r_sel:
+            reviews = int(r_sel.css('::attr(data-number-of-reviews)').get())
+            rating = round(float(r_sel.css('::attr(data-average-rating)').get()), 1)
 
         weight = None
         if 'weight' in var_list[0]:
