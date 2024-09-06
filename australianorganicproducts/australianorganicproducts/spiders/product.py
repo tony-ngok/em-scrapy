@@ -64,7 +64,7 @@ class AopProduct(scrapy.Spider):
         dims_out = [None, None, None]
 
         match1 = findall(r'\b(\d*\.?\d+)\s*([CcMm]*)\s*[Xx]\s*(\d*\.?\d+)\s*([CcMm]*)\s*[Xx]\s*(\d*\.?\d+)\s*([CcMm]+)\b', txt) # 长*宽*高
-        match2 = findall(r'\b(\d*\.?\d+)\s*([CcMm]*)\s*[Xx]\s*([\d*\.?\d+)\s*([CcMm]+)\b', txt) # 长*宽
+        match2 = findall(r'\b(\d*\.?\d+)\s*([CcMm]*)\s*[Xx]\s*(\d*\.?\d+)\s*([CcMm]+)\b', txt) # 长*宽
         match3 = findall(r'\b(\d*\.?\d+)\s*([CcMm]+)\b', txt) # 长
 
         if match1:
