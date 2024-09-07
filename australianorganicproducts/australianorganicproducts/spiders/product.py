@@ -3,25 +3,26 @@ from json import load, loads
 import re
 from re import findall
 
-from bs4 import BeautifulSoup
 from datetime import datetime
 import scrapy
 from scrapy.http import HtmlResponse
 
 
-# scrapy crawl aop_product -O aop_products.json
+# scrapy crawl aop_product -o aop_products.json # 增添数据（不复写）
+# scrapy crawl aop_product -O aop_products.json # 复写整个数据
 class AopProduct(scrapy.Spider):
     name = "aop_product"
     allowed_domains = ["australianorganicproducts.com.au"]
     start_urls = []
 
+    AUD_TO_USD = 0.6670
     CM_TO_IN = 0.393701
     G_TO_LB = 0.002205
     M_TO_IN = 39.37008
 
     # https://australianorganicproducts.com.au/pages/delivery-returns
-    SHIP_FEE = 6.63 # 9.95 澳洲元
-    FREE_SHIP_PRICE = 85.92 # 129澳洲元以上免费送货
+    SHIP_FEE = 9.95*AUD_TO_USD
+    FREE_SHIP_PRICE = 129.00*AUD_TO_USD
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -29,7 +30,7 @@ class AopProduct(scrapy.Spider):
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8",
             # "Accept-Encoding": "gzip, deflate, br, zstd", # 若发现请求回答内容奇怪，试着不用这个请求头
             "Accept-Language": "es-ES,es;q=0.8,en-GB;q=0.5,en;q=0.3",
-            "Cookie": "localization=US; cart_currency=USD",
+            # "Cookie": "localization=US; cart_currency=USD", # 这个似乎没什么用？
             "Referer": "https://www.google.es",
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0"
         }
@@ -129,22 +130,24 @@ class AopProduct(scrapy.Spider):
         variants = [{
             "variant_id": str(var['id']),
             "barcode": var.get('barcode'),
-            "sku": var.get('sku', str(var['id'])),
+            "sku": var.get('sku') if var.get('sku') else str(var['id']),
             "option_values": [{
-                "name": opt['name'],
-                "value": var[f'option{i}']
+                "option_id": None,
+                "option_value_id": None,
+                "option_name": opt['name'],
+                "option_value": var[f'option{i}']
             } for i, opt in enumerate(options, start=1) if opt != "Title"],
             "images": "https:"+var.get('featured_image', {}).get('src') if var.get('featured_image') else None,
             "price": round(float(var['price'])/100.0, 2),
             "available_qty": var.get('inventory_quantity')
-        } for var in var_list if var and var.get('title') != 'Default Title']
+        } for var in var_list if var] if options else None
 
         categories = None
         cat_sel = response.css('nav.breadcrumbs-container > a::text')[1:].getall()
         if cat_sel:
             categories = " > ".join([c.strip() for c in cat_sel])
 
-        price = round(float(prod_json['price'])/100.0, 2)
+        price = round(float(prod_json['price'])/100.0*self.AUD_TO_USD, 2)
 
         reviews = None
         rating = None
@@ -170,7 +173,7 @@ class AopProduct(scrapy.Spider):
             "description": description,
             "description_en": None,
             "summary": None,
-            "sku": var_list[0].get('sku', str(prod_json['id'])),
+            "sku": var_list[0].get('sku') if var_list[0].get('sku') else str(prod_json['id']),
             "upc": var_list[0].get('barcode'),
             "brand": prod_json.get('vendor'),
             "specifications": None,
@@ -181,12 +184,12 @@ class AopProduct(scrapy.Spider):
             "available_qty": var_list[0].get('inventory_quantity', (0 if not existence else None)),
             "options": options if options else None,
             "variants": variants if variants else None,
-            "has_only_default_variant": len(variants)<2,
+            "has_only_default_variant": len(variants)<2 if variants else True,
             "returnable": False,
             "reviews": reviews,
             "rating": rating,
             "sold_count": None,
-            "shipping_fee": self.SHIP_FEE if price < self.FREE_SHIP_PRICE else 0.00,
+            "shipping_fee": round((self.SHIP_FEE if price < self.FREE_SHIP_PRICE else 0.00), 2),
             "shipping_days_min": None,
             "shipping_days_max": None,
             "weight": weight,
