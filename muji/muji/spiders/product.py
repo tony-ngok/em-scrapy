@@ -8,34 +8,30 @@ import scrapy
 from scrapy.http import HtmlResponse
 
 
-# scrapy crawl aop_product -o aop_products.json # 增添数据（不复写）
-# scrapy crawl aop_product -O aop_products.json # 复写整个数据
-class AopProduct(scrapy.Spider):
-    name = "aop_product"
-    allowed_domains = ["australianorganicproducts.com.au"]
+# scrapy crawl muji_product -o muji_products.json # 增添数据（不复写）
+# scrapy crawl muji_product -O muji_products.json # 复写整个数据
+class MujiProduct(scrapy.Spider):
+    name = "muji_product"
+    allowed_domains = ["www.muji.com"]
     start_urls = []
 
-    AUD_TO_USD = 0.6670
+    JPY_TO_USD = 0.0070
     CM_TO_IN = 0.393701
-    G_TO_LB = 0.002205
     M_TO_IN = 39.37008
-
-    # https://australianorganicproducts.com.au/pages/delivery-returns
-    SHIP_FEE = 9.95*AUD_TO_USD
-    FREE_SHIP_PRICE = 129.00*AUD_TO_USD
+    G_TO_LB = 0.002205
+    KG_TO_LB = 2.20462
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.headers = {
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8",
             # "Accept-Encoding": "gzip, deflate, br, zstd", # 若发现请求回答内容奇怪，试着不用这个请求头
-            "Accept-Language": "es-ES,es;q=0.8,en-GB;q=0.5,en;q=0.3",
-            # "Cookie": "localization=US; cart_currency=USD", # 这个似乎没什么用？
-            "Referer": "https://www.google.es",
+            "Accept-Language": "pt-PT,pt;q=0.8,en-GB;q=0.5,en;q=0.3",
+            "Referer": "https://www.google.pt",
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0"
         }
 
-        with open('aop_prod_urls.json', 'r') as f:
+        with open('muji_prod_urls.json', 'r') as f:
             produits = load(f)
         self.start_urls = [p['prod_url'] for p in produits]
         print(f'Total {len(self.start_urls):_} products'.replace("_", "."))
@@ -53,7 +49,7 @@ class AopProduct(scrapy.Spider):
                             and 'Click here' not in s
                             and 'Range here' not in s])
         
-        return f'<div class="aop-descr">{txt}</div>'
+        return f'<div class="muji-descr">{txt}</div>'
 
     def get_dims(self, txt: str) -> list:
         """
@@ -92,22 +88,24 @@ class AopProduct(scrapy.Spider):
         return dims_out
 
     def start_requests(self):
-        # self.start_urls = [
-        #     "https://australianorganicproducts.com.au/collections/gluten-free/products/biotta-organic-beetroot-juice-500ml",
-        #     "https://australianorganicproducts.com.au/collections/floss/products/noosa-basics-dental-floss-with-activated-charcoal-bamboo-fibre-35m",
-        #     "https://australianorganicproducts.com.au/collections/gift-ideas/products/tisserand-essential-oil-orange-round-9ml",
-        #     "https://australianorganicproducts.com.au/collections/organic-natural-chocolate-online/products/vego-whole-hazelnut-chocolate-bar-150g",
-        #     "https://australianorganicproducts.com.au/collections/baby-oral-care/products/brauer-baby-child-teething"
-        # ] # test
+        self.start_urls = [
+            
+        ] # test
 
         for i, pu in enumerate(self.start_urls, start=1):
             print(f"{i:_}".replace('_', '.'), pu)
             yield scrapy.Request(pu, headers=self.headers, meta={ 'url': pu }, callback=self.parse)
 
     def parse(self, response: HtmlResponse):
+        prod_cont = None
+        for scr in response.css('script[type="application/ld+json"]::text').getall():
+            if '"ProductGroup"' in scr:
+                prod_cont = scr
+            if prod_cont is not None:
+                break
+        
         try:
-            prod_scr = response.css('script[data-section-type="static-product"]::text').get()
-            prod_json = loads(prod_scr)['product']
+            prod_cont = loads(prod_cont)
         except:
             return
 
