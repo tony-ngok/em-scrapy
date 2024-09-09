@@ -45,9 +45,60 @@ class MujiProduct(scrapy.Spider):
         """
 
         specs = []
+        speck_set = set()
+        add_descr = []
+        weight_str = ""
+        dims_str = ""
 
+        specs_kmatch = findall(r'{\\\"className\\\":\\\"HeaderCell_cellValue__4rOy0\\\",[^$]*\\\"children\\\":\\\"([^$]*)\\\"}', txt)
+        specs_vmatch = findall(r'{\\\"className\\\":\\\"Cell_cellValue__B2F5r\\\",[^$]*\\\"children\\\":\\\"([^$]*)\\\"}', txt)
+        # print(specs_vmatch)
+        if specs_kmatch and specs_vmatch:
+            for speck, specv in zip(specs_kmatch, specs_vmatch):
+                speck = speck.replace(' ', '')
+                if speck not in speck_set:
+                    speck_set.add(speck)
 
-        specs_match = (r'')
+                    if ('使用' in speck) or ('取扱' in speck):
+                        add_descr.append((speck, specv))
+                    else:
+                        specs.append({
+                            "name": speck,
+                            "value": specv
+                        })
+
+                        if '外寸' in speck:
+                            dims_str = specv
+                        if '重量' in speck:
+                            weight_str = specv
+        
+        return ((specs if specs else None), add_descr, weight_str, dims_str)
+
+    def parse_add_descr(self, add_descr: list) -> str:
+        """
+        将商品注意事项整理成表，加到描述中
+        """
+
+        descr = '<table class="muji-descr">'
+        for k, v in add_descr:
+            descr += f"<tr><th>{k}</th><td>{v}</td></tr>"
+        descr += '</table>'
+        return descr
+
+    def get_weight(self, txt: str) -> float:
+        """
+        获取商品重量
+        """
+
+        weight = None
+        w_match = findall(r'(\d*\.?\d+)(kg|g)', txt)
+        if w_match:
+            if w_match[0][1] == 'kg':
+                weight = round(float(w_match[0][0])*self.KG_TO_LB, 2)
+            elif w_match[0][1] == 'g':
+                weight = round(float(w_match[0][0])*self.G_TO_LB, 2)
+
+        return weight    
 
     def get_dims(self, txt: str) -> list:
         """
@@ -58,9 +109,9 @@ class MujiProduct(scrapy.Spider):
         units = [None, None, None]
         dims_out = [None, None, None]
 
-        match1 = findall(r'\b[w]*(\d*\.?\d+)\s*([cm]*)\s*[x|×]\s*[h]*(\d*\.?\d+)\s*([cm]*)\s*[x|×]\s*[d|l]*(\d*\.?\d+)\s*([cm]+)\b', txt) # 宽*高*长
-        match2 = findall(r'\b[w]*(\d*\.?\d+)\s*([cm]*)\s*[x|×]\s*[d|l]*(\d*\.?\d+)\s*([cm]+)\b', txt) # 宽*长
-        match3 = findall(r'\b[d|l]*(\d*\.?\d+)\s*([cm]+)\b', txt) # 长
+        match1 = findall(r'[w]*(\d*\.?\d+)\s*([cm]*)\s*[x|×]\s*[d|l]*(\d*\.?\d+)\s*([cm]*)\s*[x|×]\s*[h]*(\d*\.?\d+)\s*([cm]+)', txt) # 宽*长*高
+        match2 = findall(r'[w]*(\d*\.?\d+)\s*([cm]*)\s*[x|×]\s*[d|l]*(\d*\.?\d+)\s*([cm]+)', txt) # 宽*长
+        match3 = findall(r'[d|l]*(\d*\.?\d+)\s*([cm]+)', txt) # 长
 
         if match1:
             units[2] = match1[0][5]
@@ -69,13 +120,13 @@ class MujiProduct(scrapy.Spider):
             for i in range(3):
                 dims[i] = float(match1[0][i*2])
         elif match2:
-            units[2] = match2[0][3]
+            units[1] = match2[0][3]
             units[0] = match2[0][1] if match2[0][1] else units[1]
             dims[0] = float(match2[0][0])
-            dims[2] = float(match2[0][2])
+            dims[1] = float(match2[0][2])
         elif match3:
-            units[2] = match3[0][1]
-            dims[2] = float(match3[0][0])
+            units[1] = match3[0][1]
+            dims[1] = float(match3[0][0])
 
         for i, (d, u) in enumerate(zip(dims, units)):
             if u == 'm':
@@ -127,12 +178,18 @@ class MujiProduct(scrapy.Spider):
         existence = 'instock' in prod_json['offers']['availability'].lower()
         title = prod_json['name']
 
+        description = "<div>"
+
         descr1 = response.css('div.ItemDescriptionChildren_tab__pc__JAWSY > p.ItemDescription_description__e_erj').get("").strip().replace('\n', ' ').replace('\r', ' ')
         descr2 = response.css('div.ItemDescriptionChildren_tab__pc__JAWSY > div.ItemDescription_subDescription__YbU_2').get("").strip().replace('\n', ' ').replace('\r', ' ')
-        description = f'<div class="muji-descr">{descr1}{descr2}</div>'
-        print(description+'\n')
+        description += f'<div class="muji-descr">{descr1}{descr2}</div>'
+        
+        specifications, add_descr, weight_str, dims_str = self.get_specs(prod_specs)
+        if add_descr:
+            description += self.parse_add_descr(add_descr)
 
-        # specifications, more_descr = self.get_specs(prod_specs)
+        description += "</div>"
+        print(description+'\n')
 
         categories = None
         if prod_cont.get('category'):
@@ -147,11 +204,8 @@ class MujiProduct(scrapy.Spider):
             reviews = prod_json['aggregateRating'].get('reviewCount')
             rating = prod_json['aggregateRating'].get('ratingValue')
 
-        weight = None
-        # if 'weight' in var_list[0]:
-        #     weight = round(float(var_list[0]['weight'])*self.G_TO_LB, 2)
-        
-        # width, height, length = self.get_dims(title.lower())
+        weight = self.get_weight(weight_str.lower()) if weight_str else None
+        width, length, height = self.get_dims(dims_str.lower()) if dims_str else (None, None, None)
 
         yield {
             "date": datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
@@ -167,7 +221,7 @@ class MujiProduct(scrapy.Spider):
             "sku": prod_json['sku'] if prod_json['sku'] else prod_id,
             "upc": prod_json['gtin'],
             "brand": prod_json.get('brand', {}).get('name'),
-            # "specifications": specifications,
+            "specifications": specifications,
             "categories": categories,
             "images": images,
             "videos": None,
@@ -184,7 +238,7 @@ class MujiProduct(scrapy.Spider):
             "shipping_days_min": 4,
             "shipping_days_max": 8,
             "weight": weight,
-            # "width": width,
-            # "height": height,
-            # "length": length,
+            "width": width,
+            "length": length,
+            "height": height
         }
