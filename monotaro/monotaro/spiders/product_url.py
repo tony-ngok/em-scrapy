@@ -44,11 +44,13 @@ class MonotaroProductUrl(scrapy.Spider):
         cu = response.meta['cat_url']
         page = response.meta['page']
 
-        prod_ax = response.css('a.SearchResultProductImageLink')
+        prod_ax = response.css('div.SearchResultProductColumn')
         for a in prod_ax:
-            img = a.css('img::attr(data-rep-img-src)').get()
-            if 'mono_image_na' not in img: # 没有画像的商品无法卖
-                href = a.css('::attr(href)').get()
+            img = a.css('div.SearchResultProductColumn__LeftColumn img::attr(data-rep-img-src)').get()
+            nomore = a.css('div.SearchResultProductColumn__RightColumn span[title="取扱い終了"]')
+
+            if not (('mono_image_na' in img) or nomore): # 没有画像和彻底断货的商品无法卖
+                href = a.css('div.SearchResultProductColumn__LeftColumn > a::attr(href)').get()
                 if href not in self.prod_hrefs:
                     self.prod_hrefs.add(href)
                     yield {

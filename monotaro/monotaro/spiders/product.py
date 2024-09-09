@@ -15,12 +15,15 @@ class MonotaroProduct(scrapy.Spider):
     allowed_domains = ["www.monotaro.com"]
     start_urls = []
 
-    JPY_TO_USD = 1.0/142.71
-    FREE_SHIP_PRICE = 5000*JPY_TO_USD
+    JPY_TO_USD = 1.0/143.13
+
+    # https://help.monotaro.com/app/answers/detail/a_id/19
+    FREE_SHIP_PRICE = 3500*JPY_TO_USD
     SHIP_FEE = 500*JPY_TO_USD
 
     CM_TO_IN = 0.393701
     M_TO_IN = 39.37008
+    MM_TO_IN = 0.0393701
     G_TO_LB = 0.002205
     KG_TO_LB = 2.20462
 
@@ -138,9 +141,9 @@ class MonotaroProduct(scrapy.Spider):
 
     def start_requests(self):
         # self.start_urls = [
-        #     "https://www.monotaro.com/jp/ja/store/cmdty/detail/4550583467395",
-        #     "https://www.monotaro.com/jp/ja/store/cmdty/detail/4550583484514",
-        #     "https://www.monotaro.com/jp/ja/store/cmdty/detail/4550344295236"
+        #     "https://www.monotaro.com/g/04191960/",
+        #     "https://www.monotaro.com/g/00317720/",
+        #     "https://www.monotaro.com/g/04563190/"
         # ] # test
 
         for i, pu in enumerate(self.start_urls, start=1):
@@ -210,10 +213,10 @@ class MonotaroProduct(scrapy.Spider):
         yield {
             "date": datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
             "url": response.meta['url'],
-            "source": "MUJI",
+            "source": "MonotaRO",
             "product_id": prod_id,
             "existence": existence,
-            "title": title,
+            # "title": ,
             "title_en": None,
             "description": description,
             "description_en": None,
@@ -235,8 +238,8 @@ class MonotaroProduct(scrapy.Spider):
             "rating": rating,
             "sold_count": None,
             "shipping_fee": round((self.SHIP_FEE if price < self.FREE_SHIP_PRICE else 0.00), 2),
-            "shipping_days_min": 4,
-            "shipping_days_max": 8,
+            "shipping_days_min": 1, # https://help.monotaro.com/app/answers/detail/a_id/13
+            "shipping_days_max": 10,
             "weight": weight,
             "width": width,
             "length": length,
