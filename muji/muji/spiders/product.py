@@ -106,11 +106,12 @@ class MujiProduct(scrapy.Spider):
             if prod_cont:
                 break
         
-        for scr in response.css('script'):
+        for scr in response.css('script').getall():
             if 'ProductSpec_productTable__row__A4VGc' in scr:
                 prod_specs = scr
             if prod_specs:
                 break
+        # print(prod_specs+'\n')
         
         try:
             prod_cont = loads(prod_cont)
@@ -126,12 +127,12 @@ class MujiProduct(scrapy.Spider):
         existence = 'instock' in prod_json['offers']['availability'].lower()
         title = prod_json['name']
 
-        descr1 = response.css('div.ItemDescriptionChildren_tab__pc__JAWSY > p.ItemDescription_description__e_erj').get().replace('\n', ' ').replace('\r', ' ')
-        descr2 = response.css('div.ItemDescriptionChildren_tab__pc__JAWSY > div.ItemDescription_subDescription__YbU_2').get().replace('\n', ' ').replace('\r', ' ')
+        descr1 = response.css('div.ItemDescriptionChildren_tab__pc__JAWSY > p.ItemDescription_description__e_erj').get("").strip().replace('\n', ' ').replace('\r', ' ')
+        descr2 = response.css('div.ItemDescriptionChildren_tab__pc__JAWSY > div.ItemDescription_subDescription__YbU_2').get("").strip().replace('\n', ' ').replace('\r', ' ')
         description = f'<div class="muji-descr">{descr1}{descr2}</div>'
-        # print(description+'\n') 
+        print(description+'\n')
 
-        specifications, more_descr = self.get_specs(prod_specs)
+        # specifications, more_descr = self.get_specs(prod_specs)
 
         categories = None
         if prod_cont.get('category'):
@@ -150,7 +151,7 @@ class MujiProduct(scrapy.Spider):
         # if 'weight' in var_list[0]:
         #     weight = round(float(var_list[0]['weight'])*self.G_TO_LB, 2)
         
-        width, height, length = self.get_dims(title.lower())
+        # width, height, length = self.get_dims(title.lower())
 
         yield {
             "date": datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
@@ -166,7 +167,7 @@ class MujiProduct(scrapy.Spider):
             "sku": prod_json['sku'] if prod_json['sku'] else prod_id,
             "upc": prod_json['gtin'],
             "brand": prod_json.get('brand', {}).get('name'),
-            "specifications": specifications,
+            # "specifications": specifications,
             "categories": categories,
             "images": images,
             "videos": None,
@@ -183,7 +184,7 @@ class MujiProduct(scrapy.Spider):
             "shipping_days_min": 4,
             "shipping_days_max": 8,
             "weight": weight,
-            "width": width,
-            "height": height,
-            "length": length,
+            # "width": width,
+            # "height": height,
+            # "length": length,
         }
