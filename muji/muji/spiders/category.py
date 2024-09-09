@@ -49,5 +49,5 @@ class MujiCategory(scrapy.Spider):
             cat_ax = (await page.query_selector_all('a.CategorySelectionModalInner_categoryRow__IOEhH'))[1:]
             for a in cat_ax:
                 yield {
-                    "prod_url": 'https://www.muji.com'+(await a.get_attribute('href'))
+                    "cat_url": 'https://www.muji.com'+(await a.get_attribute('href'))
                 }

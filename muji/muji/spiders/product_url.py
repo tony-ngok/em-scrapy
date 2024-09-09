@@ -16,7 +16,7 @@ class MujiProductUrl(scrapy.Spider):
         super().__init__(*args, **kwargs)
 
         with open('muji_categories.json', 'r') as f:
-            categories = (f)
+            categories = load(f)
         self.start_urls = [c['cat_url'] for c in categories]
         print(f'Total {len(self.start_urls):_} categories'.replace("_", "."))
 
@@ -93,7 +93,7 @@ class MujiProductUrl(scrapy.Spider):
             return
 
         has_more = contents['data']['sectionItems']['hasNext']
-        produits = [item in contents['data']['sectionItems']['products'] if item['__typename'] == 'ProductCard']
+        produits = [item for item in contents['data']['sectionItems']['products'] if item['__typename'] == 'ProductCard']
 
         for prod in produits:
             prod_id = prod['janCode']
