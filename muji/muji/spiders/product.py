@@ -15,7 +15,10 @@ class MujiProduct(scrapy.Spider):
     allowed_domains = ["www.muji.com"]
     start_urls = []
 
-    JPY_TO_USD = 0.0070
+    JPY_TO_USD = 1.0/142.71
+    FREE_SHIP_PRICE = 5000*JPY_TO_USD
+    SHIP_FEE = 500*JPY_TO_USD
+
     CM_TO_IN = 0.393701
     M_TO_IN = 39.37008
     G_TO_LB = 0.002205
@@ -36,20 +39,15 @@ class MujiProduct(scrapy.Spider):
         self.start_urls = [p['prod_url'] for p in produits]
         print(f'Total {len(self.start_urls):_} products'.replace("_", "."))
     
-    def get_description(self, txt: str) -> str:
+    def get_specs(self, txt: str) -> tuple:
         """
-        解析格式为“标题+内容+标题+内容...”的商品描述，并过滤掉促销资讯
+        解析商品参数；部分参数（如使用注意事项）加入描述中
         """
 
-        if txt:
-            txt = unescape(txt).replace('\n', ' ').replace('\r', ' ')
-            txt = ''.join([s.strip() for s in re.split(r'(?=<h[2-4][^>]*>)', txt) if s.strip()
-                            and 'Why buy from us?' not in s
-                            and 'discounted price' not in s
-                            and 'Click here' not in s
-                            and 'Range here' not in s])
-        
-        return f'<div class="muji-descr">{txt}</div>'
+        specs = []
+
+
+        specs_match = (r'')
 
     def get_dims(self, txt: str) -> list:
         """
@@ -60,24 +58,24 @@ class MujiProduct(scrapy.Spider):
         units = [None, None, None]
         dims_out = [None, None, None]
 
-        match1 = findall(r'\b(\d*\.?\d+)\s*([CcMm]*)\s*[Xx]\s*(\d*\.?\d+)\s*([CcMm]*)\s*[Xx]\s*(\d*\.?\d+)\s*([CcMm]+)\b', txt) # 长*宽*高
-        match2 = findall(r'\b(\d*\.?\d+)\s*([CcMm]*)\s*[Xx]\s*(\d*\.?\d+)\s*([CcMm]+)\b', txt) # 长*宽
-        match3 = findall(r'\b(\d*\.?\d+)\s*([CcMm]+)\b', txt) # 长
+        match1 = findall(r'\b[w]*(\d*\.?\d+)\s*([cm]*)\s*[x|×]\s*[h]*(\d*\.?\d+)\s*([cm]*)\s*[x|×]\s*[d|l]*(\d*\.?\d+)\s*([cm]+)\b', txt) # 宽*高*长
+        match2 = findall(r'\b[w]*(\d*\.?\d+)\s*([cm]*)\s*[x|×]\s*[d|l]*(\d*\.?\d+)\s*([cm]+)\b', txt) # 宽*长
+        match3 = findall(r'\b[d|l]*(\d*\.?\d+)\s*([cm]+)\b', txt) # 长
 
         if match1:
-            units[2] = match1[0][5].lower()
-            units[1] = match1[0][3].lower() if match1[0][3] else units[2]
-            units[0] = match1[0][1].lower() if match1[0][1] else units[1]
+            units[2] = match1[0][5]
+            units[1] = match1[0][3] if match1[0][3] else units[2]
+            units[0] = match1[0][1] if match1[0][1] else units[1]
             for i in range(3):
                 dims[i] = float(match1[0][i*2])
         elif match2:
-            units[1] = match2[0][3].lower()
-            units[0] = match2[0][1].lower() if match2[0][1] else units[1]
+            units[2] = match2[0][3]
+            units[0] = match2[0][1] if match2[0][1] else units[1]
             dims[0] = float(match2[0][0])
-            dims[1] = float(match2[0][2])
+            dims[2] = float(match2[0][2])
         elif match3:
-            units[0] = match3[0][1].lower()
-            dims[0] = float(match3[0][0])
+            units[2] = match3[0][1]
+            dims[2] = float(match3[0][0])
 
         for i, (d, u) in enumerate(zip(dims, units)):
             if u == 'm':
@@ -89,7 +87,9 @@ class MujiProduct(scrapy.Spider):
 
     def start_requests(self):
         self.start_urls = [
-            
+            "https://www.muji.com/jp/ja/store/cmdty/detail/4550583467395",
+            "https://www.muji.com/jp/ja/store/cmdty/detail/4550583484514",
+            "https://www.muji.com/jp/ja/store/cmdty/detail/4550344295236"
         ] # test
 
         for i, pu in enumerate(self.start_urls, start=1):
@@ -97,101 +97,93 @@ class MujiProduct(scrapy.Spider):
             yield scrapy.Request(pu, headers=self.headers, meta={ 'url': pu }, callback=self.parse)
 
     def parse(self, response: HtmlResponse):
-        prod_cont = None
+        prod_cont = ""
+        prod_specs = ""
+        
         for scr in response.css('script[type="application/ld+json"]::text').getall():
             if '"ProductGroup"' in scr:
                 prod_cont = scr
-            if prod_cont is not None:
+            if prod_cont:
+                break
+        
+        for scr in response.css('script'):
+            if 'ProductSpec_productTable__row__A4VGc' in scr:
+                prod_specs = scr
+            if prod_specs:
                 break
         
         try:
             prod_cont = loads(prod_cont)
+            prod_json = prod_cont['hasVariant'][0] # 商品无实际变种
         except:
             return
 
-        images = ";".join('https:'+img for img in prod_json.get('images', []))
+        images = ";".join(prod_json.get('image', []))
         if not images:
             return
 
-        existence = prod_json['available']
-        title = prod_json['title']
+        prod_id = prod_json['mpn']
+        existence = 'instock' in prod_json['offers']['availability'].lower()
+        title = prod_json['name']
 
-        description = self.get_description(prod_json.get('description', ''))
+        descr1 = response.css('div.ItemDescriptionChildren_tab__pc__JAWSY > p.ItemDescription_description__e_erj').get().replace('\n', ' ').replace('\r', ' ')
+        descr2 = response.css('div.ItemDescriptionChildren_tab__pc__JAWSY > div.ItemDescription_subDescription__YbU_2').get().replace('\n', ' ').replace('\r', ' ')
+        description = f'<div class="muji-descr">{descr1}{descr2}</div>'
         # print(description+'\n') 
 
-        options = [{
-            "id": None,
-            "name": opt
-        } for opt in prod_json.get('options', []) if opt != "Title"]    
-        
-        var_list = [var for var in prod_json.get('variants', [{}])]
-        variants = [{
-            "variant_id": str(var['id']),
-            "barcode": var.get('barcode'),
-            "sku": var.get('sku') if var.get('sku') else str(var['id']),
-            "option_values": [{
-                "option_id": None,
-                "option_value_id": None,
-                "option_name": opt['name'],
-                "option_value": var[f'option{i}']
-            } for i, opt in enumerate(options, start=1) if opt != "Title"],
-            "images": "https:"+var.get('featured_image', {}).get('src') if var.get('featured_image') else None,
-            "price": round(float(var['price'])/100.0, 2),
-            "available_qty": var.get('inventory_quantity')
-        } for var in var_list if var] if options else None
+        specifications, more_descr = self.get_specs(prod_specs)
 
         categories = None
-        cat_sel = response.css('nav.breadcrumbs-container > a::text')[1:].getall()
-        if cat_sel:
-            categories = " > ".join([c.strip() for c in cat_sel])
-
-        price = round(float(prod_json['price'])/100.0*self.AUD_TO_USD, 2)
+        if prod_cont.get('category'):
+            cat_list = list(dict.fromkeys(prod_cont['category'].split(" > ")[1:]))
+            categories = " > ".join(cat_list)
+        
+        price = round(float(prod_json['offers']['price'])*self.JPY_TO_USD, 2)
 
         reviews = None
         rating = None
-        r_sel = response.css('div.product-app div.jdgm-prev-badge')
-        if r_sel:
-            reviews = int(r_sel.css('::attr(data-number-of-reviews)').get())
-            rating = round(float(r_sel.css('::attr(data-average-rating)').get()), 1)
+        if prod_json.get('aggregateRating'):
+            reviews = prod_json['aggregateRating'].get('reviewCount')
+            rating = prod_json['aggregateRating'].get('ratingValue')
 
         weight = None
-        if 'weight' in var_list[0]:
-            weight = round(float(var_list[0]['weight'])*self.G_TO_LB, 2)
+        # if 'weight' in var_list[0]:
+        #     weight = round(float(var_list[0]['weight'])*self.G_TO_LB, 2)
         
-        length, width, height = self.get_dims(title)
+        width, height, length = self.get_dims(title.lower())
 
         yield {
             "date": datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
             "url": response.meta['url'],
-            "source": "Australian Organic Products",
-            "product_id": str(prod_json['id']),
+            "source": "MUJI",
+            "product_id": prod_id,
             "existence": existence,
             "title": title,
-            "title_en": title,
+            "title_en": None,
             "description": description,
             "description_en": None,
             "summary": None,
-            "sku": var_list[0].get('sku') if var_list[0].get('sku') else str(prod_json['id']),
-            "upc": var_list[0].get('barcode'),
-            "brand": prod_json.get('vendor'),
-            "specifications": None,
+            "sku": prod_json['sku'] if prod_json['sku'] else prod_id,
+            "upc": prod_json['gtin'],
+            "brand": prod_json.get('brand', {}).get('name'),
+            "specifications": specifications,
             "categories": categories,
             "images": images,
             "videos": None,
             "price": price,
-            "available_qty": var_list[0].get('inventory_quantity', (0 if not existence else None)),
-            "options": options if options else None,
-            "variants": variants if variants else None,
-            "has_only_default_variant": len(variants)<2 if variants else True,
+            "available_qty": 0 if not existence else None,
+            "options": None, # 本站商品的所谓变种其实有不同商品URL
+            "variants": None,
+            "has_only_default_variant": True,
             "returnable": False,
             "reviews": reviews,
             "rating": rating,
             "sold_count": None,
             "shipping_fee": round((self.SHIP_FEE if price < self.FREE_SHIP_PRICE else 0.00), 2),
-            "shipping_days_min": None,
-            "shipping_days_max": None,
+            "shipping_days_min": 4,
+            "shipping_days_max": 8,
             "weight": weight,
-            "length": length,
             "width": width,
             "height": height,
+            "length": length,
         }
