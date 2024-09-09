@@ -137,11 +137,11 @@ class MujiProduct(scrapy.Spider):
         return dims_out
 
     def start_requests(self):
-        self.start_urls = [
-            "https://www.muji.com/jp/ja/store/cmdty/detail/4550583467395",
-            "https://www.muji.com/jp/ja/store/cmdty/detail/4550583484514",
-            "https://www.muji.com/jp/ja/store/cmdty/detail/4550344295236"
-        ] # test
+        # self.start_urls = [
+        #     "https://www.muji.com/jp/ja/store/cmdty/detail/4550583467395",
+        #     "https://www.muji.com/jp/ja/store/cmdty/detail/4550583484514",
+        #     "https://www.muji.com/jp/ja/store/cmdty/detail/4550344295236"
+        # ] # test
 
         for i, pu in enumerate(self.start_urls, start=1):
             print(f"{i:_}".replace('_', '.'), pu)
