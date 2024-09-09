@@ -189,7 +189,7 @@ class MujiProduct(scrapy.Spider):
             description += self.parse_add_descr(add_descr)
 
         description += "</div>"
-        print(description+'\n')
+        # print(description+'\n')
 
         categories = None
         if prod_cont.get('category'):
