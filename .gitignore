@@ -167,3 +167,5 @@ cython_debug/
 *_csvs/
 *_htmls/
 *_jsons/
+
+.DS_Store
