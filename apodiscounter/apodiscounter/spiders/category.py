@@ -35,7 +35,7 @@ class CategorySpider(scrapy.Spider):
             xml_content = gzip_file.read()
         xml_str = xml_content.decode()
         response = TextResponse(url='', body=xml_str, encoding='utf-8')
-        print(response)
+        # print(response)
 
         root = ET.fromstring(response.text)
 
