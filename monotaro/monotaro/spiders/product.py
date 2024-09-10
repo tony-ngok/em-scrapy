@@ -42,11 +42,21 @@ class MonotaroProduct(scrapy.Spider):
         self.start_urls = [p['prod_url'] for p in produits]
         print(f'Total {len(self.start_urls):_} products'.replace("_", "."))
     
+    def get_id(self, url: str) -> str:
+        """
+        从商品URL中提取商品号
+        """
+
+        id_match = findall(r'/g/(\d+)', url)
+        if id_match:
+            return id_match[0]
+
     def get_specs(self, txt: str) -> tuple:
         """
         解析商品参数；部分参数（如使用注意事项）加入描述中
         """
 
+        # TODO
         specs = []
         speck_set = set()
         add_descr = []
@@ -151,25 +161,20 @@ class MonotaroProduct(scrapy.Spider):
             yield scrapy.Request(pu, headers=self.headers, meta={ 'url': pu }, callback=self.parse)
 
     def parse(self, response: HtmlResponse):
-        prod_cont = ""
-        prod_specs = ""
+        prod_json = ""
+        bc_json = ""
         
         for scr in response.css('script[type="application/ld+json"]::text').getall():
-            if '"ProductGroup"' in scr:
-                prod_cont = scr
-            if prod_cont:
+            if '"Product"' in scr:
+                prod_json = scr
+            elif 'BreadCrumbList"' in scr:
+                bc_json = scr
+            if prod_json and bc_json:
                 break
-        
-        for scr in response.css('script').getall():
-            if 'ProductSpec_productTable__row__A4VGc' in scr:
-                prod_specs = scr
-            if prod_specs:
-                break
-        # print(prod_specs+'\n')
         
         try:
-            prod_cont = loads(prod_cont)
-            prod_json = prod_cont['hasVariant'][0] # 商品无实际变种
+            prod_json = loads(prod_json)
+            bc_json = loads(bc_json)
         except:
             return
 
@@ -177,17 +182,16 @@ class MonotaroProduct(scrapy.Spider):
         if not images:
             return
 
-        prod_id = prod_json['mpn']
+        url = response.meta['url']
+        prod_id = self.get_id(url)
         existence = 'instock' in prod_json['offers']['availability'].lower()
         title = prod_json['name']
 
         description = "<div>"
-
-        descr1 = response.css('div.ItemDescriptionChildren_tab__pc__JAWSY > p.ItemDescription_description__e_erj').get("").strip().replace('\n', ' ').replace('\r', ' ')
-        descr2 = response.css('div.ItemDescriptionChildren_tab__pc__JAWSY > div.ItemDescription_subDescription__YbU_2').get("").strip().replace('\n', ' ').replace('\r', ' ')
-        description += f'<div class="monotaro-descr">{descr1}{descr2}</div>'
+        descr = prod_json.get("description", "").replace("\n", "<br>")
+        description += f'<div class="monotaro-descr">{descr}</div>'
         
-        specifications, add_descr, weight_str, dims_str = self.get_specs(prod_specs)
+        specifications, add_descr, weight_str, dims_str = self.get_specs("") # TODO
         if add_descr:
             description += self.parse_add_descr(add_descr)
 
@@ -195,17 +199,20 @@ class MonotaroProduct(scrapy.Spider):
         # print(description+'\n')
 
         categories = None
-        if prod_cont.get('category'):
-            cat_list = list(dict.fromkeys(prod_cont['category'].split(" > ")[1:]))
+        cat_list = [item['item']['name'] for item in bc_json.get('itemListElement', [{}])[1:]]
+        if cat_list:
             categories = " > ".join(cat_list)
         
+        vid_list = response.css('div.MovieContents__Iframe > iframe::attr(src)').getall()
+        videos = ";".join(vid_list) if vid_list else None
+
         price = round(float(prod_json['offers']['price'])*self.JPY_TO_USD, 2)
 
         reviews = None
         rating = None
         if prod_json.get('aggregateRating'):
-            reviews = prod_json['aggregateRating'].get('reviewCount')
-            rating = prod_json['aggregateRating'].get('ratingValue')
+            reviews = prod_json['aggregateRating'].get('reviewCount', 0)
+            rating = round(float(prod_json['aggregateRating'].get('ratingValue', 0.0)), 1)
 
         weight = self.get_weight(weight_str.lower()) if weight_str else None
         width, length, height = self.get_dims(dims_str.lower()) if dims_str else (None, None, None)
@@ -216,18 +223,18 @@ class MonotaroProduct(scrapy.Spider):
             "source": "MonotaRO",
             "product_id": prod_id,
             "existence": existence,
-            # "title": ,
+            "title": prod_json['name'],
             "title_en": None,
             "description": description,
             "description_en": None,
             "summary": None,
-            "sku": prod_json['sku'] if prod_json['sku'] else prod_id,
-            "upc": prod_json['gtin'],
+            "sku": prod_id, # TODO
+            "upc": None,
             "brand": prod_json.get('brand', {}).get('name'),
             "specifications": specifications,
             "categories": categories,
             "images": images,
-            "videos": None,
+            "videos": videos,
             "price": price,
             "available_qty": 0 if not existence else None,
             "options": None, # 本站商品的所谓变种其实有不同商品URL
