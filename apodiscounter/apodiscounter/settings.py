@@ -25,10 +25,11 @@ ROBOTSTXT_OBEY = True
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-# DOWNLOAD_DELAY = 0.5
+DOWNLOAD_DELAY = 0.1
+RETRY_TIMES = 300
 # The download delay setting will honor only one of:
 #CONCURRENT_REQUESTS_PER_DOMAIN = 16
-#CONCURRENT_REQUESTS_PER_IP = 16
+#CONCURRENT_REQUESTS_PER_IP = 8
 
 # Disable cookies (enabled by default)
 #COOKIES_ENABLED = False
@@ -113,4 +114,13 @@ PLAYWRIGHT_LAUNCH_OPTIONS = {
         '--disable-setuid-sandbox',
         '--disable-features=site-per-process', 
     ],
+}
+
+# DOWNLOADER_MIDDLEWARES = {
+#     'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware': 110
+# }
+
+DOWNLOADER_MIDDLEWARES = {
+    # The priority of 560 is important, because we want this middleware to kick in just before the scrapy built-in `RetryMiddleware`.
+    'scrapy_cloudflare_middleware.middlewares.CloudFlareMiddleware': 560 # 这个似乎并没什么用
 }

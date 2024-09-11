@@ -1,14 +1,14 @@
 import json
 import re
 from datetime import datetime
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup
+# from em_product.product import StandardProduct
+# from fp.fp import FreeProxy
 import scrapy
 from scrapy.http import HtmlResponse
 import scrapy.selector
-
-from em_product.product import StandardProduct
 
 
 # scrapy crawl product -O apodiscounter_produkte.json
@@ -22,22 +22,39 @@ class ProductSpider(scrapy.Spider):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # self.cookies = {
+        #     "_ALGOLIA": "anonymous-2d511032-566d-4c70-9e39-0da8a959883f",
+        #     "baqend-speedkit-config": '{"group":"A","testId":"50vs50_2024_09_02"}',
+        #     "baqend-speedkit-user-id": "OErThTWKUGmjDsqUvOqI4PEvj",
+        #     "cf_clearance": "X1c_z7qlslGSAJzF29rvUu04DOhutxgjZ5yLoeI6icw-1726078626-1.2.1.1-14QNfH7EQtfY4CJKtwPjGCJf8AW6LSywnwj0bLFRJHnSdbbDNAopPhoWef4GtiwkTEc8jLeJkfL_M.pAxzx5dVCGwIrHRIkhUcH2J63FU05D35G7jbVAscGBrzuANr7xIOB5e1pzA82syB1QA0HF0PjWHgOSWiY9Iq0E0Cv3F4fEM.gwx_3X0Cu968GMUfoWd0PKPgs2N3ts4cKZGlvZet1acXvEvl9Bpe6p6rkaFvEQ7OHYYil_m91VK3ixMIwJdzb13uIE0hBsVD1ZD0BxLGe3yX6YyzhEHqdSZ8OEpECUd2JMvNca1dY2avmq2e_.LMvHzWQh4IFHtITpR9txWvgJj0UHszpSSKA_ciUWrOE",
+        #     "CSS_STATUS": "is_loaded",
+        #     "desiredTemplate": "desktop",
+        #     "XTCsid": "2888878f6924e1b229d7927f90ba5ef1"
+        # }
+
         self.headers = {
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8",
             # "Accept-Encoding": "gzip, deflate, br, zstd", # 若发现请求回答内容奇怪，试着不用这个请求头
             "Accept-Language": "de-DE,de;q=0.8,en-GB;q=0.5,en;q=0.3",
             "Referer": "https://www.google.de",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0"
+            "Sec-Ch-Ua-Platform": "\"Windows\"",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/128.0.0.0"
         }
 
         with open('apodiscounter_produkturls.json', 'r') as f:
             produits = json.load(f)
         self.start_urls = [p['prod_url'] for p in produits]
-        print(f'Total {len(self.start_urls):_} products'.replace("_", "."))
+        print(f'Insgesamt {len(self.start_urls):_} Produkt(e)'.replace("_", "."))
 
     def start_requests(self):
-        for url in self.start_urls[:300]:
+        for i, url in enumerate(self.start_urls, start=1):
+            print(i, url)
+            # proxy = FreeProxy(https=True, rand=True).get()
+            # print(proxy)
+            # meta = { 'proxy': proxy } if proxy else None
+
             yield scrapy.Request(url,
+                # meta=meta,
                 headers=self.headers,
                 # cookies=self.cookies,
                 callback=self.parse,
@@ -49,6 +66,7 @@ class ProductSpider(scrapy.Spider):
         script_list = response.xpath("//script[@type='application/ld+json']/text()").getall()
 
         for script in script_list:
+            # print(script)
             try:
                 data = json.loads(script)
             except Exception:
@@ -132,15 +150,16 @@ class ProductSpider(scrapy.Spider):
 
         return product_id
 
-    def get_title(self, response: HtmlResponse):
-        product_data = self.get_product_data(response)
+    def get_title(self, product_data: str):
+        # product_data = self.get_product_data(response)
         if not product_data:
             return None
         return product_data["name"]
 
-    def get_price(self, response: HtmlResponse):
+    def get_price(self, product_data: dict):
         f_price_us = None
-        f_value = float(self.get_product_data(response)["offers"]["price"])
+        # product_data = self.get_product_data(response)
+        f_value = float(product_data["offers"]["price"])
 
         f_price_us = round(f_value * self.EXCHANGE_RATE_EUR_TO_US, 2)
         return f_price_us
@@ -158,44 +177,50 @@ class ProductSpider(scrapy.Spider):
         return shipping_fee
 
     def get_description(self, response: HtmlResponse):
-        description = None
+        description = '<div class="apodiscounter-descr">'
 
-        tag = response.xpath("//div[@id='products_description_manufacturer']").get()
-        soup = BeautifulSoup(tag, "html.parser")
-        div = soup.find("div")
+        tags = response.css('section.product_description > div').getall()
+        # print(tags)
 
-        description = div.text.strip()
-        print(description)
+        for tag in tags:
+            if 'products_description_manufacturer' not in tag:
+                description += tag.replace('\n', '').replace('\r', '').replace('\xa0', '&nbsp;')
+
+        description += '</div>'
+        # print(description)
         return description
 
     def get_videos(self, response: HtmlResponse):
         """
-        获得商品影片
+        获得商品影片（从选择器"div#gallery_products_video"判断最多只有一个）
         """
 
-        videos = None
-        script_list = response.xpath("//script[@type='application/ld+json']/text()").getall()
+        # videos = None
+        # script_list = response.xpath("//script[@type='application/ld+json']/text()").getall()
 
-        for script in script_list:
-            try:
-                data = json.loads(script)
-            except Exception:
-                pass
-            finally:
-                if isinstance(data, dict) and ("@type" in data):
-                    if data["@type"] == "VideoObject":
-                        videos = data["@id"]
-                        break
-                elif isinstance(data, list):
-                    print("THERE ARE MULTIPLE VIDEOS, NEED PARSE THEM")
-                    breakpoint()
+        # for script in script_list:
+        #     try:
+        #         data = json.loads(script)
+        #     except Exception:
+        #         pass
+        #     finally:
+        #         if isinstance(data, dict) and ("@type" in data):
+        #             if data["@type"] == "VideoObject":
+        #                 videos = data["@id"]
+        #                 break
+        #         elif isinstance(data, list):
+        #             print("THERE ARE MULTIPLE VIDEOS, NEED PARSE THEM")
+        #             breakpoint()
 
+        videos = response.css('div#gallery_products_video > video > source[type="video/webm"]::attr(src)').get()
         return videos
 
-    def get_options(self, response: HtmlResponse):
-        options = None
+    def get_options(self, product_data: dict):
+        options = None # 该站的所谓变种其实有不同商品URL及商品号
+        if product_data is None:
+            return None
 
-        product_data = self.get_product_data(response)
+        # product_data = self.get_product_data(response)
 
         if type(product_data["offers"]) is type(list()):
             print("THERE ARE MULTIPLE OFFERS, NEED PARSE CODE FOR OPTIONS")
@@ -235,28 +260,26 @@ class ProductSpider(scrapy.Spider):
             "//div[@class='product_info_shipping_information']//div[@class='product_status_box']/span[@class='product_status_link']"
         ).get()
         soup = BeautifulSoup(tag, "html.parser")
-        first_span = soup.find("span")
+        spans = soup.find_all("span")
 
-        text_all = ""
-        # print("span text : ", first_span.text.strip())
-        text_all += first_span.text.strip()
+        for span in spans:
+            text_all = span.text.strip()
 
-        if "sofort" in text_all and "lieferbar" in text_all:
-            days = [1, 2]
-        else:
-            values = re.findall(r"(?:\d*)", text_all)
-            rets = []
-            for x in values:
-                if x.isdigit():
-                    rets.append(int(x))
-            if len(rets) == 2:
-                if rets[0] < rets[1]:
-                    days = [rets[0], rets[1]]
-                else:
-                    days = [rets[1], rets[0]]
+            if "sofort" in text_all and "lieferbar" in text_all:
+                days = [1, 2]
             else:
-                print("PARSE SHIPPING DAYS, ENCOUNTER EXCEPTION, NEED CHECK")
-                breakpoint()
+                values = re.findall(r"(?:\d*)", text_all)
+                rets = []
+                for x in values:
+                    if x.isdigit():
+                        rets.append(int(x))
+                if len(rets) == 2:
+                    if rets[0] < rets[1]:
+                        days = [rets[0], rets[1]]
+                    else:
+                        days = [rets[1], rets[0]]
+            if days:
+                break
 
         return days
 
@@ -265,17 +288,21 @@ class ProductSpider(scrapy.Spider):
         self.logger.error(f"{failure.request.url}: {repr(failure)}")
 
     def parse(self, response: HtmlResponse):
+        # print(response.headers)
+        # print(response.url)
+        # print("==================================================================================================================================")
+
         self.logger.info(f"{response.url}: {response.status}")
         if response.status > 300:
             return None
-        # image = self.get_images(response, item["product_id"])
-        # if not image:
-        #     return None
         images = response.css('div.product_image_50_50 > img::attr(src)').getall()
         if not images:
+            print("Produkt ohne Bilder ignoriert")
             return None
 
-        # item = get_product(response)
+        product_data = self.get_product_data(response) # 这个JSON有时会读不到？
+        # print(product_data)
+
         item = {}
 
         item["url"] = response.url
@@ -286,16 +313,27 @@ class ProductSpider(scrapy.Spider):
         for postfix in func_postfix_list_1:
             item[postfix] = getattr(self, f"get_{postfix}")(response.url)
 
-        func_postfix_list_2 = [
+        # func_postfix_list_2 = ["title", "price"]
+        # for postfix in func_postfix_list_2:
+        #     item[postfix] = getattr(self, f"get_{postfix}")(product_data)
+
+        item["title"] = response.css('div.product_info_detail > h1::text').get().strip()
+
+        price_int = response.css('div.product_detail_price::text').get().strip()[2:-1].replace(".", '')
+        price_dec = response.css('div.product_detail_price > span::text').get("00").strip()
+        item["price"] = round(float(f"{price_int}.{price_dec}"), 2)
+        # print(item["price"])
+
+        func_postfix_list_3 = [
             "product_id",
-            "title",
+            # "title",
             "shipping_fee",
-            "price",
+            # "price",
             "description",
             "rating",
             "reviews",
         ]
-        for postfix in func_postfix_list_2:
+        for postfix in func_postfix_list_3:
             item[postfix] = getattr(self, f"get_{postfix}")(response)
 
         item["specifications"] = None
@@ -306,7 +344,7 @@ class ProductSpider(scrapy.Spider):
 
         item["videos"] = self.get_videos(response)
 
-        item["options"] = self.get_options(response)
+        item["options"] = self.get_options(product_data)
         if item["options"] is None:
             item["variants"] = None
             item["has_only_default_variant"] = True
@@ -335,10 +373,10 @@ class ProductSpider(scrapy.Spider):
         item["height"] = None
         item["length"] = None
 
-        print("*** item :", item)
+        # print("*** item :", item)
 
         # just for check validation
-        product_to_upload = StandardProduct(**item)
-        json.dumps(product_to_upload.model_dump(mode='json'), ensure_ascii=False)
+        # product_to_upload = StandardProduct(**item)
+        # json.dumps(product_to_upload.model_dump(mode='json'), ensure_ascii=False)
 
         yield item
