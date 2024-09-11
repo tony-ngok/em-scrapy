@@ -47,6 +47,7 @@ class ProductSpider(scrapy.Spider):
         print(f'Insgesamt {len(self.start_urls):_} Produkt(e)'.replace("_", "."))
 
     def start_requests(self):
+        self.start_urls = ['https://www.apodiscounter.de/voltactive-kniebandage-s-1stk-pzn-16506658']
         for i, url in enumerate(self.start_urls, start=1):
             print(i, url)
             # proxy = FreeProxy(https=True, rand=True).get()
@@ -339,10 +340,14 @@ class ProductSpider(scrapy.Spider):
         item["specifications"] = None
         item["brand"] = self.get_brand(response, item["product_id"])
         item["images"] = ";".join([img.replace('bestseller', 'original') for img in images])
-
         item["summary"] = f"{item['title']} {item['brand']}"
-
         item["videos"] = self.get_videos(response)
+
+        cat_list = response.css('div.header_navigation > a::text').getall()[1:]
+        print(cat_list)
+        cat_list = [cat.strip() for cat in cat_list if cat.strip()]
+        item["categories"] = " > ".join(cat_list) if cat_list else None
+        # print(item["categories"])
 
         item["options"] = self.get_options(product_data)
         if item["options"] is None:
