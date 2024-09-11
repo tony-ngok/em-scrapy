@@ -100,21 +100,21 @@ FEED_EXPORTERS = {
 LOG_FILE = 'scrapy.log'
 LOG_LEVEL = 'DEBUG'
 
-DOWNLOAD_HANDLERS = {
-    "http": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
-    "https": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
-}
+# DOWNLOAD_HANDLERS = {
+#     "http": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
+#     "https": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
+# }
 
-PLAYWRIGHT_BROWSER_TYPE = 'chromium'  # or 'firefox' or 'webkit'
-PLAYWRIGHT_LAUNCH_OPTIONS = {
-    # "headless": True,
-    "headless": False,
-    'args': [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-features=site-per-process', 
-    ],
-}
+# PLAYWRIGHT_BROWSER_TYPE = 'chromium'  # or 'firefox' or 'webkit'
+# PLAYWRIGHT_LAUNCH_OPTIONS = {
+#     # "headless": True,
+#     "headless": False,
+#     'args': [
+#         '--no-sandbox',
+#         '--disable-setuid-sandbox',
+#         '--disable-features=site-per-process', 
+#     ],
+# }
 
 # DOWNLOADER_MIDDLEWARES = {
 #     'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware': 110
