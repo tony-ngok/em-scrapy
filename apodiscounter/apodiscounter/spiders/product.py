@@ -47,7 +47,26 @@ class ProductSpider(scrapy.Spider):
         print(f'Insgesamt {len(self.start_urls):_} Produkt(e)'.replace("_", "."))
 
     def start_requests(self):
-        # self.start_urls = ['https://www.apodiscounter.de/voltactive-kniebandage-s-1stk-pzn-16506658']
+        self.start_urls = [
+            "https://www.apodiscounter.de/mandragora-compmischung-2x50ml-pzn-15232147",
+            "https://www.apodiscounter.de/cefasel-300-myg-tabletten-100stk-pzn-16390368",
+            "https://www.apodiscounter.de/nova-t-380-intrauterinpessar-1stk-pzn-17242138",
+            "https://www.apodiscounter.de/velmetia-50mg850mg-56stk-pzn-00089891",
+            "https://www.apodiscounter.de/omep-20mg-30stk-pzn-00233046",
+            "https://www.apodiscounter.de/onglyza-5mg-28stk-pzn-01753693",
+            "https://www.apodiscounter.de/m-m-rvaxpro-05ml-pzn-01849157",
+            "https://www.apodiscounter.de/clindahexal-600-mg-filmtabletten-12stk-pzn-02482523",
+            "https://www.apodiscounter.de/tramadol-200-ret-1a-pharma-retardtabletten-100stk-pzn-03480905",
+            "https://www.apodiscounter.de/trusopt-20mgml-3x5ml-pzn-07186309",
+            "https://www.apodiscounter.de/candesartan-abz-32mg-98stk-pzn-09075011",
+            "https://www.apodiscounter.de/mirena-intrauterinpessar-1stk-pzn-09508651",
+            "https://www.apodiscounter.de/montelukast-heumann-10-mg-tabletten-100stk-pzn-09673568",
+            "https://www.apodiscounter.de/ladivella-1-mg2-mg-tabletten-84stk-pzn-11128306",
+            "https://www.apodiscounter.de/mirena-intrauterinpessar-1stk-pzn-11193114",
+            "https://www.apodiscounter.de/jaydess-intrauterinpessar-1stk-pzn-11193120",
+            "https://www.apodiscounter.de/kyleena-195-mg-intrauterinwirkstofffreisetzsys-1x1stk-pzn-11872128",
+        ]
+
         for i, url in enumerate(self.start_urls, start=1):
             print(i, url)
             # proxy = FreeProxy(https=True, rand=True).get()
@@ -121,17 +140,15 @@ class ProductSpider(scrapy.Spider):
 
         return brand
 
-    """
-    def get_product_id(self, url):
-        pro_id = None
-        parse_usl = urlparse(url)
-        split_path = parse_usl.path.split("/")
-        if(split_path is not None):
-            split_dash = split_path.pop().split("-")
-            if(split_dash is not None):
-                pro_id = split_dash.pop()
-        return pro_id
-    """
+    # def get_product_id(self, url):
+    #     pro_id = None
+    #     parse_usl = urlparse(url)
+    #     split_path = parse_usl.path.split("/")
+    #     if(split_path is not None):
+    #         split_dash = split_path.pop().split("-")
+    #         if(split_dash is not None):
+    #             pro_id = split_dash.pop()
+    #     return pro_id
 
     def get_product_id(self, response: HtmlResponse):
         product_id = None
@@ -196,23 +213,6 @@ class ProductSpider(scrapy.Spider):
         获得商品影片（从选择器"div#gallery_products_video"判断最多只有一个）
         """
 
-        # videos = None
-        # script_list = response.xpath("//script[@type='application/ld+json']/text()").getall()
-
-        # for script in script_list:
-        #     try:
-        #         data = json.loads(script)
-        #     except Exception:
-        #         pass
-        #     finally:
-        #         if isinstance(data, dict) and ("@type" in data):
-        #             if data["@type"] == "VideoObject":
-        #                 videos = data["@id"]
-        #                 break
-        #         elif isinstance(data, list):
-        #             print("THERE ARE MULTIPLE VIDEOS, NEED PARSE THEM")
-        #             breakpoint()
-
         videos = response.css('div#gallery_products_video > video > source[type="video/webm"]::attr(src)').get()
         return videos
 
@@ -260,6 +260,9 @@ class ProductSpider(scrapy.Spider):
         tag = response.xpath(
             "//div[@class='product_info_shipping_information']//div[@class='product_status_box']/span[@class='product_status_link']"
         ).get()
+        if not tag:
+            return days
+
         soup = BeautifulSoup(tag, "html.parser")
         spans = soup.find_all("span")
 
