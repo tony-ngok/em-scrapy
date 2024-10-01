@@ -36,14 +36,15 @@ class AmazontrCategories:
         await self.page.setViewport({ 'width': 1024, 'height': 768 })
         await self.page.setExtraHTTPHeaders(self.HEADERS)
     
-    async def goto_cat(self, page: Page, url: str) -> None:
-        resp = await page.goto(url)
+    async def goto_cat(self, url: str) -> None:
+        resp = await self.page.goto(url)
         actual_url = resp.url
         print(actual_url)
         print(resp.status)
     
         subcats = await self.page.querySelectorAll('li.s-navigation-indent-2 > span > a')
         if subcats:
+            subcat_links = []
             for subcat in subcats:
                 cat_name = await self.page.evaluate(self.GET_TXT_JS, (await subcat.querySelector('span')))
                 if cat_name == 'Cinsel Sağlık ve Aile Planlaması':
@@ -51,25 +52,23 @@ class AmazontrCategories:
 
                 href = await self.page.evaluate(self.GET_ATTR_JS, subcat, 'href')
                 next_url = 'https://www.amazon.com.tr'+href
+                subcat_links.append(next_url)
 
-                new_page = await self.browser.newPage()
-                await self.goto_cat(new_page, next_url)
+            print("subcat_links", subcat_links)
+            for suburl in subcat_links:
+                await self.goto_cat(suburl)
         else:
-            if resp.status >= 400:
-                print(resp.text)
-            else:
-                clean_url = actual_url.split('fs=true')[0]+'fs=true'
-                self.cat_links.append({ 'cat_url': clean_url })
-                await page.close()
+            clean_url = actual_url.split('fs=true')[0]+'fs=true'
+            self.cat_links.append({ 'cat_url': clean_url })
+            print("cat_links", self.cat_links)
 
 
 async def main():
     ac = AmazontrCategories()
     await ac.start()
 
-    # https://www.amazon.com.tr/s?i=hpc&fs=true, https://www.amazon.com.tr/s?i=beauty&fs=true
-    await ac.goto_cat(ac.page, 'https://www.amazon.com.tr/s?i=hpc&fs=true')
-    await ac.goto_cat(ac.page, 'https://www.amazon.com.tr/s?i=beauty&fs=true')
+    await ac.goto_cat('https://www.amazon.com.tr/s?i=hpc&fs=true')
+    await ac.goto_cat('https://www.amazon.com.tr/s?i=beauty&fs=true')
 
     # await sleep(30)
     await ac.browser.close()
