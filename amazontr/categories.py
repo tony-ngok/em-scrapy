@@ -29,6 +29,7 @@ class AmazontrCategories:
 
     def __init__(self) -> None:
         self.cat_links = []
+        self.err_links = []
 
     async def start(self) -> None:
         self.browser = await launch(headless=False)
@@ -39,8 +40,13 @@ class AmazontrCategories:
     async def goto_cat(self, url: str) -> None:
         resp = await self.page.goto(url)
         actual_url = resp.url
-        print(actual_url)
-        print(resp.status)
+        clean_url = actual_url.split('fs=true')[0]+'fs=true'
+        print(clean_url)
+
+        if (resp.status >= 300):
+            print("Error", resp.status)
+            self.err_links.append(clean_url)
+            return
     
         subcats = await self.page.querySelectorAll('li.s-navigation-indent-2 > span > a')
         if subcats:
@@ -58,7 +64,6 @@ class AmazontrCategories:
             for suburl in subcat_links:
                 await self.goto_cat(suburl)
         else:
-            clean_url = actual_url.split('fs=true')[0]+'fs=true'
             self.cat_links.append({ 'cat_url': clean_url })
             print("cat_links", self.cat_links)
 
