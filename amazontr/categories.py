@@ -69,6 +69,10 @@ class AmazontrCategories:
             actual_url = actual_url.split('&fs=')[0]+'&fs=true'
         elif '&dc' in resp.url:
             actual_url = actual_url.split('&dc')[0]
+        print(actual_url)
+        if (actual_url in self.cats_set) or (actual_url in self.errs_set):
+            print("Duplicate")
+            return
 
         if (resp.status >= 300):
             print("Error", resp.status)
