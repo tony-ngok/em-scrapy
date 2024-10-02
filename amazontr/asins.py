@@ -6,7 +6,7 @@ from sys import argv
 from pyppeteer import launch
 
 
-class AmazontrCategories:
+class AmazontrAsins:
     GET_ATTR_JS = '(elem, attr) => elem.getAttribute(attr)'
     GET_TXT_JS = '(elem) => elem.textContent'
 
@@ -29,36 +29,37 @@ class AmazontrCategories:
     def __init__(self, review: bool, todo: list = []) -> None:
         if review:
             try:
-                with open('amazontr_categories.json', 'r', encoding='utf-8') as f_cats: 
-                    self.asins_list = [cat['cat_url'] for cat in json.load(f_cats)] # 已经获得的分类页面
-                    self.asin_set = set([self.get_catno(url) for url in self.asins_list]) # 不好直接用url hash（太长了，容易误查重）
+                with open('amazontr_asins.json', 'r', encoding='utf-8') as f_asins: 
+                    self.asins_dict = {asin['asin']: True for asin in json.load(f_asins)} # 已经获得的分类页面
             except:
-                print("No cats file")
-                self.asins_list = []
-                self.asin_set = set()
+                print("No asins file")
+                self.asins_dict = {}
         
             try:
-                with open('amazontr_categories_errs.json', 'r', encoding='utf-8') as f_errs: # 前面的出错
-                    self.todo_list = [cat['cat_url'] for cat in json.load(f_errs)]
+                with open('amazontr_asins_errs.json', 'r', encoding='utf-8') as f_errs: # 前面的出错
+                    self.todo_list = [(cat['cat_url'], cat['from_page']) for cat in json.load(f_errs)]
             except:
                 print("No prev errs")
                 self.todo_list = []
 
-            print(len(self.asins_list), "categorie(s)")
+            print(f"{len(self.asins_dict):_} asin(s)".replace('_', '.'))
             print(len(self.todo_list), "url(s) to do")
         else:
             print("Start anew")
-            self.asins_list = []
-            self.asin_set = set()
+            self.asins_dict = {}
             self.todo_list = todo
 
-        self.errs_list = []
-        self.errs_set = set()
+        self.errs_dict = {}
 
     def get_catno(self, url):
         catno_match = re.findall(r'n%3A(\d+)', url)
         if catno_match:
             return catno_match[-1]
+
+    def get_asin(self, url):
+        asin_match = re.findall(r'/dp/(\w+)', url)
+        if asin_match:
+            return asin_match[0]
 
     async def start(self) -> None:
         self.browser = await launch(headless=False)
@@ -68,62 +69,53 @@ class AmazontrCategories:
     
     async def scrape(self):
         for url in self.todo_list:
-            await self.visite(url)
+            await self.visite(url[0], url[1])
 
-    async def visite(self, url: str) -> None:
-        resp = await self.page.goto(url, { 'waitUntil': 'networkidle2' })
-
-        accept = await self.page.querySelector('input[id="sp-cc-accept"]')
-        if accept:
-            await self.page.click('input[id="sp-cc-accept"]')
-            await asyncio.sleep(1)
-
-        actual_url = self.page.url
-        print('\n'+actual_url)
-
-        actual_catno = self.get_catno(actual_url)
-        print(actual_catno)
-        if (actual_catno in self.asin_set) or (actual_catno in self.errs_set):
-            print("Duplicate")
-            return
-
-        if (resp.status >= 300):
-            print("Error", resp.status)
-            self.errs_list.append(actual_url)
-            self.errs_set.add(actual_catno)
-            print(len(self.asins_list), "categorie(s)")
-            print(len(self.errs_list), "error url(s)")
-            return
-    
+    async def visite(self, cat_url: str, page_no: int = 1) -> None:
+        url = cat_url
+        if page_no > 1:
+            url += f'&page={page_no}'
+        
         try:
-            subcats = await self.page.querySelectorAll('li.apb-browse-refinements-indent-2 > span > a, li.s-navigation-indent-2 > span > a')
-            if subcats:
-                subcat_links = []
-                for subcat in subcats:
-                    cat_name = await self.page.evaluate(self.GET_TXT_JS, (await subcat.querySelector('span')))
-                    if cat_name == 'Cinsel Sağlık ve Aile Planlaması':
-                        continue
+            resp = await self.page.goto(url,
+                                        # { 'waitUntil': 'networkidle2' }
+                                        )
+            if (resp.status >= 300):
+                print("Error", resp.status)
+                self.errs_dict[cat_url] = page_no
+                print(f"{len(self.asins_dict):_} asin(s)".replace('_', '.'))
+                print(len(self.errs_dict), "error categorie(s)")
+                return
 
-                    href = await self.page.evaluate(self.GET_ATTR_JS, subcat, 'href')
-                    next_url = 'https://www.amazon.com.tr'+href
-                    subcat_links.append(next_url)
+            if (await self.page.querySelector('input[id="sp-cc-accept"]')):
+                await self.page.click('input[id="sp-cc-accept"]')
+                await asyncio.sleep(1)
 
-                print("subcat_links", subcat_links)
-                for suburl in subcat_links:
-                    await self.visite(suburl)
-            else: # 翻到底了
-                cat_url = f'https://www.amazon.com.tr/s?rh=n%3A{actual_catno}&fs=true'
-                print("Add cat_url:", cat_url)
-                self.asins_list.append(cat_url)
+            print(f'\ncat {self.get_catno(cat_url)} page {page_no}')
 
-                print(len(self.asins_list), "categorie(s)")
-                print(len(self.errs_list), "error url(s)")
+            prod_cards = await self.page.querySelectorAll('div[data-cy="title-recipe"]')
+            prod_cards = [pc for pc in prod_cards if not await pc.querySelector(':scope a.puis-sponsored-label-text')]
+            print(len(prod_cards), 'asin(s) here')
+
+            for pc in prod_cards:
+                pc_a = await pc.querySelector(':scope h2 > a')
+                href = await self.page.evaluate(self.GET_ATTR_JS, pc_a, 'href')
+                asin = self.get_asin(href)
+                
+                if asin not in self.asins_dict:
+                    self.asins_dict[asin] = True
+            
+            print(f"{len(self.asins_dict):_} asin(s)".replace('_', '.'))
+            print(len(self.errs_dict), "error url(s)")
+
+            goto_next = await self.page.querySelector('a.s-pagination-next')
+            if goto_next:
+                await self.visite(cat_url, page_no+1)
         except Exception as e:
             print("Error:", str(e))
-            self.errs_list.append(actual_url)
-            self.errs_set.add(actual_catno)
-            print(len(self.asins_list), "categorie(s)")
-            print(len(self.errs_set), "error url(s)")
+            self.errs_dict[cat_url] = page_no
+            print(f"{len(self.asins_dict):_} asin(s)".replace('_', '.'))
+            print(len(self.errs_dict), "error url(s)")
 
 
 async def main():
@@ -133,21 +125,25 @@ async def main():
 
     todo_list = []
     if not review: # 从头开始
-        todo_list.append('https://www.amazon.com.tr/s?rh=n%3A12466323031')
-        todo_list.append('https://www.amazon.com.tr/s?rh=n%3A12466610031')
+        todo_list.append(('https://www.amazon.com.tr/s?rh=n%3A12572036031&fs=true', 1))
+        todo_list.append(('https://www.amazon.com.tr/s?rh=n%3A13526710031&fs=true', 1))
 
-    ac = AmazontrCategories(review, todo_list)
+    ac = AmazontrAsins(review, todo_list)
     await ac.start()
     await ac.scrape()
     await ac.browser.close()
     
-    cats_links = [{ 'cat_url': url } for url in ac.asins_list]
-    with open('amazontr_categories.json', 'w') as f:
-        json.dump(cats_links, f)
+    asins_links = ',\n'.join([f'{{ "asin": "{asin}" }}' for asin in ac.asins_dict])
+    with open('amazontr_asins.json', 'w') as f:
+        f.write('[\n')
+        f.write(asins_links)
+        f.write('\n]')
     
-    errs_links = [{ 'cat_url': url } for url in ac.errs_list]
-    with open('amazontr_categories_errs.json', 'w') as f:
-        json.dump(errs_links, f)
+    errs_links = ',\n'.join([f'{{ "cat_url": {url}, "from_page": {fp} }}' for url, fp in ac.errs_dict.items()])
+    with open('amazontr_asins_errs.json', 'w') as f:
+        f.write('[\n')
+        f.write(errs_links)
+        f.write('\n]')
 
 
 if __name__ == '__main__':
