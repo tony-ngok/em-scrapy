@@ -38,12 +38,15 @@ class AmazontrCategories:
         await self.page.setExtraHTTPHeaders(self.HEADERS)
     
     async def goto_cat(self, url: str) -> None:
-        resp = await self.page.goto(url)
+        resp = await self.page.goto(url, { 'waitUntil': 'networkidle2' })
         actual_url = resp.url.split('&ref=')[0]
 
         if (resp.status >= 300):
             print("Error", resp.status)
             self.errs_set.add(actual_url)
+
+            print("cat_links:", len(self.cats_set), "categorie(s)")
+            print(len(self.errs_set), "error url(s)")
             return
     
         subcats = await self.page.querySelectorAll('li.apb-browse-refinements-indent-2 > span > a')
@@ -63,8 +66,13 @@ class AmazontrCategories:
                 await self.goto_cat(suburl)
         else:
             cat_href = await self.page.evaluate(self.GET_ATTR_JS, (await self.page.querySelector('a#apb-desktop-browse-search-see-all')), 'href')
-            cat_url = 'https://www.amazon.com.tr'+cat_href.split('&ref=')[0]
-            self.cats_set.add(cat_url)
+            if cat_href:
+                cat_url = 'https://www.amazon.com.tr'+cat_href.split('&ref=')[0]
+                self.cats_set.add(cat_url)
+            else:
+                print("Error: no categorie link")
+                self.errs_set.add(actual_url)
+
             print("cat_links:", len(self.cats_set), "categorie(s)")
             print(len(self.errs_set), "error url(s)")
 
@@ -79,9 +87,13 @@ async def main():
     # await sleep(30)
     await ac.browser.close()
     
-    cats_link = [{ 'cat_url': url } for url in ac.cats_set]
-    with open('amazontr_categories1.json', 'w') as f:
-        json.dump(cats_link, f)
+    cats_links = [{ 'cat_url': url } for url in ac.cats_set]
+    with open('amazontr_categories.json', 'w') as f:
+        json.dump(cats_links, f)
+    
+    errs_links = [{ 'cat_url': url } for url in ac.errs_set]
+    with open('amazontr_categories_errs.json', 'w') as f:
+        json.dump(errs_links, f)
 
 if __name__ == '__main__':
     run(main())
