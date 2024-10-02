@@ -79,8 +79,6 @@ class AmazontrCategories:
             await asyncio.sleep(1)
 
         actual_url = self.page.url
-        if '&dc' in actual_url:
-            actual_url = actual_url.split('&dc')[0]
         print('\n'+actual_url)
 
         actual_catno = self.get_catno(actual_url)
