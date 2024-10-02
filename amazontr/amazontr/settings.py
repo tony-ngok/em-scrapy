@@ -20,7 +20,7 @@ NEWSPIDER_MODULE = "amazontr.spiders"
 ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
-#CONCURRENT_REQUESTS = 32
+CONCURRENT_REQUESTS = 12
 
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay
@@ -101,3 +101,19 @@ LOG_LEVEL = 'DEBUG'
 
 HTTPERROR_ALLOW_ALL = True
 HTTPERROR_ALLOWED_CODES = [503]
+
+DOWNLOAD_HANDLERS = {
+    "http": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
+    "https": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
+}
+
+PLAYWRIGHT_BROWSER_TYPE = 'chromium'  # or 'firefox' or 'webkit'
+PLAYWRIGHT_LAUNCH_OPTIONS = {
+    # "headless": True,
+    "headless": False,
+    'args': [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-features=site-per-process', 
+    ],
+}

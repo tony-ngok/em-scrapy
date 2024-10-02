@@ -1,7 +1,10 @@
+import asyncio
+import json
 import re
 
 import scrapy
 from scrapy.http import HtmlResponse
+from scrapy_playwright.page import PageMethod
 
 
 # scrapy crawl amazontr_asins -O amazontr_asins.json
@@ -9,64 +12,86 @@ class AmazontrAsins(scrapy.Spider):
     name = "amazontr_asins"
     allowed_domains = ["www.amazon.com.tr"]
     start_urls = [
-        "https://www.amazon.com.tr/s?rh=n%3A14102463031&fs=true",
-        "https://www.amazon.com.tr/s?rh=n%3A13526965031&fs=true"
+        "https://www.amazon.com.tr/s?rh=n%3A12572036031&fs=true",
+        "https://www.amazon.com.tr/s?rh=n%3A13526710031&fs=true"
     ]
+    asins = set()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # https://scrapeops.io/python-scrapy-playbook/scrapy-503-service-unavailable-error/#optimize-request-headers
+        try:
+            with open('amazontr_categories.json', 'r', encoding='utf-8') as f_cats:
+                self.start_urls = [cat['cat_url'] for cat in json.load(f_cats)]
+        except:
+            pass
+
         self.headers = {
-            "Connection": 'keep-alive',
-            "Cache-Control": 'max-age=0',
-            "sec-ch-ua": '" Not A;Brand";v="99", "Chromium";v="99", "Google Chrome";v="99"',
-            "sec-ch-ua-mobile": '?0',
-            "sec-ch-ua-platform": "macOS",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Accept-Language": "fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7",
+            "Referer": "https://www.amazon.com.tr/",
+            "Sec-CH-UA": '"Not_A Brand";v="99", "Google Chrome";v="109", "Chromium";v="109"',
+            "Sec-CH-UA-Mobile": "?0",
+            "Sec-CH-UA-Platform": '"Windows"',
+            "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Site": "none",
+            "Sec-Fetch-User": "?1",
             "Upgrade-Insecure-Requests": "1",
-            "User-Agent": 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.83 Safari/537.36',
-            "Accept": 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-            "Sec-Fetch-Site": 'none',
-            "Sec-Fetch-Mode": 'navigate',
-            "Sec-Fetch-User": '?1',
-            "Sec-Fetch-Dest": 'document',
-            "Accept-Encoding": 'gzip, deflate, br',
-            "Accept-Language": 'fr-FR,fr;q=0.9,en-GB;q=0.8,en;q=0.7',
-            # "Cookie": 'session-id=261-6962176-2121760; session-id-time=2082787201l; i18n-prefs=TRY; ubid-acbtr=262-5292875-4606067; session-token="nIegK7zo9t1XfCjHVM8a9CYvcOAhFZsRH5teq7xpenz6YtCl8y2jxkct5qghACxyr4Q4ciql0OTHifJ5u4qJRG9LpZpCcnLXEn/l+JziGZFJBE18LydgV22smjnPPLcg9KG73bE02bA1EWFFe4ahNMPai9GB0OzWuxYO+ujj/X1EUNotm9/xxezKPiIbxnWrzTtxq6QKCmbIowzkmWLljMGeBefkLRDh2xoJtQ9o5evvHLtsyb5JowxwFVxleSRER3ihl5XiO2TTLX6Xx4gT9Yuf//kggp7VscEmHorDOgBNk7eUY7kbKUk73qu+m/N0ctGYr4gOkIQB57JoHlEtUYM0GMLNbG1BfW1KSg8DAgA="; csm-hit=tb:T3K91DT3W7N8SY6ZN6FK+s-EZD0Y0T9CH2AD4D425Z5|1727815462053&t:1727815462053&adb:adblk_no'
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"
         }
 
     def start_requests(self):
-        for url in self.start_urls:
+        for n, url in enumerate(self.start_urls, start=1):
             yield scrapy.Request(url, headers=self.headers,
                                  meta={
-                                     'cat_url': url,
-                                     'actual_page': 1
+                                        'cat_no': n,
+                                        'cat_url': url,
+                                        # 'actual_page': 1,
+                                        "playwright": True,
+                                        "playwright_include_page": True,
+                                        "playwright_page_methods": [
+                                            PageMethod("wait_for_selector", 'div[data-cy="title-recipe"]')
+                                        ]
                                      },
                                 callback=self.parse)
 
-    def parse(self, response: HtmlResponse):
+    def get_asin(self, url):
+        asin_match = re.findall(r'/dp/(\w+)', url)
+        if asin_match:
+            return asin_match[0]
+
+    async def parse(self, response: HtmlResponse):
+        cat_no = response.meta['cat_no']
+        page = response.meta['playwright_page']
         cat_url = response.meta['cat_url']
-        actual_page = response.meta['actual_page']
 
-        if response.status >= 400:
-            print(response.text)
-            return
+        i = 1
+        asins = 0
+        while True:
+            print(cat_no, cat_url, f"page={i}")
+            if (await page.query_selector('input[id="sp-cc-accept"]')):
+                await page.click('input[id="sp-cc-accept"]')
+                await asyncio.sleep(1)
 
-        prod_cards = response.css('div[data-cy="title-recipe"]')
-        for pc in prod_cards:
-            if pc.css(':scope a.puis-sponsored-label-text'):
-                continue
+            prod_cards = await page.query_selector_all('div[data-cy="title-recipe"]')
+            for pc in prod_cards:
+                if await pc.query_selector(':scope a.puis-sponsored-label-text'):
+                    continue
 
-            pc_url = pc.css(':scope h2 > a::attr(href)').get()
-            asin_match = re.findall(r'/dp/(\w+)', pc_url)
-            if asin_match:
-                yield { 'asin': asin_match[0] }
+                pc_a = await pc.query_selector(':scope h2 > a')
+                href = await pc_a.get_attribute('href')
+                asin = self.get_asin(href)
+                if asin not in self.asins:
+                    asins += 1
+                    yield { 'asin': asin }
+            
+            if await page.query_selector('a.s-pagination-next'):
+                i += 1
+                await page.goto(cat_url+f'&page={i}')
+            else:
+                break
         
-        if response.css('a.s-pagination-next'):
-            headers = { **self.headers, 'Referer': cat_url+f'&page={actual_page}' }
-            yield scrapy.Request(cat_url+f'&page={actual_page+1}', headers=headers,
-                                 meta={
-                                    'cat_url': cat_url,
-                                    'actual_page': actual_page+1
-                                 },
-                                 callback=self.parse)
+        await page.close()
+        print(cat_no, cat_url, f"done: asins={asins}")
