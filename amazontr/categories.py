@@ -51,7 +51,6 @@ class AmazontrCategories:
             subcat_links = []
             for subcat in subcats:
                 cat_name = await self.page.evaluate(self.GET_TXT_JS, (await subcat.querySelector('span')))
-                print(cat_name)
                 if cat_name == 'Cinsel Sağlık ve Aile Planlaması':
                     continue
 
