@@ -55,7 +55,7 @@ class AmazontrCategories:
         self.errs_list = []
         self.errs_set = set()
 
-    def get_catno(url):
+    def get_catno(self, url):
         catno_match = re.findall(r'n%3A(\d+)', url)
         if catno_match:
             return catno_match[-1]
