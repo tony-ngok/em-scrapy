@@ -11,10 +11,7 @@ from scrapy_playwright.page import PageMethod
 class AmazontrAsins(scrapy.Spider):
     name = "amazontr_asins"
     allowed_domains = ["www.amazon.com.tr"]
-    start_urls = [
-        "https://www.amazon.com.tr/s?rh=n%3A12572036031&fs=true",
-        "https://www.amazon.com.tr/s?rh=n%3A13526710031&fs=true"
-    ]
+    start_urls = []
     asins = set()
 
     def __init__(self, *args, **kwargs):
@@ -25,6 +22,7 @@ class AmazontrAsins(scrapy.Spider):
                 self.start_urls = [cat['cat_url'] for cat in json.load(f_cats)]
         except:
             pass
+        print("Total", len(self.start_urls), "categorie(s)")
 
         self.headers = {
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
