@@ -44,35 +44,40 @@ class AmazontrCategories:
         if (resp.status >= 300):
             print("Error", resp.status)
             self.errs_set.add(actual_url)
-
             print("cat_links:", len(self.cats_set), "categorie(s)")
             print(len(self.errs_set), "error url(s)")
             return
     
-        subcats = await self.page.querySelectorAll('li.apb-browse-refinements-indent-2 > span > a')
-        if subcats:
-            subcat_links = []
-            for subcat in subcats:
-                cat_name = await self.page.evaluate(self.GET_TXT_JS, (await subcat.querySelector('span')))
-                if cat_name == 'Cinsel Sağlık ve Aile Planlaması':
-                    continue
+        try:
+            subcats = await self.page.querySelectorAll('li.apb-browse-refinements-indent-2 > span > a, li.s-navigation-indent-2 > span > a')
+            if subcats:
+                subcat_links = []
+                for subcat in subcats:
+                    cat_name = await self.page.evaluate(self.GET_TXT_JS, (await subcat.querySelector('span')))
+                    if cat_name == 'Cinsel Sağlık ve Aile Planlaması':
+                        continue
 
-                href = await self.page.evaluate(self.GET_ATTR_JS, subcat, 'href')
-                next_url = 'https://www.amazon.com.tr'+href
-                subcat_links.append(next_url)
+                    href = await self.page.evaluate(self.GET_ATTR_JS, subcat, 'href')
+                    next_url = 'https://www.amazon.com.tr'+href
+                    subcat_links.append(next_url)
 
-            print("subcat_links", subcat_links)
-            for suburl in subcat_links:
-                await self.goto_cat(suburl)
-        else:
-            cat_href = await self.page.evaluate(self.GET_ATTR_JS, (await self.page.querySelector('a#apb-desktop-browse-search-see-all')), 'href')
-            if cat_href:
-                cat_url = 'https://www.amazon.com.tr'+cat_href.split('&ref=')[0]
-                self.cats_set.add(cat_url)
+                print("subcat_links", subcat_links)
+                for suburl in subcat_links:
+                    await self.goto_cat(suburl)
             else:
-                print("Error: no categorie link")
-                self.errs_set.add(actual_url)
+                cat_href = await self.page.evaluate(self.GET_ATTR_JS, (await self.page.querySelector('a#apb-desktop-browse-search-see-all')), 'href')
+                if cat_href:
+                    cat_url = 'https://www.amazon.com.tr'+cat_href.split('&ref=')[0]
+                    self.cats_set.add(cat_url)
+                else:
+                    print("Error: no categorie link")
+                    self.errs_set.add(actual_url)
 
+                print("cat_links:", len(self.cats_set), "categorie(s)")
+                print(len(self.errs_set), "error url(s)")
+        except Exception as e:
+            print("Error:", str(e))
+            self.errs_set.add(actual_url)
             print("cat_links:", len(self.cats_set), "categorie(s)")
             print(len(self.errs_set), "error url(s)")
 
