@@ -28,8 +28,8 @@ class AmazontrCategories:
     }
 
     def __init__(self) -> None:
-        self.cat_links = []
-        self.err_links = []
+        self.cats_set = set()
+        self.errs_set = set()
 
     async def start(self) -> None:
         self.browser = await launch(headless=False)
@@ -39,15 +39,14 @@ class AmazontrCategories:
     
     async def goto_cat(self, url: str) -> None:
         resp = await self.page.goto(url)
-        actual_url = resp.url
-        clean_url = actual_url.split('fs=true')[0]+'fs=true'
+        actual_url = resp.url.split('&ref=')[0]
 
         if (resp.status >= 300):
             print("Error", resp.status)
-            self.err_links.append(clean_url)
+            self.errs_set.add(actual_url)
             return
     
-        subcats = await self.page.querySelectorAll('li.s-navigation-indent-2 > span > a')
+        subcats = await self.page.querySelectorAll('li.apb-browse-refinements-indent-2 > span > a')
         if subcats:
             subcat_links = []
             for subcat in subcats:
@@ -64,22 +63,25 @@ class AmazontrCategories:
             for suburl in subcat_links:
                 await self.goto_cat(suburl)
         else:
-            self.cat_links.append({ 'cat_url': clean_url })
-            print("cat_links", self.cat_links)
+            cat_href = await self.page.evaluate(self.GET_ATTR_JS, (await self.page.querySelector('a#apb-desktop-browse-search-see-all')), 'href')
+            cat_url = 'https://www.amazon.com.tr'+cat_href.split('&ref=')[0]
+            self.cats_set.add(cat_url)
+            print("cat_links", self.cats_set)
 
 
 async def main():
     ac = AmazontrCategories()
     await ac.start()
 
-    await ac.goto_cat('https://www.amazon.com.tr/s?i=hpc&fs=true')
-    await ac.goto_cat('https://www.amazon.com.tr/s?i=beauty&fs=true')
+    await ac.goto_cat('https://www.amazon.com.tr/b?node=12466323031')
+    await ac.goto_cat('https://www.amazon.com.tr/s?bbn=12466610031&rh=n%3A12466610031&dc&qid=1727809363&ref=lp_13525981031_ex_n_1')
 
     # await sleep(30)
     await ac.browser.close()
     
+    cats_link = [{ 'cat_url': url } for url in ac.cats_set]
     with open('amazontr_categories1.json', 'w') as f:
-        json.dump(ac.cat_links, f)
+        json.dump(cats_link, f)
 
 if __name__ == '__main__':
     run(main())
