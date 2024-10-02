@@ -1,5 +1,6 @@
 import asyncio
 import json
+import re
 from sys import argv
 
 from pyppeteer import launch
@@ -25,30 +26,39 @@ class AmazontrCategories:
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"
     }
 
-    def __init__(self, review: bool, todo: set = set()) -> None:
+    def __init__(self, review: bool, todo: list = []) -> None:
         if review:
             try:
                 with open('amazontr_categories.json', 'r', encoding='utf-8') as f_cats: 
-                    self.cats_set = set([cat['cat_url'] for cat in json.load(f_cats)])
+                    self.cats_list = [cat['cat_url'] for cat in json.load(f_cats)] # 已经获得的分类页面
+                    self.cats_set = set([self.get_catno(url) for url in self.cats_list]) # 不好直接用url hash（太长了，容易误查重）
             except:
                 print("No cats file")
-                self.cats_set = set(todo)
+                self.cats_list = []
+                self.cats_set = set()
         
             try:
                 with open('amazontr_categories_errs.json', 'r', encoding='utf-8') as f_errs: # 前面的出错
-                    self.todo_set = set([cat['cat_url'] for cat in json.load(f_errs)])
+                    self.todo_list = [cat['cat_url'] for cat in json.load(f_errs)]
             except:
                 print("No prev errs")
-                self.todo_set = set()
+                self.todo_list = []
 
-            print(len(self.cats_set), "categorie(s)")
-            print(len(self.todo_set), "url(s) to do")
+            print(len(self.cats_list), "categorie(s)")
+            print(len(self.todo_list), "url(s) to do")
         else:
             print("Start anew")
+            self.cats_list = []
             self.cats_set = set()
-            self.todo_set = todo
+            self.todo_list = todo
 
+        self.errs_list = []
         self.errs_set = set()
+
+    def get_catno(url):
+        catno_match = re.findall(r'n%3A(\d+)', url)
+        if catno_match:
+            return catno_match[-1]
 
     async def start(self) -> None:
         self.browser = await launch(headless=False)
@@ -57,8 +67,7 @@ class AmazontrCategories:
         await self.page.setExtraHTTPHeaders(self.HEADERS)
     
     async def scrape(self):
-        while len(self.todo_set):
-            url = self.todo_set.pop()
+        for url in self.todo_list:
             await self.visite(url)
 
     async def visite(self, url: str) -> None:
@@ -73,15 +82,19 @@ class AmazontrCategories:
         if '&dc' in actual_url:
             actual_url = actual_url.split('&dc')[0]
         print('\n'+actual_url)
-        if (actual_url in self.cats_set) or (actual_url in self.errs_set):
+
+        actual_catno = self.get_catno(actual_url)
+        print(actual_catno)
+        if (actual_catno in self.cats_set) or (actual_catno in self.errs_set):
             print("Duplicate")
             return
 
         if (resp.status >= 300):
             print("Error", resp.status)
-            self.errs_set.add(actual_url)
-            print(len(self.cats_set), "categorie(s)")
-            print(len(self.errs_set), "error url(s)")
+            self.errs_list.append(actual_url)
+            self.errs_set.add(actual_catno)
+            print(len(self.cats_list), "categorie(s)")
+            print(len(self.errs_list), "error url(s)")
             return
     
         try:
@@ -100,25 +113,18 @@ class AmazontrCategories:
                 print("subcat_links", subcat_links)
                 for suburl in subcat_links:
                     await self.visite(suburl)
-            else:
-                see_all = await self.page.querySelector('a#apb-desktop-browse-search-see-all')
-                if see_all:
-                    cat_href = await self.page.evaluate(self.GET_ATTR_JS, see_all, 'href')
-                    if cat_href:
-                        cat_url = 'https://www.amazon.com.tr'+cat_href.split('&ref=')[0]
-                        self.cats_set.add(cat_url)
-                    else:
-                        print("Error: no categorie link")
-                        self.errs_set.add(actual_url)
-                else:
-                    self.cats_set.add(actual_url) # 有的直接就是叶分类页面
+            else: # 翻到底了
+                cat_url = f'https://www.amazon.com.tr/s?rh=n%3A{actual_catno}&fs=true'
+                print("Add cat_url:", cat_url)
+                self.cats_list.append(cat_url)
 
-                print(len(self.cats_set), "categorie(s)")
-                print(len(self.errs_set), "error url(s)")
+                print(len(self.cats_list), "categorie(s)")
+                print(len(self.errs_list), "error url(s)")
         except Exception as e:
             print("Error:", str(e))
-            self.errs_set.add(actual_url)
-            print(len(self.cats_set), "categorie(s)")
+            self.errs_list.append(actual_url)
+            self.errs_set.add(actual_catno)
+            print(len(self.cats_list), "categorie(s)")
             print(len(self.errs_set), "error url(s)")
 
 
@@ -127,21 +133,21 @@ async def main():
     if (len(argv) >= 2) and argv[1] == '--review':
         review = True
 
-    todo = set()
+    todo_list = []
     if not review: # 从头开始
-        todo.add('https://www.amazon.com.tr/b?node=12466323031')
-        todo.add('https://www.amazon.com.tr/s?bbn=12466610031&rh=n%3A12466610031&dc&qid=1727809363&ref=lp_13525981031_ex_n_1')
+        todo_list.append('https://www.amazon.com.tr/s?rh=n%3A12466323031')
+        todo_list.append('https://www.amazon.com.tr/s?rh=n%3A12466610031')
 
-    ac = AmazontrCategories(review, todo)
+    ac = AmazontrCategories(review, todo_list)
     await ac.start()
     await ac.scrape()
     await ac.browser.close()
     
-    cats_links = [{ 'cat_url': url } for url in ac.cats_set]
+    cats_links = [{ 'cat_url': url } for url in ac.cats_list]
     with open('amazontr_categories.json', 'w') as f:
         json.dump(cats_links, f)
     
-    errs_links = [{ 'cat_url': url } for url in ac.errs_set]
+    errs_links = [{ 'cat_url': url } for url in ac.errs_list]
     with open('amazontr_categories_errs.json', 'w') as f:
         json.dump(errs_links, f)
 
