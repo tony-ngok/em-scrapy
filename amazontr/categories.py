@@ -64,12 +64,10 @@ class AmazontrCategories:
     async def visite(self, url: str) -> None:
         resp = await self.page.goto(url, { 'waitUntil': 'networkidle2' })
 
-        actual_url = resp.url
-        if '&fs=' in resp.url:
-            actual_url = actual_url.split('&fs=')[0]+'&fs=true'
-        elif '&dc' in resp.url:
+        actual_url = self.page.url
+        if '&dc' in actual_url:
             actual_url = actual_url.split('&dc')[0]
-        print(actual_url)
+        print('\n'+actual_url)
         if (actual_url in self.cats_set) or (actual_url in self.errs_set):
             print("Duplicate")
             return
