@@ -41,7 +41,6 @@ class AmazontrCategories:
         resp = await self.page.goto(url)
         actual_url = resp.url
         clean_url = actual_url.split('fs=true')[0]+'fs=true'
-        print(clean_url)
 
         if (resp.status >= 300):
             print("Error", resp.status)
@@ -53,6 +52,7 @@ class AmazontrCategories:
             subcat_links = []
             for subcat in subcats:
                 cat_name = await self.page.evaluate(self.GET_TXT_JS, (await subcat.querySelector('span')))
+                print(cat_name)
                 if cat_name == 'Cinsel Sağlık ve Aile Planlaması':
                     continue
 
