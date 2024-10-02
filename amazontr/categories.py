@@ -1,5 +1,5 @@
+import asyncio
 import json
-from asyncio import run
 from sys import argv
 
 from pyppeteer import launch
@@ -63,6 +63,11 @@ class AmazontrCategories:
 
     async def visite(self, url: str) -> None:
         resp = await self.page.goto(url, { 'waitUntil': 'networkidle2' })
+
+        accept = self.page.querySelector('input[id="sp-cc-accept"]')
+        if accept:
+            await self.page.click('input[id="sp-cc-accept"]')
+            await asyncio.sleep(1)
 
         actual_url = self.page.url
         if '&dc' in actual_url:
@@ -142,4 +147,4 @@ async def main():
 
 
 if __name__ == '__main__':
-    run(main())
+    asyncio.run(main())
