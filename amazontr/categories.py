@@ -26,25 +26,27 @@ class AmazontrCategories:
     }
 
     def __init__(self, review: bool, todo: set = set()) -> None:
-        try:
-            with open('amazontr_categories.json', 'r', encoding='utf-8') as f_cats: 
-               self.cats_set = set([cat['cat_url'] for cat in json.load(f_cats)])
-        except:
-            print("No cats file")
-            self.cats_set = set(todo)
-        
         if review:
+            try:
+                with open('amazontr_categories.json', 'r', encoding='utf-8') as f_cats: 
+                    self.cats_set = set([cat['cat_url'] for cat in json.load(f_cats)])
+            except:
+                print("No cats file")
+                self.cats_set = set(todo)
+        
             try:
                 with open('amazontr_categories_errs.json', 'r', encoding='utf-8') as f_errs: # 前面的出错
                     self.todo_set = set([cat['cat_url'] for cat in json.load(f_errs)])
             except:
                 print("No prev errs")
                 self.todo_set = set()
-        else:
-            self.todo_set = todo
 
-        print(len(self.cats_set), "categorie(s)")
-        print(len(self.todo_set), "url(s) to do")
+            print(len(self.cats_set), "categorie(s)")
+            print(len(self.todo_set), "url(s) to do")
+        else:
+            print("Start anew")
+            self.cats_set = set()
+            self.todo_set = todo
 
         self.errs_set = set()
 
