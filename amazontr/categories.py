@@ -65,7 +65,8 @@ class AmazontrCategories:
             cat_href = await self.page.evaluate(self.GET_ATTR_JS, (await self.page.querySelector('a#apb-desktop-browse-search-see-all')), 'href')
             cat_url = 'https://www.amazon.com.tr'+cat_href.split('&ref=')[0]
             self.cats_set.add(cat_url)
-            print("cat_links", self.cats_set)
+            print("cat_links:", len(self.cats_set), "categorie(s)")
+            print(len(self.errs_set), "error url(s)")
 
 
 async def main():
