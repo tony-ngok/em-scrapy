@@ -125,8 +125,8 @@ async def main():
 
     todo_list = []
     if not review: # 从头开始
-        todo_list.append(('https://www.amazon.com.tr/s?rh=n%3A12572036031&fs=true', 1))
-        todo_list.append(('https://www.amazon.com.tr/s?rh=n%3A13526710031&fs=true', 1))
+        with open('amazontr_categories.json', 'r', encoding='utf-8') as f_cats:
+            todo_list = [(cat['cat_url'], 1) for cat in json.load(f_cats)]
 
     ac = AmazontrAsins(review, todo_list)
     await ac.start()
@@ -134,13 +134,13 @@ async def main():
     await ac.browser.close()
     
     asins_links = ',\n'.join([f'{{ "asin": "{asin}" }}' for asin in ac.asins_dict])
-    with open('amazontr_asins.json', 'w') as f:
+    with open('amazontr_asins.json', 'w', encoding='utf-8') as f:
         f.write('[\n')
         f.write(asins_links)
         f.write('\n]')
     
     errs_links = ',\n'.join([f'{{ "cat_url": {url}, "from_page": {fp} }}' for url, fp in ac.errs_dict.items()])
-    with open('amazontr_asins_errs.json', 'w') as f:
+    with open('amazontr_asins_errs.json', 'w', encoding='utf-8') as f:
         f.write('[\n')
         f.write(errs_links)
         f.write('\n]')
