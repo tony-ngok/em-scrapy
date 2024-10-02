@@ -64,7 +64,7 @@ class AmazontrCategories:
     async def visite(self, url: str) -> None:
         resp = await self.page.goto(url, { 'waitUntil': 'networkidle2' })
 
-        accept = self.page.querySelector('input[id="sp-cc-accept"]')
+        accept = await self.page.querySelector('input[id="sp-cc-accept"]')
         if accept:
             await self.page.click('input[id="sp-cc-accept"]')
             await asyncio.sleep(1)
