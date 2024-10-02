@@ -125,7 +125,7 @@ async def main():
         todo.add('https://www.amazon.com.tr/b?node=12466323031')
         todo.add('https://www.amazon.com.tr/s?bbn=12466610031&rh=n%3A12466610031&dc&qid=1727809363&ref=lp_13525981031_ex_n_1')
 
-    ac = AmazontrCategories(review)
+    ac = AmazontrCategories(review, todo)
     await ac.start()
     await ac.scrape()
     await ac.browser.close()
