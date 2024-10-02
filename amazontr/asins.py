@@ -30,12 +30,12 @@ class AmazontrCategories:
         if review:
             try:
                 with open('amazontr_categories.json', 'r', encoding='utf-8') as f_cats: 
-                    self.cats_list = [cat['cat_url'] for cat in json.load(f_cats)] # 已经获得的分类页面
-                    self.cats_set = set([self.get_catno(url) for url in self.cats_list]) # 不好直接用url hash（太长了，容易误查重）
+                    self.asins_list = [cat['cat_url'] for cat in json.load(f_cats)] # 已经获得的分类页面
+                    self.asin_set = set([self.get_catno(url) for url in self.asins_list]) # 不好直接用url hash（太长了，容易误查重）
             except:
                 print("No cats file")
-                self.cats_list = []
-                self.cats_set = set()
+                self.asins_list = []
+                self.asin_set = set()
         
             try:
                 with open('amazontr_categories_errs.json', 'r', encoding='utf-8') as f_errs: # 前面的出错
@@ -44,12 +44,12 @@ class AmazontrCategories:
                 print("No prev errs")
                 self.todo_list = []
 
-            print(len(self.cats_set), "categorie(s)")
+            print(len(self.asins_list), "categorie(s)")
             print(len(self.todo_list), "url(s) to do")
         else:
             print("Start anew")
-            self.cats_list = []
-            self.cats_set = set()
+            self.asins_list = []
+            self.asin_set = set()
             self.todo_list = todo
 
         self.errs_list = []
@@ -83,7 +83,7 @@ class AmazontrCategories:
 
         actual_catno = self.get_catno(actual_url)
         print(actual_catno)
-        if (actual_catno in self.cats_set) or (actual_catno in self.errs_set):
+        if (actual_catno in self.asin_set) or (actual_catno in self.errs_set):
             print("Duplicate")
             return
 
@@ -91,8 +91,8 @@ class AmazontrCategories:
             print("Error", resp.status)
             self.errs_list.append(actual_url)
             self.errs_set.add(actual_catno)
-            print(len(self.cats_set), "categorie(s)")
-            print(len(self.errs_set), "error url(s)")
+            print(len(self.asins_list), "categorie(s)")
+            print(len(self.errs_list), "error url(s)")
             return
     
         try:
@@ -114,16 +114,15 @@ class AmazontrCategories:
             else: # 翻到底了
                 cat_url = f'https://www.amazon.com.tr/s?rh=n%3A{actual_catno}&fs=true'
                 print("Add cat_url:", cat_url)
-                self.cats_list.append(cat_url)
-                self.cats_set.add(actual_catno)
+                self.asins_list.append(cat_url)
 
-                print(len(self.cats_set), "categorie(s)")
-                print(len(self.errs_set), "error url(s)")
+                print(len(self.asins_list), "categorie(s)")
+                print(len(self.errs_list), "error url(s)")
         except Exception as e:
             print("Error:", str(e))
             self.errs_list.append(actual_url)
             self.errs_set.add(actual_catno)
-            print(len(self.cats_set), "categorie(s)")
+            print(len(self.asins_list), "categorie(s)")
             print(len(self.errs_set), "error url(s)")
 
 
@@ -142,7 +141,7 @@ async def main():
     await ac.scrape()
     await ac.browser.close()
     
-    cats_links = [{ 'cat_url': url } for url in ac.cats_list]
+    cats_links = [{ 'cat_url': url } for url in ac.asins_list]
     with open('amazontr_categories.json', 'w') as f:
         json.dump(cats_links, f)
     
