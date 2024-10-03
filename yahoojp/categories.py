@@ -92,6 +92,7 @@ class YahoojpCategories:
             if resp.status >= 300:
                 raise Exception(f"Error {resp.status}")
 
+            await asyncio.sleep(randint(500, 1500)/1000.0)
             subcats = (await self.page.querySelectorAll('li.style_SubCategoryList__subCategoryItem__MdKvA > a'))[1:]
             if not subcats:
                 cat_url = f'https://shopping.yahoo.co.jp/category/{catno}/list'
@@ -105,8 +106,6 @@ class YahoojpCategories:
                 hrefs = [await self.page.evaluate(self.GET_ATTR_JS, sc, 'href') for sc in subcats]
                 print(hrefs)
                 for i, href in enumerate(hrefs):
-                    await asyncio.sleep(randint(1000, 3000)/1000.0)
-                    
                     subcats = (await self.page.querySelectorAll('li.style_SubCategoryList__subCategoryItem__MdKvA > a'))[1:]
                     subcat = subcats[i]
                     nav = await asyncio.gather(
@@ -142,11 +141,15 @@ async def main():
     await ac.scrape()
     await ac.browser.close()
 
-    with open('amazontr_categories.json', 'w') as f:
-        json.dump(ac.cats_list, f)
+    with open('yahoojp_categories.json', 'w') as f:
+        f.write('[\n')
+        f.write(',\n'.join(ac.cats_list))
+        f.write('\n]')
     
-    with open('amazontr_categories_errs.json', 'w') as f:
-        json.dump(ac.errs_list, f)
+    with open('yahoojp_categories_errs.json', 'w') as f:
+        f.write('[\n')
+        f.write(',\n'.join(ac.errs_list))
+        f.write('\n]')
 
 
 if __name__ == '__main__':
