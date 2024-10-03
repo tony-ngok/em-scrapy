@@ -78,7 +78,7 @@ class YahoojpCategories:
     async def scrape(self):
         for url in self.todo_list:
             resp = await self.page.goto(url)
-            await self.visite(url)
+            await self.visite(url, resp)
 
     async def visite(self, url: str, resp: Response) -> None: # 由地址栏访问站点
         print('\n'+url)
@@ -111,7 +111,7 @@ class YahoojpCategories:
                             subcat.click(),
                             self.page.waitForNavigation()
                         )
-                        await self.visite(nav[1], href)
+                        await self.visite(href, nav[1])
                         await self.page.goBack()
 
         except Exception as e:
