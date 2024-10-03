@@ -1,5 +1,3 @@
-# https://shopping.yahoo.co.jp/category/2501/recommend?sc_i=shp_pc_top_cate_menu_cosm_and_frag:2501:rcmd
-
 import asyncio
 import json
 import re
@@ -19,6 +17,7 @@ class YahoojpCategories:
         "accept-language": "fr-FR,fr;q=0.9,en-GB;q=0.8,en;q=0.7",
         "dnt": "1",
         "priority": "u=0, i",
+        "referer": "https://shopping.yahoo.co.jp/category/2501/recommend?sc_i=shp_pc_top_cate_menu_cosm_and_frag:2501:rcmd",
         "sec-ch-ua": '"Microsoft Edge";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
         "sec-ch-ua-arch": '"x86"',
         "sec-ch-ua-full-version-list": '"Microsoft Edge";v="129.0.2792.65", "Not=A?Brand";v="8.0.0.0", "Chromium";v="129.0.6668.71"',
@@ -34,7 +33,7 @@ class YahoojpCategories:
         "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0"
     }
 
-    def __init__(self, resume: bool, todo: list = []) -> None:
+    def __init__(self, resume: bool = False, todo: list = []) -> None:
         if resume: # 断点续传模式（主要为调试查错用）
             try:
                 with open('yahoojp_categories.json', 'r', encoding='utf-8') as f_errs: 
@@ -62,11 +61,6 @@ class YahoojpCategories:
         
         self.errs_list = []
         self.errs_set = set()
-    
-    def get_catno(self, url: str):
-        catno_match = re.findall(r'/(\d+)', url)
-        if catno_match:
-            return catno_match[-1]
 
     async def start(self):
         self.browser = await launch(headless=False)
