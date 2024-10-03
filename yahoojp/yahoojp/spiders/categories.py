@@ -36,7 +36,7 @@ class YahoojpCategories(scrapy.Spider):
         yield scrapy.Request(self.start_urls[0], headers=self.headers, callback=self.parse)
 
     def parse(self, response: HtmlResponse):
-        sub_cats = response.css('style_SubCategoryList__subCategoryItem__MdKvA > a')[1:] # 去掉全部商品
+        sub_cats = response.css('li.style_SubCategoryList__subCategoryItem__MdKvA > a')[1:] # 去掉全部商品
         if not sub_cats:
             yield { 'cat_url': response.url.split('?')[0] }
         else:
