@@ -94,25 +94,24 @@ class YahoojpCategories:
 
             subcats = (await self.page.querySelectorAll('li.style_SubCategoryList__subCategoryItem__MdKvA > a'))[1:]
             if not subcats:
+                cat_url = f'https://shopping.yahoo.co.jp/category/{catno}/list'
                 if catno not in self.cats_list: # 翻到叶分类了
-                    cat_url = f'https://shopping.yahoo.co.jp/category/{catno}/list'
-                    if catno not in self.cats_list:
-                        self.cats_list.append(cat_url)
-                        self.cats_set.add(catno)
-                    print(len(self.cats_set), "categorie(s)")
-                    print(len(self.errs_set), "error url(s)")
-                    return
-                else:
-                    hrefs = [await self.page.evaluate(self.GET_ATTR_JS, sc, 'href') for sc in subcats]
-                    print(hrefs)
-                    for subcat, href in zip(subcats, hrefs):
-                        await asyncio.sleep(randint(1000, 5000)/1000.0)
-                        nav = await asyncio.gather(
-                            subcat.click(),
-                            self.page.waitForNavigation()
-                        )
-                        await self.visite(href, nav[1])
-                        await self.page.goBack()
+                    self.cats_list.append(cat_url)
+                    self.cats_set.add(catno)
+                print(len(self.cats_set), "categorie(s)")
+                print(len(self.errs_set), "error url(s)")
+                return
+            else:
+                hrefs = [await self.page.evaluate(self.GET_ATTR_JS, sc, 'href') for sc in subcats]
+                print(hrefs)
+                for subcat, href in zip(subcats, hrefs):
+                    await asyncio.sleep(randint(1000, 5000)/1000.0)
+                    nav = await asyncio.gather(
+                        subcat.click(),
+                        self.page.waitForNavigation()
+                    )
+                    await self.visite(href, nav[1])
+                    await self.page.goBack()
 
         except Exception as e:
             print("Error:", str(e))
