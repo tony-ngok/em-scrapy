@@ -133,13 +133,13 @@ async def main():
     await ac.scrape()
     await ac.browser.close()
     
-    asins_links = ',\n'.join([f'{{ "asin": "{asin}" }}' for asin in ac.asins_dict])
+    asins_links = ',\n'.join([f'{{"asin": "{asin}"}}' for asin in ac.asins_dict])
     with open('amazontr_asins.json', 'w', encoding='utf-8') as f:
         f.write('[\n')
         f.write(asins_links)
         f.write('\n]')
     
-    errs_links = ',\n'.join([f'{{ "cat_url": {url}, "from_page": {fp} }}' for url, fp in ac.errs_dict.items()])
+    errs_links = ',\n'.join([f'{{"cat_url": {url}, "from_page": {fp}}}' for url, fp in ac.errs_dict.items()])
     with open('amazontr_asins_errs.json', 'w', encoding='utf-8') as f:
         f.write('[\n')
         f.write(errs_links)
