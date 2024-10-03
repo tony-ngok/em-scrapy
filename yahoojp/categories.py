@@ -92,7 +92,7 @@ class YahoojpCategories:
             if resp.status >= 300:
                 raise Exception(f"Error {resp.status}")
 
-            subcats = await self.page.querySelectorAll('li.style_SubCategoryList__subCategoryItem__MdKvA > a')[1:]
+            subcats = (await self.page.querySelectorAll('li.style_SubCategoryList__subCategoryItem__MdKvA > a'))[1:]
             if not subcats:
                 if catno not in self.cats_list: # 翻到叶分类了
                     cat_url = f'https://shopping.yahoo.co.jp/category/{catno}/list'
