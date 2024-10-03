@@ -104,8 +104,11 @@ class YahoojpCategories:
             else:
                 hrefs = [await self.page.evaluate(self.GET_ATTR_JS, sc, 'href') for sc in subcats]
                 print(hrefs)
-                for subcat, href in zip(subcats, hrefs):
-                    await asyncio.sleep(randint(1000, 5000)/1000.0)
+                for i, href in enumerate(hrefs):
+                    await asyncio.sleep(randint(1000, 3000)/1000.0)
+                    
+                    subcats = (await self.page.querySelectorAll('li.style_SubCategoryList__subCategoryItem__MdKvA > a'))[1:]
+                    subcat = subcats[i]
                     nav = await asyncio.gather(
                         subcat.click(),
                         self.page.waitForNavigation()
