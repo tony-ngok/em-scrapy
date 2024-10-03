@@ -5,7 +5,7 @@ from scrapy.http import HtmlResponse
 # scrapy crawl yahoojp_categories -O yahoojp_categories.json
 class YahoojpCategories(scrapy.Spider):
     name = "yahoojp_categories"
-    allowed_domains = ['']
+    allowed_domains = ['shopping.yahoo.co.jp']
     start_urls = ['https://shopping.yahoo.co.jp/category/2501/recommend?sc_i=shp_pc_top_cate_menu_cosm_and_frag:2501:rcmd']
 
     def __init__(self, *args, **kwargs):
@@ -36,13 +36,12 @@ class YahoojpCategories(scrapy.Spider):
         yield scrapy.Request(self.start_urls[0], headers=self.headers, callback=self.parse)
 
     def parse(self, response: HtmlResponse):
-        sub_cats = response.css('style_SubCategoryList__subCategoryItem__MdKvA > a')
+        sub_cats = response.css('style_SubCategoryList__subCategoryItem__MdKvA > a')[1:] # 去掉全部商品
         if not sub_cats:
             yield { 'cat_url': response.url.split('?')[0] }
-        
-        sub_cats = sub_cats[1:] # 去掉全部商品
-        for sub_cat in sub_cats:
-            headers = { **self.headers, 'referer': response.url }
-            yield scrapy.Request(sub_cat.css('::attr(href)').get(),
-                                 headers=headers,
-                                 callback=self.parse)
+        else:
+            for sub_cat in sub_cats:
+                headers = { **self.headers, 'referer': response.url }
+                yield scrapy.Request(sub_cat.css('::attr(href)').get(),
+                                    headers=headers,
+                                    callback=self.parse)
