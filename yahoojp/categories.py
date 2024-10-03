@@ -111,8 +111,10 @@ class YahoojpCategories:
                         self.page.waitForNavigation()
                     )
                     await self.visite(href, nav[1])
-                    await self.page.goBack()
-
+                    await asyncio.gather(
+                        self.page.goBack(),
+                        self.page.waitForNavigation()
+                    )
         except Exception as e:
             print("Error:", str(e))
             if catno not in self.errs_set:
@@ -136,14 +138,12 @@ async def main():
     await ac.start()
     await ac.scrape()
     await ac.browser.close()
-    
-    cats_links = [{ 'cat_url': url } for url in ac.cats_list]
+
     with open('amazontr_categories.json', 'w') as f:
-        json.dump(cats_links, f)
+        json.dump(ac.cats_list, f)
     
-    errs_links = [{ 'cat_url': url } for url in ac.errs_list]
     with open('amazontr_categories_errs.json', 'w') as f:
-        json.dump(errs_links, f)
+        json.dump(ac.errs_list, f)
 
 
 if __name__ == '__main__':
