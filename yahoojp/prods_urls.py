@@ -15,6 +15,7 @@ class YahoojpProdUrls:
         "accept-language": "fr-FR,fr;q=0.9,en-GB;q=0.8,en;q=0.7",
         "dnt": "1",
         "priority": "u=0, i",
+        "referer": "https://shopping.yahoo.co.jp/category/2501/recommend?sc_i=shp_pc_top_cate_menu_cosm_and_frag:2501:rcmd",
         "sec-ch-ua": '"Microsoft Edge";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
         "sec-ch-ua-arch": '"x86"',
         "sec-ch-ua-full-version-list": '"Microsoft Edge";v="129.0.2792.65", "Not=A?Brand";v="8.0.0.0", "Chromium";v="129.0.6668.71"',
