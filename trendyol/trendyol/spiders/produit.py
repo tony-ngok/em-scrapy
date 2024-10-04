@@ -100,7 +100,7 @@ class TrendyolProduit(scrapy.Spider):
             print("Preparse error:", url, f"({str(e)})")
 
     async def get_json(self, page):
-        scr_appl = await page.query_selector_all('script[type="application/javascript"]')
+        scr_appl = await page.query_selector_all('script[type="application/javascript"], script[type="application/ld+json"]')
 
         prod_json = None
         wp_json = None
