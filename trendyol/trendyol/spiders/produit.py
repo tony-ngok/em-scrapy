@@ -1,4 +1,5 @@
 import asyncio
+import json
 import re
 from datetime import datetime
 
@@ -86,6 +87,15 @@ class TrendyolProduit(scrapy.Spider):
         except Exception as e:
             print("Preparse error:", url, f"({str(e)})")
 
+    async def get_json(self, page):
+        scr_appl = await page.query_selector_all('script[type="application/javascript"]')
+
+        for scr in scr_appl:
+            scr_txt = await scr.text_content()
+            json_match = re.findall(r'__PRODUCT_DETAIL_APP_INITIAL_STATE__=(\{.*\});', scr_txt)
+            if json_match:
+                return json.loads(json_match[0])
+
     async def get_video(self, page):
         video = None
 
@@ -95,10 +105,12 @@ class TrendyolProduit(scrapy.Spider):
                 video_sel.click(),
                 page.wait_for_selector('div.gallery-video-container')
             )
+
             video_wait2 = await asyncio.gather(
                 video_wait1[1].click(),
                 page.wait_for_selector('video.video-player > source[type="video/mp4"]', state='attached') # 不用等到要素出现在视窗中
             )
+
             video = await video_wait2[1].get_attribute('src')
         
         return video
@@ -122,6 +134,9 @@ class TrendyolProduit(scrapy.Spider):
                 await init_butt.click()
                 await asyncio.sleep(1)
             
+            prod_json = await self.get_json(page)
+            print(prod_json)
+
             video = await self.get_video(page)
 
             yield {
