@@ -1,4 +1,5 @@
 import asyncio
+import re
 from datetime import datetime
 
 import requests
@@ -10,10 +11,11 @@ from scrapy_playwright.page import PageMethod
 # scrapy crawl trendyol_produit -O trendyol_produits.json # 复写整个数据
 class TrendyolProduit(scrapy.Spider):
     name = 'trendyol_produit'
-    allowed_domains = ['www.trendyol.com']
+    allowed_domains = ['www.trendyol.com', 'apigw.trendyol.com']
     start_urls = [
         'https://www.trendyol.com/sihhat-pharma/sihhat-aqua-beyaz-vazelin-50-ml-p-51920806',
-        'https://www.trendyol.com/the-fine-organics/avustralya-nanesi-aktif-karbon-dis-beyazlatma-tozu-50g-p-762586955'
+        'https://www.trendyol.com/the-fine-organics/avustralya-nanesi-aktif-karbon-dis-beyazlatma-tozu-50g-p-762586955',
+        'https://www.trendyol.com/oxvin/walker-baggy-bol-paca-2-iplik-orta-kalinlikta-uzun-esofman-alti-orijinal-kalip-p-855410436'
     ]
 
     def __init__(self, *args, **kwargs):
@@ -49,58 +51,88 @@ class TrendyolProduit(scrapy.Spider):
             print(f"USD/TRY: {self.exch_rate}".replace('.', ','))
         
     def start_requests(self):
-        for url in self.start_urls:
+        for i, url in enumerate(self.start_urls, start=1):
+            print(url, f"({i:_}/{len(self.start_urls):_})".replace("_", "."))
+
+            id_match = re.findall(r'p-(\d+)$', url)
+            if id_match:
+                product_id = id_match[0]
+                yield scrapy.Request(f'https://apigw.trendyol.com/discovery-web-productgw-service/api/product-detail/{product_id}/html-content?channelId=1',
+                                     headers=self.headers,
+                                     meta={
+                                         "url": url,
+                                         "product_id": product_id,
+                                     },
+                                     callback=self.pre_parse)
+
+    def pre_parse(self, response: HtmlResponse):
+        url = response.meta['url']
+        product_id = response.meta['product_id']
+
+        try:
+            descr_page = response.json()['result']
             yield scrapy.Request(url, headers=self.headers,
                                  meta={
-                                    "url": url,
-                                    "playwright": True,
-                                    "playwright_include_page": True,
-                                    "playwright_page_methods": [
-                                        PageMethod("wait_for_selector", "div.product-detail-wrapper")
-                                    ]
-                                },
-                                 callback=self.parse)
-    
+                                        "url": url,
+                                        "product_id": product_id,
+                                        "descr_page": descr_page,
+                                        "playwright": True,
+                                        "playwright_include_page": True,
+                                        "playwright_page_methods": [
+                                            PageMethod("wait_for_selector", "div.product-detail-wrapper")
+                                        ]
+                                     },
+                                     callback=self.parse)
+        except Exception as e:
+            print("Preparse error:", url, f"({str(e)})")
+
     async def get_video(self, page):
         video = None
 
         video_sel = await page.query_selector('div.video-player')
         if video_sel:
-            try:
-                video_wait1 = await asyncio.gather(
-                    video_sel.click(),
-                    page.wait_for_selector('div.gallery-video-container')
-                )
-                video_wait2 = await asyncio.gather(
-                    video_wait1[1].click(),
-                    page.wait_for_selector('video.video-player > source[type="video/mp4"]', state='attached') # 不用等到要素出现在视窗中
-                )
-                video = await video_wait2[1].get_attribute('src')
-            except Exception as e:
-                print('Get video error', str(e))
+            video_wait1 = await asyncio.gather(
+                video_sel.click(),
+                page.wait_for_selector('div.gallery-video-container')
+            )
+            video_wait2 = await asyncio.gather(
+                video_wait1[1].click(),
+                page.wait_for_selector('video.video-player > source[type="video/mp4"]', state='attached') # 不用等到要素出现在视窗中
+            )
+            video = await video_wait2[1].get_attribute('src')
         
         return video
 
     async def parse(self, response: HtmlResponse):
+        url = response.meta['url']
+        product_id = response.meta['product_id']
+        descr_page = response.meta['descr_page']
         page = response.meta['playwright_page']
 
-        # 首次进入页面时
-        accept = await page.query_selector('button#onetrust-accept-btn-handler')
-        if accept:
-            await asyncio.gather(
-                accept.click(),
-                page.reload()
-            )
-        init_butt = await page.query_selector('button.onboarding-popover__default-renderer-primary-button')
-        if init_butt:
-            await init_butt.click()
-            await asyncio.sleep(1)
-        
-        video = await self.get_video(page)
+        try:
+            # 首次进入页面时
+            accept = await page.query_selector('button#onetrust-accept-btn-handler')
+            if accept:
+                await asyncio.gather(
+                    accept.click(),
+                    page.reload()
+                )
+            init_butt = await page.query_selector('button.onboarding-popover__default-renderer-primary-button')
+            if init_butt:
+                await init_butt.click()
+                await asyncio.sleep(1)
+            
+            video = await self.get_video(page)
 
-        await page.close()
-        yield {
-            "date": datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
-            "url": response.meta['url'],
-            "videos": video,
-        }
+            yield {
+                "date": datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
+                "url": url,
+                "product_id": product_id,
+                "description": descr_page,
+                "sku": product_id,
+                "videos": video,
+            }
+        except Exception as e:
+            print("Parse error:", url, f"({str(e)})")
+        finally:
+            await page.close()
