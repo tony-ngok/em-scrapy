@@ -182,21 +182,21 @@ class TrendyolProduit(scrapy.Spider):
         for spec in specs_infos:
             k = spec['key']['name']
             v = spec['value']['name']
-            specs.append[{
+            specs.append({
                 "name": k,
                 "value": v
-            }]
+            })
 
             kk = k.lower()
             vv = v.lower()
             if ('gramaj' in kk) or ('hacim' in kk) or ('ağırlık' in kk):
-                weight = self.get_dim(vv, r'\b(\d+(?:\.\d+)?)\s?(g|kg|ml|l|cc)\b')
+                weight = self.get_dim(vv, r'(\d+(?:\.\d+)?)\s?(g|kg|ml|l|cc)')
             elif ('derinlik' in kk):
-                length = self.get_dim(vv, r'\b(\d+(?:\.\d+)?)\s?(m|cm)\b')
+                length = self.get_dim(vv, r'(\d+(?:\.\d+)?)\s?(m|cm)')
             elif ('genişlik' in kk):
-                width = self.get_dim(vv, r'\b(\d+(?:\.\d+)?)\s?(m|cm)\b')
+                width = self.get_dim(vv, r'(\d+(?:\.\d+)?)\s?(m|cm)')
             elif ('yükseklik' in kk):
-                height = self.get_dim(vv, r'\b(\d+(?:\.\d+)?)\s?(m|cm)\b')
+                height = self.get_dim(vv, r'(\d+(?:\.\d+)?)\s?(m|cm)')
         
         return {
             "specifications": specs,
@@ -221,7 +221,7 @@ class TrendyolProduit(scrapy.Spider):
             "barcode": vi['barcode'],
             "sku": None,
             "option_values": [{
-                "option_id": opt_info[0]['id'],
+                "option_id": str(opt_info[0]['id']),
                 "option_value_id": None,
                 "option_name": opt_info[0]['name'],
                 "option_value": vi['value']
@@ -253,17 +253,17 @@ class TrendyolProduit(scrapy.Spider):
         page = response.meta['playwright_page']
 
         try:
-            # 首次进入页面时
+        # 首次进入页面时
             accept = await page.query_selector('button#onetrust-accept-btn-handler')
             if accept:
                 await asyncio.gather(
                     accept.click(),
                     page.reload()
                 )
-            init_butt = await page.query_selector('button.onboarding-popover__default-renderer-primary-button')
-            if init_butt:
-                await init_butt.click()
-                await asyncio.sleep(1)
+            # init_butt = await page.query_selector('button.onboarding-popover__default-renderer-primary-button')
+            # if init_butt:
+            #     await init_butt.click()
+            #     await asyncio.sleep(1)
             
             prod_json, wp_json = await self.get_json(page)
             if not prod_json:
