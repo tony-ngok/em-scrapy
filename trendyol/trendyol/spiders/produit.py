@@ -219,7 +219,7 @@ class TrendyolProduit(scrapy.Spider):
         return [{
             "variant_id": str(vi['itemNumber']),
             "barcode": vi['barcode'],
-            "sku": None,
+            "sku": '',
             "option_values": [{
                 "option_id": str(opt_info[0]['id']),
                 "option_value_id": None,
@@ -270,6 +270,7 @@ class TrendyolProduit(scrapy.Spider):
                 raise Exception("No product JSON")
             if not wp_json:
                 wp_json = {}
+            print(wp_json)
 
             img_list = prod_json.get('images')
             if not img_list:
@@ -294,7 +295,7 @@ class TrendyolProduit(scrapy.Spider):
             spec_info = self.parse_specs(prod_json.get('attributes', []))
 
             cats_list = wp_json.get('itemListElement', [])[1:-1]
-            categories = " > ".join([cat['item']['name'] for cat in cats_list]) if cats_list else None
+            categories = self.parse_cats(cats_list)
 
             video = await self.get_video(page)
 
