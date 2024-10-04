@@ -10,7 +10,6 @@ from scrapy_playwright.page import PageMethod
 # scrapy crawl trendyol_produit -O trendyol_produits.json # 复写整个数据
 class TrendyolProduit(scrapy.Spider):
     name = 'trendyol_produit'
-    download_timeout = 60
     allowed_domains = ['www.trendyol.com']
     start_urls = [
         'https://www.trendyol.com/sihhat-pharma/sihhat-aqua-beyaz-vazelin-50-ml-p-51920806',
@@ -67,17 +66,18 @@ class TrendyolProduit(scrapy.Spider):
 
         video_sel = await page.query_selector('div.video-player')
         if video_sel:
-            video_wait1 = await asyncio.gather(
-                video_sel.click(),
-                page.wait_for_selector('div.gallery-video-container')
-            )
-            if not isinstance(video_wait1[1], Exception):
+            try:
+                video_wait1 = await asyncio.gather(
+                    video_sel.click(),
+                    page.wait_for_selector('div.gallery-video-container')
+                )
                 video_wait2 = await asyncio.gather(
                     video_wait1[1].click(),
-                    page.wait_for_selector('video.video-player > source')
+                    page.wait_for_selector('video.video-player > source[type="video/mp4"]', state='attached') # 不用等到要素出现在视窗中
                 )
-                if not isinstance(video_wait2[1], Exception):
-                    video = video_wait2[1].get_attribute('src')
+                video = await video_wait2[1].get_attribute('src')
+            except Exception as e:
+                print('Get video error', str(e))
         
         return video
 
@@ -89,7 +89,7 @@ class TrendyolProduit(scrapy.Spider):
         if accept:
             await asyncio.gather(
                 accept.click(),
-                await page.reload()
+                page.reload()
             )
         init_butt = await page.query_selector('button.onboarding-popover__default-renderer-primary-button')
         if init_butt:

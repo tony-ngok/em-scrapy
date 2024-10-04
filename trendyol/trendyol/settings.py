@@ -115,3 +115,4 @@ PLAYWRIGHT_LAUNCH_OPTIONS = {
         '--disable-features=site-per-process', 
     ],
 }
+PLAYWRIGHT_DEFAULT_NAVIGATION_TIMEOUT = 60000
