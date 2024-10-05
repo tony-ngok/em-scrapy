@@ -20,12 +20,12 @@ NEWSPIDER_MODULE = "trendyol.spiders"
 ROBOTSTXT_OBEY = True
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
-CONCURRENT_REQUESTS = 6
+#CONCURRENT_REQUESTS = 32
 
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-DOWNLOAD_DELAY = 0.1
+# DOWNLOAD_DELAY = 0.1
 RETRY_TIMES = 300
 # The download delay setting will honor only one of:
 #CONCURRENT_REQUESTS_PER_DOMAIN = 16
@@ -99,21 +99,3 @@ FEED_EXPORTERS = {
 
 LOG_FILE = 'scrapy.log'
 LOG_LEVEL = 'DEBUG'
-
-DOWNLOAD_HANDLERS = {
-    "http": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
-    "https": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
-}
-
-PLAYWRIGHT_BROWSER_TYPE = 'chromium'  # or 'firefox' or 'webkit'
-PLAYWRIGHT_LAUNCH_OPTIONS = {
-    # "headless": True,
-    "headless": False,
-    'args': [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-features=site-per-process', 
-    ],
-}
-PLAYWRIGHT_DEFAULT_NAVIGATION_TIMEOUT = 300000
-HTTPERROR_ALLOWED_CODES = [404]
