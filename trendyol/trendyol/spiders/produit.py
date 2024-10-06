@@ -140,8 +140,14 @@ class TrendyolProduit(scrapy.Spider):
         '''
 
         if not specs_infos:
-            return None
-        
+            return {
+                "specifications": None,
+                "weight": None,
+                "length": None,
+                "width": None,
+                "height": None
+            }
+
         specs = []
         weight = None
         length = None
@@ -167,7 +173,7 @@ class TrendyolProduit(scrapy.Spider):
                 height = self.get_dim(vv, r'(\d+(?:\.\d+)?)\s?(m|cm)\b')
         
         return {
-            "specifications": specs,
+            "specifications": specs if specs else None,
             "weight": weight,
             "length": length,
             "width": width,
