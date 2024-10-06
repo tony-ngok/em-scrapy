@@ -17,7 +17,7 @@ NEWSPIDER_MODULE = "trendyol.spiders"
 #USER_AGENT = "trendyol (+http://www.yourdomain.com)"
 
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = True
+ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
@@ -27,6 +27,7 @@ ROBOTSTXT_OBEY = True
 # See also autothrottle settings and docs
 DOWNLOAD_DELAY = 0.2
 RETRY_TIMES = 500
+RETRY_HTTP_CODES = [403]
 # The download delay setting will honor only one of:
 #CONCURRENT_REQUESTS_PER_DOMAIN = 16
 #CONCURRENT_REQUESTS_PER_IP = 16
@@ -100,4 +101,4 @@ FEED_EXPORTERS = {
 LOG_FILE = 'scrapy.log'
 LOG_LEVEL = 'DEBUG'
 
-HTTPERROR_ALLOWED_CODES = [404]
+HTTPERROR_ALLOWED_CODES = [403, 404]

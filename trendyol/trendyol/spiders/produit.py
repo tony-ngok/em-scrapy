@@ -5,6 +5,7 @@ from datetime import datetime
 import requests
 import scrapy
 from scrapy.http import HtmlResponse
+from scrapy.selector import SelectorList
 
 
 # scrapy crawl trendyol_produit -O trendyol_produits.json # 复写整个数据
@@ -49,7 +50,7 @@ class TrendyolProduit(scrapy.Spider):
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0"
         }
 
-        with open('trendyol_prods_urls.json', 'r', encoding='utf-8') as f_in:
+        with open('coursi.json', 'r', encoding='utf-8') as f_in:
             self.start_urls = [prod['prod_url'] for prod in json.load(f_in)]
         print(f"Total {len(self.start_urls):_} produit(s)".replace('_', '.'))
 
@@ -79,23 +80,18 @@ class TrendyolProduit(scrapy.Spider):
         获得重要数据聚集的JSON
         '''
 
-        scrs = response.css('script[type="application/javascript"], script[type="application/ld+json"]')
+        scrs = response.css('script[type="application/javascript"]')
 
         prod_json = None
-        wp_json = None
         for scr in scrs:
             scr_txt = scr.css('::text').get('').strip()
 
             json_match = re.findall(r'__PRODUCT_DETAIL_APP_INITIAL_STATE__=(\{.*\});', scr_txt)
             if json_match:
                 prod_json = json.loads(json_match[0])['product']
-            elif 'WebPage' in scr_txt:
-                wp_json = json.loads(scr_txt)['breadcrumb']
-            
-            if prod_json and wp_json:
                 break
         
-        return (prod_json, wp_json)
+        return prod_json
 
     def parse_descr_info(self, descr_info: list):
         '''
@@ -180,7 +176,7 @@ class TrendyolProduit(scrapy.Spider):
             "height": height
         }
     
-    def parse_cats(self, cats_infos: list):
+    def parse_cats(self, cats_infos: SelectorList):
         '''
         由JSON解析分类
         '''
@@ -188,7 +184,7 @@ class TrendyolProduit(scrapy.Spider):
         if not cats_infos:
             return None
         
-        return " > ".join([cat['item']['name'] for cat in cats_infos])
+        return " > ".join([cat.css('::text').get().strip() for cat in cats_infos])
 
     def parse_vars(self, opt_info: list, vars_infos: list):
         '''
@@ -235,13 +231,10 @@ class TrendyolProduit(scrapy.Spider):
     def parse(self, response: HtmlResponse):
         url = response.meta['url']
         
-        prod_json, wp_json = self.get_json(response)
+        prod_json = self.get_json(response)
         if not prod_json:
             print("No product JSON:", url)
             return
-        if not wp_json:
-            print("No categories JSON:", url)
-            wp_json = {}
 
         img_list = prod_json.get('images')
         if not img_list:
@@ -267,7 +260,7 @@ class TrendyolProduit(scrapy.Spider):
         brand_info = prod_json.get('brand', {})
         brand = brand_info['name'] if brand_info.get('name') else None
 
-        cats_list = wp_json.get('itemListElement', [])[1:-1]
+        cats_list = response.css('div#marketing-product-detail-breadcrumb a.product-detail-breadcrumb-item > span')[1:-1]
         categories = self.parse_cats(cats_list)
 
         options = var_parse['options'] # 单一选项名
@@ -304,7 +297,7 @@ class TrendyolProduit(scrapy.Spider):
             "reviews": reviews,
             "rating": rating,
             "sold_count": None,
-            "shipping_fee": 0.00 if prod_json['isFreeCargo'] else round(34.99/self.exch_rate, 2), # https://www.trendyol.com/yardim/sorular/2002?grup=1
+            "shipping_fee": 0.00 if prod_json.get('isFreeCargo') or (price >= 200*self.exch_rate) else round(34.99/self.exch_rate, 2), # https://www.trendyol.com/yardim/sorular/2002?grup=1
             "shipping_days_min": None,
             "shipping_days_max": None,
             "weight": spec_info['weight'],
