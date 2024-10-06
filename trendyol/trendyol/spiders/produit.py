@@ -22,17 +22,17 @@ class TrendyolProduit(scrapy.Spider):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.start_urls = [
-            'https://www.trendyol.com/bubito/kislik-tatli-kapsonlu-bebek-pelus-welsoft-tulum-p-446949530',
-            'https://www.trendyol.com/sihhat-pharma/sihhat-aqua-beyaz-vazelin-50-ml-p-51920806',
-            'https://www.trendyol.com/the-fine-organics/avustralya-nanesi-aktif-karbon-dis-beyazlatma-tozu-50g-p-762586955',
-            'https://www.trendyol.com/l-oreal-paris/panorama-hacim-veren-maskara-koyu-kahverengi-p-796043319',
-            'https://www.trendyol.com/oxvin/walker-baggy-bol-paca-2-iplik-orta-kalinlikta-uzun-esofman-alti-orijinal-kalip-p-855410433',
-            'https://www.trendyol.com/oxvin/walker-baggy-bol-paca-2-iplik-orta-kalinlikta-uzun-esofman-alti-orijinal-kalip-p-855410436',
-            'https://www.trendyol.com/mert-sert-mobilya/vern-120cm-konsol-tv-sehpasi-tv-unitesi-kahve-kosesi-banyo-dolabi-cok-amacli-dolap-p-773280008',
-            'https://www.trendyol.com/bioderma/sebium-foaming-gel-karma-yagli-ve-akne-egilimli-ciltler-icin-yuz-temizleme-jeli-500-ml-p-132469',
-            'https://www.trendyol.com/copierbond/ve-ge-a4-fotokopi-kagidi-80-g-500-lu-5-paket-2500ad-1-koli-p-6026206'
-        ]
+        # self.start_urls = [
+        #     'https://www.trendyol.com/bubito/kislik-tatli-kapsonlu-bebek-pelus-welsoft-tulum-p-446949530',
+        #     'https://www.trendyol.com/sihhat-pharma/sihhat-aqua-beyaz-vazelin-50-ml-p-51920806',
+        #     'https://www.trendyol.com/the-fine-organics/avustralya-nanesi-aktif-karbon-dis-beyazlatma-tozu-50g-p-762586955',
+        #     'https://www.trendyol.com/l-oreal-paris/panorama-hacim-veren-maskara-koyu-kahverengi-p-796043319',
+        #     'https://www.trendyol.com/oxvin/walker-baggy-bol-paca-2-iplik-orta-kalinlikta-uzun-esofman-alti-orijinal-kalip-p-855410433',
+        #     'https://www.trendyol.com/oxvin/walker-baggy-bol-paca-2-iplik-orta-kalinlikta-uzun-esofman-alti-orijinal-kalip-p-855410436',
+        #     'https://www.trendyol.com/mert-sert-mobilya/vern-120cm-konsol-tv-sehpasi-tv-unitesi-kahve-kosesi-banyo-dolabi-cok-amacli-dolap-p-773280008',
+        #     'https://www.trendyol.com/bioderma/sebium-foaming-gel-karma-yagli-ve-akne-egilimli-ciltler-icin-yuz-temizleme-jeli-500-ml-p-132469',
+        #     'https://www.trendyol.com/copierbond/ve-ge-a4-fotokopi-kagidi-80-g-500-lu-5-paket-2500ad-1-koli-p-6026206'
+        # ]
         
         self.headers = {
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8",
@@ -49,6 +49,10 @@ class TrendyolProduit(scrapy.Spider):
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0"
         }
 
+        with open('trendyol_prods_urls.json', 'r', encoding='utf-8') as f_in:
+            self.start_urls = [cat['cat_url'] for cat in json.load(f_in)]
+        print(f"Total {len(self.start_urls):_} produit(s)".replace('_', '.'))
+
         exch = requests.get('https://open.er-api.com/v6/latest/USD')
         try:
             if exch.status_code in range(200, 300):
@@ -59,7 +63,7 @@ class TrendyolProduit(scrapy.Spider):
                 raise Exception("Get USD/TRY: error", exch.status_code)
         except Exception as e:
             print(str(e))
-            self.exch_rate = 34.234075
+            self.exch_rate = 34.27608
         finally:
             print(f"USD/TRY: {self.exch_rate}".replace('.', ','))
 
