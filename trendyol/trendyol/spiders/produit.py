@@ -84,7 +84,7 @@ class TrendyolProduit(scrapy.Spider):
         prod_json = None
         wp_json = None
         for scr in scrs:
-            scr_txt = scr.css('::text').get().strip()
+            scr_txt = scr.css('::text').get('').strip()
 
             json_match = re.findall(r'__PRODUCT_DETAIL_APP_INITIAL_STATE__=(\{.*\});', scr_txt)
             if json_match:
