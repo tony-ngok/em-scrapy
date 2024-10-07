@@ -119,9 +119,9 @@ class TrendyolProduit(scrapy.Spider):
         upc = var_item.get('barcode')
         available_qty = var_item.get('stock')
 
-        option_name = var_item.get('attributeName')
+        option_name = var_item.get('attributeName', '')
         options = [{
-            "id": var_item.get('attributeId'),
+            "id": str(var_item['attributeId']) if (var_item.get('attributeId') is not None) else None,
             "name": option_name
         }] if option_name else None
 
