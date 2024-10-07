@@ -17,6 +17,7 @@ class YahoojpCategories:
         "accept-language": "fr-FR,fr;q=0.9,en-GB;q=0.8,en;q=0.7",
         "dnt": "1",
         "priority": "u=0, i",
+        "referer": "https://www.yahoo.co.jp/",
         "sec-ch-ua": '"Microsoft Edge";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
         "sec-ch-ua-arch": '"x86"',
         "sec-ch-ua-full-version-list": '"Microsoft Edge";v="129.0.2792.65", "Not=A?Brand";v="8.0.0.0", "Chromium";v="129.0.6668.71"',

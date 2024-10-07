@@ -165,8 +165,10 @@ cython_debug/
 *.html
 *.json
 *.xml
+*.js
 *_csvs/
 *_htmls/
 *_jsons/
+*_js/
 
 .DS_Store
