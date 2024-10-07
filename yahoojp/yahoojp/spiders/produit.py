@@ -1,4 +1,5 @@
 import json
+import re
 from datetime import datetime
 
 import requests
@@ -12,13 +13,13 @@ class YahoojpProduit(scrapy.Spider):
     allowed_domains = ["store.shopping.yahoo.co.jp", "lohaco.yahoo.co.jp"]
     start_urls = []
 
-    FILTERS = ['/line.', '/xzly.', '/instabaner.', '/yahoo-instagram-banner.', '/ksk-1.', '/ksk-2.', '/ksk-3.']
+    FILTERS = ['/instabaner.', '/yahoo-instagram-banner.', 'tenbai', 'delivery', 'haisou']
 
-    CM_TO_IN = 0.393701
+    # CM_TO_IN = 0.393701
     G_TO_LB = 0.002205
     KG_TO_LB = 2.20462
-    M_TO_IN = 39.37008
-    MM_TO_IN = 0.03937
+    # M_TO_IN = 39.37008
+    # MM_TO_IN = 0.03937
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -54,7 +55,9 @@ class YahoojpProduit(scrapy.Spider):
             "https://store.shopping.yahoo.co.jp/lifeessence/vcl.html",
             # "https://lohaco.yahoo.co.jp/store/h-lohaco/item/wx88723",
             "https://store.shopping.yahoo.co.jp/mygift/yunth-sk-4580785290040.html",
-            "https://store.shopping.yahoo.co.jp/kscojp/669042492-hnd.html"
+            "https://store.shopping.yahoo.co.jp/kscojp/669042492-hnd.html",
+            "https://store.shopping.yahoo.co.jp/kisekiforyou/kissme-sk-4901433038492.html",
+            "https://store.shopping.yahoo.co.jp/kisocare/kiso-k35.html"
         ] # 测试用
 
         exch = requests.get('https://open.er-api.com/v6/latest/USD')
@@ -97,6 +100,8 @@ class YahoojpProduit(scrapy.Spider):
         if not raw_descr:
             return ''
 
+
+
         return ''
 
     def parse_specs(self, specs_list: list): # TODO
@@ -104,7 +109,15 @@ class YahoojpProduit(scrapy.Spider):
         weight = None
 
         if specs_list:
-            pass
+            for sp in specs_list:
+                spec = {
+                    "name": sp['name'],
+                    "value": ";".join([v['name'] for v in sp['valueList']])
+                }
+                specifications.append(spec)
+            
+                if ('内容量' in sp['name']) and (weight is None):
+                    weight = self.get_dim(spec['value'].lower(), r'(\d+(?:\.\d+)?)\s?(g|kg|ml|l)\b')
 
         return {
             "specifications": specifications if specifications else None,
@@ -173,6 +186,21 @@ class YahoojpProduit(scrapy.Spider):
         diff = (datetime.strptime(deliv_date, '%Y%m%d')-actual).days
         return diff if diff > 0 else 0
     
+    def get_dim(self, txt: str, regex: str):
+        dim_match = re.findall(regex, txt)
+        if dim_match:
+            val = float(dim_match[0][0])
+            unit = dim_match[0][1]
+
+            if unit in {'kg', 'l'}:
+                return round(val*self.KG_TO_LB, 2)
+            if unit in {'g', 'ml'}:
+                return round(val*self.G_TO_LB, 2)
+            # if unit == 'm':
+            #     return round(val*self.M_TO_IN, 2)
+            # if unit == 'cm':
+            #     return round(val*self.CM_TO_IN, 2)
+
     def parse(self, response: HtmlResponse):
         url = response.meta['url']
 
