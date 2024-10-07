@@ -50,7 +50,8 @@ class TrendyolProduit(scrapy.Spider):
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0"
         }
 
-        with open('coursi.json', 'r', encoding='utf-8') as f_in:
+        # with open('coursi.json', 'r', encoding='utf-8') as f_in:
+        with open('trendyol_categories.json', 'r', encoding='utf-8') as f_in:
             self.start_urls = [prod['prod_url'] for prod in json.load(f_in)]
         print(f"Total {len(self.start_urls):_} produit(s)".replace('_', '.'))
 
