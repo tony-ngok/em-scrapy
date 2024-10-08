@@ -137,7 +137,7 @@ class YahoojpProdUrls:
                 else:
                     await asyncio.gather(
                         self.page.evaluate(self.SCROLL_JS),
-                        self.page.waitForSelector(f'li#searchResults{page_no}')
+                        self.page.waitForSelector(f'li#searchResults{i}')
                     )
         except Exception as e:
             print("Error:", str(e))
