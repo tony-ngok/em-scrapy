@@ -13,7 +13,7 @@ class YahoojpProduit(scrapy.Spider):
     allowed_domains = ["store.shopping.yahoo.co.jp", "lohaco.yahoo.co.jp"]
     start_urls = []
 
-    FILTERS = ['/instabaner.', '/yahoo-instagram-banner.', 'tenbai', 'delivery', 'haisou']
+    # FILTERS = ['/instabaner.', '/yahoo-instagram-banner.', 'tenbai', 'delivery', 'haisou']
 
     # CM_TO_IN = 0.393701
     G_TO_LB = 0.002205
@@ -104,9 +104,7 @@ class YahoojpProduit(scrapy.Spider):
         if not raw_descr:
             return ''
 
-
-
-        return ''
+        return f'<div class="yahoojp-descr">{raw_descr}</div>'
 
     def parse_specs(self, specs_list: list):
         specifications = []
