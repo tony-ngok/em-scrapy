@@ -170,7 +170,7 @@ async def main():
     
     with open('yahoojp_prods_urls_errs.json', 'w') as f:
         f.write('[\n')
-        f.write(',\n'.join(ac.errs_list))
+        f.write(',\n'.join([f'"{url}"' for url in ac.errs_list]))
         f.write('\n]')
 
 
