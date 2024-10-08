@@ -118,6 +118,9 @@ class YahoojpProdUrls:
 
                 await asyncio.sleep(randint(3000, 7000)/1000.0)
 
+                if (i >= max_pages):
+                    break
+
                 i += 1
                 if ((i == 22) or (i == 43)):
                     await asyncio.gather(
