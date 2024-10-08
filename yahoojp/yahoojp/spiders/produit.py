@@ -46,19 +46,23 @@ class YahoojpProduit(scrapy.Spider):
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0"
         }
 
-        self.start_urls = [
-            "https://store.shopping.yahoo.co.jp/kscojp/403411141-1.html",
-            "https://store.shopping.yahoo.co.jp/kscojp/590632062-2.html",
-            "https://store.shopping.yahoo.co.jp/shizenshop/cocosilk-haircap-long45r.html",
-            "https://store.shopping.yahoo.co.jp/elpisstore/r356.html",
-            # "https://lohaco.yahoo.co.jp/store/h-lohaco/item/re41648",
-            "https://store.shopping.yahoo.co.jp/lifeessence/vcl.html",
-            # "https://lohaco.yahoo.co.jp/store/h-lohaco/item/wx88723",
-            "https://store.shopping.yahoo.co.jp/mygift/yunth-sk-4580785290040.html",
-            "https://store.shopping.yahoo.co.jp/kscojp/669042492-hnd.html",
-            "https://store.shopping.yahoo.co.jp/kisekiforyou/kissme-sk-4901433038492.html",
-            "https://store.shopping.yahoo.co.jp/kisocare/kiso-k35.html"
-        ] # 测试用
+        # self.start_urls = [
+        #     "https://store.shopping.yahoo.co.jp/kscojp/403411141-1.html",
+        #     "https://store.shopping.yahoo.co.jp/kscojp/590632062-2.html",
+        #     "https://store.shopping.yahoo.co.jp/shizenshop/cocosilk-haircap-long45r.html",
+        #     "https://store.shopping.yahoo.co.jp/elpisstore/r356.html",
+        #     # "https://lohaco.yahoo.co.jp/store/h-lohaco/item/re41648",
+        #     "https://store.shopping.yahoo.co.jp/lifeessence/vcl.html",
+        #     # "https://lohaco.yahoo.co.jp/store/h-lohaco/item/wx88723",
+        #     "https://store.shopping.yahoo.co.jp/mygift/yunth-sk-4580785290040.html",
+        #     "https://store.shopping.yahoo.co.jp/kscojp/669042492-hnd.html",
+        #     "https://store.shopping.yahoo.co.jp/kisekiforyou/kissme-sk-4901433038492.html",
+        #     "https://store.shopping.yahoo.co.jp/kisocare/kiso-k35.html"
+        # ] # 测试用
+
+        with open('yahoojp_prods_urls.json', 'r', encoding='utf-8') as f_in:
+            self.start_urls = [prod for prod in json.load(f_in)]
+        print(f"Total {len(self.start_urls):_} produit(s)".replace('_', '.'))
 
         exch = requests.get('https://open.er-api.com/v6/latest/USD')
         try:
@@ -104,7 +108,7 @@ class YahoojpProduit(scrapy.Spider):
 
         return ''
 
-    def parse_specs(self, specs_list: list): # TODO
+    def parse_specs(self, specs_list: list):
         specifications = []
         weight = None
 
@@ -128,9 +132,9 @@ class YahoojpProduit(scrapy.Spider):
         if not cats_list:
             return None
         
-        return [cat['name'] for cat in cats_list]
+        return " > ".join([cat['name'] for cat in cats_list])
 
-    def parse_opts_vars(self, opts_list: list, vars_list: list, price_base: int):
+    def parse_opts_vars(self, opts_list: list, vars_list: list, price_base: int, seller_id: str):
         options = []
         opts_charge_maps = {}
         variants = []
@@ -160,13 +164,21 @@ class YahoojpProduit(scrapy.Spider):
 
                     price += opts_charge_maps[f'{v['name']}:{v['choiceName']}']
         
+                var_img = None
+                if var['image']:
+                    img_info = var['image']
+                    if img_info['type'] == 'Item':
+                        var_img = 'https://item-shopping.c.yimg.jp/i/n/'+img_info['id']
+                    elif img_info['type'] == 'Lib':
+                        var_img = f'https://shopping.c.yimg.jp/lib/{seller_id}/{img_info['id']}'
+
                 variants.append({
                     "variant_id": var['skuId'],
                     "barcode": None,
                     "sku": var['skuId'],
                     "option_values": option_values,
-                    "images": var['image'],
-                    "price": float(price/self.exch_rate, 2),
+                    "images": var_img,
+                    "price": round(price/self.exch_rate, 2),
                     "available_qty": var['stock'].get('quantity')
                 })
 
@@ -207,7 +219,7 @@ class YahoojpProduit(scrapy.Spider):
         prod_scr = response.css('script#__NEXT_DATA__::text').get('').strip()
         if not prod_scr:
             return
-        prod_scr = json.loads(prod_scr)
+        prod_scr = json.loads(prod_scr)['props']['pageProps']
         
         item = prod_scr['item']
         review = prod_scr['review'].get('reviewSummary', {})
@@ -218,7 +230,8 @@ class YahoojpProduit(scrapy.Spider):
             return
 
         now = datetime.now()
-        product_id = prod_scr['srid']
+        seller_id = prod_scr['seller']['id']
+        product_id = item['srid']
         existence = item['stock']['isAvailable']
 
         brand = None
@@ -235,13 +248,13 @@ class YahoojpProduit(scrapy.Spider):
         spec_info = self.parse_specs(item['specList'])
         categories = self.parse_cats((item['genreCategory'] if item.get('genreCategory') else {}).get('categoryPathsIgnoreShopping', []))
         price_jpy = item['applicablePrice']
-        opts_vars = self.parse_opts_vars(item['individualItemOptionList'], item['individualItemList'], price_jpy)
+        opts_vars = self.parse_opts_vars(item['individualItemOptionList'], item['individualItemList'], price_jpy, seller_id)
 
         yield {
             "date": now.strftime('%Y-%m-%dT%H:%M:%S'),
             "url": url,
             "source": "Yahoo! JAPAN",
-            "product_id": prod_scr['srid'],
+            "product_id": product_id,
             "existence": existence,
             "title": item['name'],
             "title_en": None,
@@ -264,11 +277,11 @@ class YahoojpProduit(scrapy.Spider):
             "reviews": review.get('count'),
             "rating": review.get('average'),
             "sold_count": None,
-            "shipping_fee": float(prod_scr['postage'].get('fee', 0.00)/self.exch_rate, 2),
-            "shipping_days_min": self.parse_deliv_date(item['delivery']),
+            "shipping_fee": round(prod_scr['postage'].get('fee', 0.00)/self.exch_rate, 2),
+            "shipping_days_min": self.parse_deliv_date(item['delivery'], now),
             "shipping_days_max": None,
             "weight": spec_info['weight'],
             "length": None,
             "width": None,
-            "Height": None,
+            "height": None,
         }

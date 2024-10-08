@@ -51,7 +51,7 @@ class TrendyolProduit(scrapy.Spider):
         }
 
         # with open('coursi.json', 'r', encoding='utf-8') as f_in:
-        with open('trendyol_categories.json', 'r', encoding='utf-8') as f_in:
+        with open('trendyol_prods_urls.json', 'r', encoding='utf-8') as f_in:
             self.start_urls = [prod['prod_url'] for prod in json.load(f_in)]
         print(f"Total {len(self.start_urls):_} produit(s)".replace('_', '.'))
 
