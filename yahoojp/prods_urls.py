@@ -124,7 +124,7 @@ class YahoojpProdUrls:
                 i += 1
                 if ((i == 22) or (i == 43)):
                     await asyncio.gather(
-                        self.page.evaluate(self.page.evaluate(self.SCROLL_JS)),
+                        self.page.evaluate(self.SCROLL_JS),
                         self.page.waitForSelector('button.Pager_Pager__link__xLzFo')
                     )
 
@@ -136,7 +136,7 @@ class YahoojpProdUrls:
                     await self.visite(url, nav[1], i, max_pages)
                 else:
                     await asyncio.gather(
-                        self.page.evaluate(self.page.evaluate(self.SCROLL_JS)),
+                        self.page.evaluate(self.SCROLL_JS),
                         self.page.waitForSelector(f'li#searchResults{page_no}')
                     )
         except Exception as e:
