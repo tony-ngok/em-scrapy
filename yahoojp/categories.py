@@ -90,7 +90,7 @@ class YahoojpCategories:
             subcats = (await self.page.querySelectorAll('li.style_SubCategoryList__subCategoryItem__MdKvA > a'))[1:]
             if not subcats:
                 cat_url = f'https://shopping.yahoo.co.jp/category/{catno}/list'
-                if catno not in self.cats_list: # 翻到叶分类了
+                if catno not in self.cats_set: # 翻到叶分类了
                     self.cats_list.append(cat_url)
                     self.cats_set.add(catno)
                 print(len(self.cats_set), "categorie(s)")
