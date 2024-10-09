@@ -102,8 +102,8 @@ class YahoojpProduit(scrapy.Spider):
             return ''
         
         # 过滤配送、转卖、店铺Instagram等无用资料
-        resp_tmp = HtmlResponse('', body=f'<div id="temp">{raw_descr}</div>')
-        resp_getall = resp_tmp.css('div.temp > *, div.temp::text').getall() # 获得所有子要素和文字
+        resp_tmp = HtmlResponse('', body=f'<div id="temp">{raw_descr}</div>', encoding='utf-8')
+        resp_getall = resp_tmp.css('div#temp > *, div#temp::text').getall() # 获得所有子要素和文字
 
         descr = ""
         for r in resp_getall:
@@ -157,7 +157,7 @@ class YahoojpProduit(scrapy.Spider):
                 })
 
                 for ch in opt['choiceList']:
-                    opts_charge_maps[f'{opt['name']}:{ch['name']}'] = ch['charge'] if ch['charge'] else 0
+                    opts_charge_maps[f'{opt["name"]}:{ch["name"]}'] = ch["charge"] if ch["charge"] else 0
 
 
             for var in vars_list:
@@ -172,7 +172,7 @@ class YahoojpProduit(scrapy.Spider):
                         "option_value": v['choiceName']
                     })
 
-                    price += opts_charge_maps[f'{v['name']}:{v['choiceName']}']
+                    price += opts_charge_maps[f'{v["name"]}:{v["choiceName"]}']
         
                 var_img = None
                 if var['image']:
@@ -180,7 +180,7 @@ class YahoojpProduit(scrapy.Spider):
                     if img_info['type'] == 'Item':
                         var_img = 'https://item-shopping.c.yimg.jp/i/n/'+img_info['id']
                     elif img_info['type'] == 'Lib':
-                        var_img = f'https://shopping.c.yimg.jp/lib/{seller_id}/{img_info['id']}'
+                        var_img = f'https://shopping.c.yimg.jp/lib/{seller_id}/{img_info["id"]}'
 
                 variants.append({
                     "variant_id": var['skuId'],
