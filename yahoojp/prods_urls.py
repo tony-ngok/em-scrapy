@@ -123,6 +123,7 @@ class YahoojpProdUrls:
             for r in results:
                 href = await self.page.evaluate(self.GET_ATTR_JS, r, 'href')
                 href = href.split('?')[0]
+                print(href)
                 prod_id = self.get_prod_id(href)
                 if prod_id not in self.prods_set:
                     self.prods_set.add(prod_id)
