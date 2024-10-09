@@ -95,6 +95,58 @@ class YahoojpProduit(scrapy.Spider):
                                      meta={ 'url': url },
                                      callback=self.parse)
 
+    def locaho_parse_descr(self, descr_txt: str, tag: str = 'div'):
+        return f'<{tag} class="yahoojp-descr">{descr_txt}</{tag}>' if descr_txt else ''
+
+    def locaho_parse_specs(self, nuxt: str):
+        '''
+        locaho：用正规表达式从页面中提取参数
+        '''
+
+        specs_info = {
+            "more_descr": '',
+            "upc": None,
+            "specifications": None,
+            "weight": None,
+            "length": None,
+            "width": None,
+            "height": None
+        }
+
+        if not nuxt:
+            return specs_info
+        
+        match1 = re.findall(r'specList\s*:\s*{\s*items\s*:(\[\s*[^\[\]]*\s*\])\s*}', nuxt)
+        if not match1:
+            return specs_info
+        match2 = re.findall(r'{\s*name\s*:\s*"([^"]*)"\s*,\s*value\s*:\s*"([^"]*)"\s*}', match1[0])
+        if not match2:
+            return specs_info
+        
+        specs = []
+        for si in match2:
+            k, v = si
+
+            if ('返品' in k) or (k == '備考'):
+                continue  
+            if (k == '使用方法') or ('注意事項' in k) or (('内容' in k) and ('内容量' not in k)) or ('成分' in k) or ('詳細' in k):
+                specs_info['more_descr'] += f'<tr><th>{k}</th><td>{v}</td></tr>'
+            else:
+                specs.append({
+                    "name": k,
+                    "value": v
+                })
+                specs_info['specifications'] = specs if specs else None
+
+                if k == 'JANコード':
+                    specs_info['upc'] = v
+                elif '内容量' in k: # TODO: 由参数解析尺寸
+                    pass
+                elif (k == '寸法') or (k == 'サイズ'):
+                    pass
+
+        return specs_info
+
     def locaho_parse_images(self, img_list: SelectorList):
         if not img_list:
             return None
@@ -160,6 +212,18 @@ class YahoojpProduit(scrapy.Spider):
             cat_json = {}
 
         existence = ('instock' in prod_json['offers']['availability'].lower())
+
+        nuxt = ''
+        for scr in response.css('script').getall():
+            if '__NUXT__' in scr:
+                nuxt = scr
+                break
+        specs_info = self.locaho_parse_specs(nuxt)
+
+        descr1 = self.locaho_parse_descr(prod_json["description"])
+        descr2 = self.locaho_parse_descr(specs_info['more_descr'], 'table')
+        description = descr1+descr2 if descr1+descr2 else None
+
         brand = (prod_json['brand'] if prod_json['brand'] else {}).get('name')
         categories = " > ".join([cat["name"] for cat in cat_json.get('itemListElement')[1:-1]])
         video = self.locaho_parse_video(response.css('div.extYouTube a'))
@@ -184,13 +248,13 @@ class YahoojpProduit(scrapy.Spider):
             "existence": existence,
             "title": prod_json['name'],
             "title_en": None,
-            "description": f'<div class="yahoojp-descr">{prod_json["description"]}</div>' if prod_json["description"] else None,
+            "description": description,
             "description_en": None,
             "summary": None,
             "sku": product_id,
-            # "upc": item['janCode'] if item['janCode'] else None,
+            "upc": specs_info['upc'],
             "brand": brand if brand else None,
-            # "specifications": spec_info['specifications'],
+            "specifications": specs_info['specifications'],
             "categories": categories,
             "images": images,
             "videos": video,
@@ -206,10 +270,10 @@ class YahoojpProduit(scrapy.Spider):
             "shipping_fee": shipping_fee,
             "shipping_days_min": shipping_days_min,
             "shipping_days_max": None,
-            # "weight": spec_info['weight'],
-            # "length": None,
-            # "width": None,
-            # "height": None,
+            "weight": specs_info['weight'],
+            "length": specs_info['length'],
+            "width": specs_info['width'],
+            "height": specs_info['height']
         }
 
     def parse_images(self, img_list: list):
