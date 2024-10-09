@@ -142,12 +142,12 @@ async def main():
 
     with open('yahoojp_categories.json', 'w') as f:
         f.write('[\n')
-        f.write(',\n'.join(ac.cats_list))
+        f.write(',\n'.join([f'"{url}"' for url in ac.cats_list]))
         f.write('\n]')
     
     with open('yahoojp_categories_errs.json', 'w') as f:
         f.write('[\n')
-        f.write(',\n'.join(ac.errs_list))
+        f.write(',\n'.join([f'"{url}"' for url in ac.errs_list]))
         f.write('\n]')
 
 

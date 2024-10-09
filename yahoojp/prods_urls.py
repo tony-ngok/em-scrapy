@@ -67,12 +67,12 @@ class YahoojpProdUrls:
     
     def get_cat_id(self, url: str):
         url_sp = url.split('/')
-        prod_id = url_sp[-2]
+        cat_id = url_sp[-2]
 
         if not url.endswith('list'):
-            prod_id += url_sp[-1].split('b=')[-1]
+            cat_id += url_sp[-1].split('b=')[-1]
         
-        return prod_id
+        return cat_id
 
     def get_prod_id(self, url: str):
         prod_id = url.split('/')[-1]
@@ -130,6 +130,7 @@ class YahoojpProdUrls:
             
             print(f"{len(self.prods_set):_} produit(s) url(s)".replace("_", "."))
             print(f"{len(self.errs_set):_} error url(s)".replace("_", "."))
+            print(self.prods_set)
             await asyncio.sleep(randint(3000, 7000)/1000.0)
 
             i += 1
@@ -145,6 +146,7 @@ class YahoojpProdUrls:
                 self.errs_set.add(cat_id)
             print(f"{len(self.prods_set):_} produit(s) url(s)".replace("_", "."))
             print(f"{len(self.errs_set):_} error url(s)".replace("_", "."))
+            print(self.errs_set)
             return
 
 
@@ -155,7 +157,7 @@ async def main():
 
     todo_list = []
     if not review: # 从头开始
-        todo_list.append('https://shopping.yahoo.co.jp/category/1840/list')
+        todo_list.append('https://shopping.yahoo.co.jp/category/1764/list')
 
     ac = YahoojpProdUrls(review, todo_list)
     await ac.start()
@@ -164,7 +166,7 @@ async def main():
 
     with open('yahoojp_prods_urls.json', 'w') as f:
         f.write('[\n')
-        f.write(',\n'.join(ac.prods_list))
+        f.write(',\n'.join([f'"{url}"' for url in ac.prods_list]))
         f.write('\n]')
     
     with open('yahoojp_prods_urls_errs.json', 'w') as f:
