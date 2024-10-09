@@ -39,8 +39,8 @@ class YahoojpProdUrls:
     def __init__(self, resume: bool = False, todo: list = []) -> None:
         if resume: # 断点续传模式（主要为调试查错用）
             try:
-                with open('yahoojp_prods_urls.json', 'r', encoding='utf-8') as f_errs: 
-                    self.prods_list = [url for url in json.load(f_errs)] # 已经获得的分类页面
+                with open('yahoojp_prods_urls.json', 'r', encoding='utf-8') as f_urls: 
+                    self.prods_list = [url for url in json.load(f_urls)] # 已经获得的分类页面
                     self.prods_set = set([self.get_prod_id(url) for url in self.prods_list])
             except:
                 print("No cats file")
@@ -49,7 +49,7 @@ class YahoojpProdUrls:
             
             try:
                 with open('yahoojp_prods_urls_errs.json', 'r', encoding='utf-8') as f_errs: 
-                    self.todo_list = [(err[0], err[1]) for err in json.load(f_errs)] # 积累之前出错的URL
+                    self.todo_list = [err for err in json.load(f_errs)] # 积累之前出错的URL
             except:
                 print("No prev errors")
                 self.todo_list = []
