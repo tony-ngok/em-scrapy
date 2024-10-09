@@ -52,21 +52,22 @@ class YahoojpProduit(scrapy.Spider):
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0"
         }
 
-        self.start_urls = [
-            "https://lohaco.yahoo.co.jp/store/h-lohaco/item/re41648",
-            "https://lohaco.yahoo.co.jp/store/h-lohaco/item/wx88723",
-            "https://lohaco.yahoo.co.jp/store/h-lohaco/item/hk77293",
-            "https://lohaco.yahoo.co.jp/store/h-lohaco/item/rk84669",
-            "https://lohaco.yahoo.co.jp/store/h-lohaco/item/hn23157",
-            "https://lohaco.yahoo.co.jp/store/h-lohaco/item/6120688",
-            "https://lohaco.yahoo.co.jp/store/h-lohaco3/item/p827709",
-            "https://lohaco.yahoo.co.jp/store/h-lohaco/item/ju16176",
-            "https://lohaco.yahoo.co.jp/store/h-lohaco/item/hn23160",
-            "https://lohaco.yahoo.co.jp/store/h-lohaco/item/ee74357"
-        ] # 测试用
-        # with open('yahoojp_prods_urls.json', 'r', encoding='utf-8') as f_in:
-        #     self.start_urls = [prod for prod in json.load(f_in)]
-        # print(f"Total {len(self.start_urls):_} produit(s)".replace('_', '.'))
+        # self.start_urls = [
+        #     "https://lohaco.yahoo.co.jp/store/h-lohaco/item/re41648",
+        #     "https://lohaco.yahoo.co.jp/store/h-lohaco/item/wx88723",
+        #     "https://lohaco.yahoo.co.jp/store/h-lohaco/item/hk77293",
+        #     "https://lohaco.yahoo.co.jp/store/h-lohaco/item/rk84669",
+        #     "https://lohaco.yahoo.co.jp/store/h-lohaco/item/hn23157",
+        #     "https://lohaco.yahoo.co.jp/store/h-lohaco/item/6120688",
+        #     "https://lohaco.yahoo.co.jp/store/h-lohaco3/item/p827709",
+        #     "https://lohaco.yahoo.co.jp/store/h-lohaco/item/ju16176",
+        #     "https://lohaco.yahoo.co.jp/store/h-lohaco/item/hn23160",
+        #     "https://lohaco.yahoo.co.jp/store/h-lohaco/item/ee74357",
+        #     "https://lohaco.yahoo.co.jp/store/h-lohaco/item/xn18230"
+        # ] # 测试用
+        with open('yahoojp_prods_urls.json', 'r', encoding='utf-8') as f_in:
+            self.start_urls = [prod for prod in json.load(f_in)]
+        print(f"Total {len(self.start_urls):_} produit(s)".replace('_', '.'))
 
         exch = requests.get('https://open.er-api.com/v6/latest/USD')
         try:
@@ -129,7 +130,7 @@ class YahoojpProduit(scrapy.Spider):
 
             if ('返品' in k) or (k == '備考'):
                 continue  
-            if (k == '使用方法') or ('注意事項' in k) or (('内容' in k) and ('内容量' not in k)) or ('成分' in k) or ('詳細' in k):
+            if ('方法' in k) or ('注意事項' in k) or (('内容' in k) and ('内容量' not in k)) or ('成分' in k) or ('詳細' in k):
                 specs_info['more_descr'] += f'<tr><th>{k}</th><td>{v}</td></tr>'
             else:
                 specs.append({
@@ -141,9 +142,12 @@ class YahoojpProduit(scrapy.Spider):
                 if k == 'JANコード':
                     specs_info['upc'] = v
                 elif '内容量' in k: # TODO: 由参数解析尺寸
-                    pass
+                    specs_info['weight'] = self.locaho_parse_weight(v.lower())
                 elif (k == '寸法') or (k == 'サイズ'):
-                    pass
+                    dim_map = self.locaho_parse_dims(v.lower())
+                    specs_info['length'] = self.locaho_calc_dim(dim_map.get('length', [0, '']))
+                    specs_info['width'] = self.locaho_calc_dim(dim_map.get('width', [0, '']))
+                    specs_info['height'] = self.locaho_calc_dim(dim_map.get('height', [0, '']))
 
         return specs_info
 
@@ -185,7 +189,76 @@ class YahoojpProduit(scrapy.Spider):
 
         if '翌日' in day_text:
             return 1
-        return None
+
+    def locaho_parse_weight(self, weight_text: str):
+        weight_match = re.findall(r'(\d+(?:\.\d+)?)\s*(g|kg|ml|l|)\b', self.standardise(weight_text))
+        if weight_match:
+            val = float(weight_match[0][0])
+            unit = weight_match[0][1]
+            if (unit == 'ml') or (unit == 'g'):
+                return round(val*self.G_TO_LB, 2)
+            if (unit == 'l') or (unit == 'kg'):
+                return round(val*self.KG_TO_LB, 2)
+
+    def standardise(self, text: str):
+        replace_map = {
+            '０': '0', '１': '1', '２': '2', '３': '3', '４': '4',
+            '５': '5', '６': '6', '７': '7', '８': '8', '９': '9',
+            'Ａ': 'A', 'Ｂ': 'B', 'Ｃ': 'C', 'Ｄ': 'D', 'Ｅ': 'E',
+            'Ｆ': 'F', 'Ｇ': 'G', 'Ｈ': 'H', 'Ｉ': 'I', 'Ｊ': 'J',
+            'Ｋ': 'K', 'Ｌ': 'L', 'Ｍ': 'M', 'Ｎ': 'N', 'Ｏ': 'O',
+            'Ｐ': 'P', 'Ｑ': 'Q', 'Ｒ': 'R', 'Ｓ': 'S', 'Ｔ': 'T',
+            'Ｕ': 'U', 'Ｖ': 'V', 'Ｗ': 'W', 'Ｘ': 'X', 'Ｙ': 'Y',
+            'Ｚ': 'Z', 'ａ': 'a', 'ｂ': 'b', 'ｃ': 'c', 'ｄ': 'd',
+            'ｅ': 'e', 'ｆ': 'f', 'ｇ': 'g', 'ｈ': 'h', 'ｉ': 'i',
+            'ｊ': 'j', 'ｋ': 'k', 'ｌ': 'l', 'ｍ': 'm', 'ｎ': 'n',
+            'ｏ': 'o', 'ｐ': 'p', 'ｑ': 'q', 'ｒ': 'r', 'ｓ': 's',
+            'ｔ': 't', 'ｕ': 'u', 'ｖ': 'v', 'ｗ': 'w', 'ｘ': 'x',
+            'ｙ': 'y', 'ｚ': 'z'
+        }
+
+        return ''.join([replace_map.get(char, char) for char in text])
+
+    def locaho_parse_dims(self, dim_text: str):
+        dim_split = self.standardise(dim_text).split('×')
+
+        default_unit = '' # 默认单位
+        dim_map = {}
+        for dim, d in zip(["length", "width", "height"], dim_split):
+            ds = d.strip()
+
+            ds_match = re.findall(r'(\d+(?:\.\d+)?)\s*(m|cm|mm|)\b', ds)
+            if ds_match and ds_match[0]:
+                value = float(ds_match[0][0])
+                unit = ds_match[0][1].replace('ｍ', 'm').replace('ｃ', 'c')
+                if unit:
+                    default_unit = unit
+
+                if ds.startswith('奥') or ds.startswith('長') or ds.startswith('d') or ds.startswith('l'):
+                    dim_map['length'] = [value, unit]
+                elif ds.startswith('幅') or ds.startswith('横') or ds.startswith('w'):
+                    dim_map['width'] = [value, unit]
+                elif ds.startswith('高') or ds.startswith('縦') or ds.startswith('h'):
+                    dim_map['height'] = [value, unit]
+                else:
+                    dim_map[dim] = [value, unit]
+    
+        # 填补缺失的单位
+        for k in dim_map.keys():
+            if not dim_map[k][1]:
+                dim_map[k][1] = default_unit
+
+        return dim_map
+    
+    def locaho_calc_dim(self, dim_list: list):
+        value, unit = dim_list
+
+        if unit == 'm':
+            return round(value*self.M_TO_IN, 2)
+        elif unit == 'cm':
+            return round(value*self.CM_TO_IN, 2)
+        elif unit == 'mm':
+            return round(value*self.MM_TO_IN, 2)
 
     def locaho_parse(self, response: HtmlResponse):
         url = response.meta['url']
@@ -477,5 +550,5 @@ class YahoojpProduit(scrapy.Spider):
             "weight": spec_info['weight'],
             "length": None,
             "width": None,
-            "height": None,
+            "height": None
         }
