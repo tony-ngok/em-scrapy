@@ -5,6 +5,7 @@ from datetime import datetime
 import requests
 import scrapy
 from scrapy.http import HtmlResponse
+from scrapy.selector import SelectorList
 
 
 # scrapy crawl yahoojp_produit -O yahoojp_produits.json
@@ -14,17 +15,17 @@ class YahoojpProduit(scrapy.Spider):
     start_urls = []
 
     FILTERS = ['instabaner', 'instagram', 'tenbai', 'delivery', 'haisou', 'gift',
-               'info', 'invoice', 'hoshou', 'bunkatsu','attention', 'line', 'yamato_huru',
-               'tyuui', '1000en', 'store', 'tyui', 'hosyo', 'shouhou', 'campain',
-               'hatubai', 'yupake', 'marketsale', 'matomegai', 'zcshpsl', 'zcsbzt',
-               'sale', 'campaign', 'yohida', 'nekoposu', 'setsumei', 'takuhai',
-               'oshirase', '定期購入', '保証']
+               'info', 'invoice', 'hoshou', 'bunkatsu','attention', 'yamato_huru',
+               'tyuui', '1000en', 'tyui', 'hosyo', 'shouhou', 'campain', 'hatubai',
+               'yupake', 'marketsale', 'matomegai', 'zcshpsl', 'zcsbzt', 'sale',
+               'campaign', 'yohida', 'nekoposu', 'setsumei', 'takuhai', 'oshirase',
+               'line_', 'alt="line"', '_line', 'yahoolinebana', '定期購入', '保証']
 
-    # CM_TO_IN = 0.393701
+    CM_TO_IN = 0.393701
     G_TO_LB = 0.002205
     KG_TO_LB = 2.20462
-    # M_TO_IN = 39.37008
-    # MM_TO_IN = 0.03937
+    M_TO_IN = 39.37008
+    MM_TO_IN = 0.03937
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -55,11 +56,17 @@ class YahoojpProduit(scrapy.Spider):
             "https://lohaco.yahoo.co.jp/store/h-lohaco/item/re41648",
             "https://lohaco.yahoo.co.jp/store/h-lohaco/item/wx88723",
             "https://lohaco.yahoo.co.jp/store/h-lohaco/item/hk77293",
+            "https://lohaco.yahoo.co.jp/store/h-lohaco/item/rk84669",
+            "https://lohaco.yahoo.co.jp/store/h-lohaco/item/hn23157",
+            "https://lohaco.yahoo.co.jp/store/h-lohaco/item/6120688",
+            "https://lohaco.yahoo.co.jp/store/h-lohaco3/item/p827709",
+            "https://lohaco.yahoo.co.jp/store/h-lohaco/item/ju16176",
+            "https://lohaco.yahoo.co.jp/store/h-lohaco/item/hn23160",
+            "https://lohaco.yahoo.co.jp/store/h-lohaco/item/ee74357"
         ] # 测试用
-
-        with open('yahoojp_prods_urls.json', 'r', encoding='utf-8') as f_in:
-            self.start_urls = [prod for prod in json.load(f_in)]
-        print(f"Total {len(self.start_urls):_} produit(s)".replace('_', '.'))
+        # with open('yahoojp_prods_urls.json', 'r', encoding='utf-8') as f_in:
+        #     self.start_urls = [prod for prod in json.load(f_in)]
+        # print(f"Total {len(self.start_urls):_} produit(s)".replace('_', '.'))
 
         exch = requests.get('https://open.er-api.com/v6/latest/USD')
         try:
@@ -82,25 +89,139 @@ class YahoojpProduit(scrapy.Spider):
             if url.startswith('https://lohaco'):
                 yield scrapy.Request(url, headers=self.headers,
                                      meta={ 'url': url },
-                                     callback=self.parse_lohaco)
+                                     callback=self.locaho_parse)
             else:
                 yield scrapy.Request(url, headers=self.headers,
                                      meta={ 'url': url },
                                      callback=self.parse)
 
-    def parse_lohaco(self, response: HtmlResponse):
+    def locaho_parse_images(self, img_list: SelectorList):
+        if not img_list:
+            return None
+
+        return ";".join([img.css('::attr(src)').get() for img in img_list])
+
+    def locaho_parse_video(self, vid_sel: SelectorList):
+        if not vid_sel:
+            return None
+
+        return vid_sel.css('::attr(src)').get()
+
+    def locaho_parse_recensions(self, recens: dict):
+        return (
+            int(recens['reviewCount']) if recens.get('reviewCount') else None,
+            float(recens['ratingValue']) if recens.get('ratingValue') else None
+            )
+
+    def locaho_parse_ship_fee(self, deliv_text: str, price_jpy: int):
+        if not deliv_text:
+            return 0.00
+
+        # https://lohaco.yahoo.co.jp/help/delivery/#par_guidewysiwyg_13
+        if '直送品グループ' in deliv_text:
+            if price_jpy >= 1900:
+                return 0.00
+            return round(220/self.exch_rate, 2)
+        else:
+            if price_jpy >= 3780:
+                return 0.00
+            return round(550/self.exch_rate, 2)
+
+    def locaho_parse_ship_day(self, day_text: str):
+        if not day_text:
+            return None
+
+        if '翌日' in day_text:
+            return 1
+        return None
+
+    def locaho_parse(self, response: HtmlResponse):
         url = response.meta['url']
-    
+        product_id = url.split('/')[-1]
+
+        images = self.locaho_parse_images(response.css('div.thumbs img'))
+        if not images:
+            return
+
+        scripts = response.css('script[type="application/ld+json"]')
+        prod_json = None
+        cat_json = None
+        for scr in scripts:
+            scr_text = scr.css('::text').get()
+            if '"Product"' in scr_text:
+                prod_json = json.loads(scr_text)
+            elif '"BreadcrumbList"' in scr_text:
+                cat_json = json.loads(scr_text)
+            if prod_json and cat_json:
+                break
+        if not prod_json:
+            return
+        if not cat_json:
+            cat_json = {}
+
+        existence = ('instock' in prod_json['offers']['availability'].lower())
+        brand = (prod_json['brand'] if prod_json['brand'] else {}).get('name')
+        categories = " > ".join([cat["name"] for cat in cat_json.get('itemListElement')[1:-1]])
+        video = self.locaho_parse_video(response.css('div.extYouTube a'))
+        price_jpy = prod_json['offers']['price']
+
+        recens = prod_json['aggregateRating'] if prod_json.get('aggregateRating') else {}
+        reviews, rating = self.locaho_parse_recensions(recens)
+
+        shipping_fee = 0.00
+        shipping_days_min = None
+        ship_texts = response.css('div.mb-2 > p.black--text')
+        if ship_texts:
+            shipping_fee = self.locaho_parse_ship_fee(ship_texts.get(''), price_jpy)
+        if len(ship_texts) >= 2:
+            shipping_days_min = self.locaho_parse_ship_day(ship_texts[1].get())
+
+        yield {
+            "date": datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
+            "url": url,
+            "source": "Yahoo! JAPAN",
+            "product_id": product_id,
+            "existence": existence,
+            "title": prod_json['name'],
+            "title_en": None,
+            "description": f'<div class="yahoojp-descr">{prod_json["description"]}</div>' if prod_json["description"] else None,
+            "description_en": None,
+            "summary": None,
+            "sku": product_id,
+            # "upc": item['janCode'] if item['janCode'] else None,
+            "brand": brand if brand else None,
+            # "specifications": spec_info['specifications'],
+            "categories": categories,
+            "images": images,
+            "videos": video,
+            "price": round(price_jpy/self.exch_rate, 2),
+            "available_qty": 0 if not existence else None,
+            "options": None, # 所谓变种实际上商品ID不同
+            "variants": None,
+            "has_only_default_variant": True,
+            "returnable": False,
+            "reviews": reviews,
+            "rating": rating,
+            "sold_count": None,
+            "shipping_fee": shipping_fee,
+            "shipping_days_min": shipping_days_min,
+            "shipping_days_max": None,
+            # "weight": spec_info['weight'],
+            # "length": None,
+            # "width": None,
+            # "height": None,
+        }
+
     def parse_images(self, img_list: list):
         if not img_list:
             return None
-        
+
         return ";".join([img['src'] for img in img_list if img['src'].startswith('https://item-')])
 
     def parse_descr(self, raw_descr: str):
         if not raw_descr:
             return ''
-        
+
         # 过滤配送、转卖、店铺Instagram等无用资料
         resp_tmp = HtmlResponse('', body=f'<div id="temp">{raw_descr}</div>', encoding='utf-8')
         resp_getall = resp_tmp.css('div#temp > *, div#temp::text').getall() # 获得所有子要素和文字
@@ -108,7 +229,7 @@ class YahoojpProduit(scrapy.Spider):
         descr = ""
         for r in resp_getall:
             filter = False
-            if r.startswith('<a') or r.startswith('<img'):
+            if ('<img ' in r):
                 for f in self.FILTERS:
                     if f in r.lower():
                         filter = True
@@ -129,7 +250,7 @@ class YahoojpProduit(scrapy.Spider):
                     "value": ";".join([v['name'] for v in sp['valueList']])
                 }
                 specifications.append(spec)
-            
+
                 if ('内容量' in sp['name']) and (weight is None):
                     weight = self.get_dim(spec['value'].lower(), r'(\d+(?:\.\d+)?)\s?(g|kg|ml|l)\b')
 
@@ -137,11 +258,11 @@ class YahoojpProduit(scrapy.Spider):
             "specifications": specifications if specifications else None,
             "weight": weight
         }
-    
+
     def parse_cats(self, cats_list: list):
         if not cats_list:
             return None
-        
+
         return " > ".join([cat['name'] for cat in cats_list])
 
     def parse_opts_vars(self, opts_list: list, vars_list: list, price_base: int, seller_id: str):
@@ -159,7 +280,6 @@ class YahoojpProduit(scrapy.Spider):
                 for ch in opt['choiceList']:
                     opts_charge_maps[f'{opt["name"]}:{ch["name"]}'] = ch["charge"] if ch["charge"] else 0
 
-
             for var in vars_list:
                 price = price_base
 
@@ -173,7 +293,7 @@ class YahoojpProduit(scrapy.Spider):
                     })
 
                     price += opts_charge_maps[f'{v["name"]}:{v["choiceName"]}']
-        
+
                 var_img = None
                 if var['image']:
                     img_info = var['image']
@@ -200,14 +320,14 @@ class YahoojpProduit(scrapy.Spider):
     def parse_deliv_date(self, deliv_infos: dict, actual: datetime):
         if not (deliv_infos and deliv_infos.get('hasDeliveryDate') and deliv_infos.get('methodList')):
             return None
-        
+
         deliv_date = deliv_infos.get('methodList')[0].get('shortestDate')
         if not deliv_date:
             return None
-        
+
         diff = (datetime.strptime(deliv_date, '%Y%m%d')-actual).days
         return diff if diff > 0 else 0
-    
+
     def get_dim(self, txt: str, regex: str):
         dim_match = re.findall(regex, txt)
         if dim_match:
@@ -230,7 +350,7 @@ class YahoojpProduit(scrapy.Spider):
         if not prod_scr:
             return
         prod_scr = json.loads(prod_scr)['props']['pageProps']
-        
+
         item = prod_scr['item']
         review = prod_scr['review'].get('reviewSummary', {})
 
