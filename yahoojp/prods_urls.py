@@ -126,18 +126,15 @@ class YahoojpProdUrls:
                 href = href.split('?')[0]
                 if href.endswith('/'):
                     href = href[:-1]
-                print(href)
 
                 prod_id = self.get_prod_id(href)
                 if prod_id not in self.prods_set:
                     self.prods_set.add(prod_id)
                     self.prods_list.append(href)
-                else:
-                    print("Duplicate")
             
             print(f"{len(self.prods_set):_} produit(s) url(s)".replace("_", "."))
             print(f"{len(self.errs_set):_} error url(s)".replace("_", "."))
-            await asyncio.sleep(randint(3000, 7000)/1000.0)
+            await asyncio.sleep(randint(3000, 5000)/1000.0)
 
             i += 1
             if i < len(pages):
