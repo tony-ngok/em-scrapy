@@ -54,8 +54,8 @@ class YahoojpProdUrls:
                 print("No prev errors")
                 self.todo_list = []
 
-            print(len(self.prods_set), "produit(s) url(s)")
-            print(len(self.todo_list), "url(s) to do")
+            print(f"{len(self.prods_set):_} produit(s) url(s)".replace("_", "."))
+            print(f"{len(self.todo_list):_} url(s) to do".replace("_", "."))
         else:
             print("Start anew")
             self.prods_list = []
@@ -128,8 +128,8 @@ class YahoojpProdUrls:
                     self.prods_set.add(prod_id)
                     self.prods_list.append(href)
             
-            print(len(self.prods_set), "categorie(s)")
-            print(len(self.errs_set), "error url(s)")
+            print(f"{len(self.prods_set):_} produit(s) url(s)".replace("_", "."))
+            print(f"{len(self.errs_set):_} error url(s)".replace("_", "."))
             await asyncio.sleep(randint(3000, 7000)/1000.0)
 
             i += 1
@@ -143,8 +143,8 @@ class YahoojpProdUrls:
             if cat_id not in self.errs_set:
                 self.errs_list.append(url_b)
                 self.errs_set.add(cat_id)
-            print(len(self.prods_set), "produit(s) url(s)")
-            print(len(self.errs_set), "error url(s)")
+            print(f"{len(self.prods_set):_} produit(s) url(s)".replace("_", "."))
+            print(f"{len(self.errs_set):_} error url(s)".replace("_", "."))
             return
 
 
