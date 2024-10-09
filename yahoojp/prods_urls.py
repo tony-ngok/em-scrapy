@@ -66,13 +66,7 @@ class YahoojpProdUrls:
         self.errs_set = set()
     
     def get_cat_id(self, url: str):
-        url_sp = url.split('/')
-        cat_id = url_sp[-2]
-
-        if not url.endswith('list'):
-            cat_id += url_sp[-1].split('b=')[-1]
-        
-        return cat_id
+        return url.split('/')[-2]
 
     def get_prod_id(self, url: str):
         prod_id = url.split('/')[-1]
@@ -89,9 +83,20 @@ class YahoojpProdUrls:
 
     async def scrape(self):
         for url in self.todo_list:
-            resp = await self.page.goto(url)
-            await self.visite(url, resp)
-    
+            try:
+                resp = await self.page.goto(url)
+                await self.visite(url, resp)
+            except Exception as e:
+                print("Error:", str(e))
+
+                cat_id = self.get_cat_id(url)
+                if cat_id not in self.errs_set:
+                    self.errs_list.append(url)
+                    self.errs_set.add(cat_id)
+
+                print(f"{len(self.prods_set):_} produit(s) url(s)".replace("_", "."))
+                print(f"{len(self.errs_set):_} error url(s)".replace("_", "."))
+
     async def visite(self, url: str, resp: Response, pages: list = [], i: int = -1) -> None:
         print()
         url_b = url
@@ -142,11 +147,12 @@ class YahoojpProdUrls:
                 await self.visite(url, resp, pages, i)
         except Exception as e:
             print("Error:", str(e))
-            cat_id = self.get_cat_id(url_b)
 
+            cat_id = self.get_cat_id(url_b)
             if cat_id not in self.errs_set:
                 self.errs_list.append(url_b)
                 self.errs_set.add(cat_id)
+
             print(f"{len(self.prods_set):_} produit(s) url(s)".replace("_", "."))
             print(f"{len(self.errs_set):_} error url(s)".replace("_", "."))
             return

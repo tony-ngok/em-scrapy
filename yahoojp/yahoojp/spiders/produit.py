@@ -13,7 +13,12 @@ class YahoojpProduit(scrapy.Spider):
     allowed_domains = ["store.shopping.yahoo.co.jp", "lohaco.yahoo.co.jp"]
     start_urls = []
 
-    # FILTERS = ['/instabaner.', '/yahoo-instagram-banner.', 'tenbai', 'delivery', 'haisou']
+    FILTERS = ['instabaner', 'instagram', 'tenbai', 'delivery', 'haisou', 'gift',
+               'info', 'invoice', 'hoshou', 'bunkatsu','attention', 'line', 'yamato_huru',
+               'tyuui', '1000en', 'store', 'tyui', 'hosyo', 'shouhou', 'campain',
+               'hatubai', 'yupake', 'marketsale', 'matomegai', 'zcshpsl', 'zcsbzt',
+               'sale', 'campaign', 'yohida', 'nekoposu', 'setsumei', 'takuhai',
+               'oshirase', '定期購入', '保証']
 
     # CM_TO_IN = 0.393701
     G_TO_LB = 0.002205
@@ -46,19 +51,11 @@ class YahoojpProduit(scrapy.Spider):
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0"
         }
 
-        # self.start_urls = [
-        #     "https://store.shopping.yahoo.co.jp/kscojp/403411141-1.html",
-        #     "https://store.shopping.yahoo.co.jp/kscojp/590632062-2.html",
-        #     "https://store.shopping.yahoo.co.jp/shizenshop/cocosilk-haircap-long45r.html",
-        #     "https://store.shopping.yahoo.co.jp/elpisstore/r356.html",
-        #     # "https://lohaco.yahoo.co.jp/store/h-lohaco/item/re41648",
-        #     "https://store.shopping.yahoo.co.jp/lifeessence/vcl.html",
-        #     # "https://lohaco.yahoo.co.jp/store/h-lohaco/item/wx88723",
-        #     "https://store.shopping.yahoo.co.jp/mygift/yunth-sk-4580785290040.html",
-        #     "https://store.shopping.yahoo.co.jp/kscojp/669042492-hnd.html",
-        #     "https://store.shopping.yahoo.co.jp/kisekiforyou/kissme-sk-4901433038492.html",
-        #     "https://store.shopping.yahoo.co.jp/kisocare/kiso-k35.html"
-        # ] # 测试用
+        self.start_urls = [
+            "https://lohaco.yahoo.co.jp/store/h-lohaco/item/re41648",
+            "https://lohaco.yahoo.co.jp/store/h-lohaco/item/wx88723",
+            "https://lohaco.yahoo.co.jp/store/h-lohaco/item/hk77293",
+        ] # 测试用
 
         with open('yahoojp_prods_urls.json', 'r', encoding='utf-8') as f_in:
             self.start_urls = [prod for prod in json.load(f_in)]
@@ -100,11 +97,26 @@ class YahoojpProduit(scrapy.Spider):
         
         return ";".join([img['src'] for img in img_list if img['src'].startswith('https://item-')])
 
-    def parse_descr(self, raw_descr: str): # TODO
+    def parse_descr(self, raw_descr: str):
         if not raw_descr:
             return ''
+        
+        # 过滤配送、转卖、店铺Instagram等无用资料
+        resp_tmp = HtmlResponse('', body=f'<div id="temp">{raw_descr}</div>')
+        resp_getall = resp_tmp.css('div.temp > *, div.temp::text').getall() # 获得所有子要素和文字
 
-        return f'<div class="yahoojp-descr">{raw_descr}</div>'
+        descr = ""
+        for r in resp_getall:
+            filter = False
+            if r.startswith('<a') or r.startswith('<img'):
+                for f in self.FILTERS:
+                    if f in r.lower():
+                        filter = True
+                        break
+            if not filter:
+                descr += r
+
+        return f'<div class="yahoojp-descr">{descr}</div>' if descr else ''
 
     def parse_specs(self, specs_list: list):
         specifications = []
