@@ -62,6 +62,11 @@ class YahoojpCategories:
         self.errs_list = []
         self.errs_set = set()
 
+    def get_catno(self, url: str):
+        catno_match = re.findall(r'/(\d+)', url)
+        if catno_match:
+            return catno_match[-1]
+
     async def start(self):
         self.browser = await launch(headless=False)
         self.page = await self.browser.newPage()

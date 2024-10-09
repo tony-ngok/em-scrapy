@@ -2,7 +2,7 @@ import asyncio
 import json
 import re
 from math import ceil
-from random import randint
+from random import randint, shuffle
 from sys import argv
 
 from pyppeteer import launch
@@ -41,7 +41,7 @@ class YahoojpProdUrls:
             try:
                 with open('yahoojp_prods_urls.json', 'r', encoding='utf-8') as f_errs: 
                     self.prods_list = [url for url in json.load(f_errs)] # 已经获得的分类页面
-                    self.prods_set = set([url for url in self.prods_list]) # 不好直接用url hash（太长了，容易误查重）
+                    self.prods_set = set([self.get_prod_id(url) for url in self.prods_list])
             except:
                 print("No cats file")
                 self.prods_list = []
@@ -65,6 +65,21 @@ class YahoojpProdUrls:
         self.errs_list = []
         self.errs_set = set()
     
+    def get_cat_id(self, url: str):
+        url_sp = url.split('/')
+        prod_id = url_sp[-2]
+
+        if not url.endswith('list'):
+            prod_id += url_sp[-1].split('b=')[-1]
+        
+        return prod_id
+
+    def get_prod_id(self, url: str):
+        prod_id = url.split('/')[-1]
+        if (prod_id.endswith('.html')):
+            prod_id = prod_id[:-5]
+        return prod_id
+
     async def start(self):
         self.browser = await launch(headless=False)
         self.page = await self.browser.newPage()
@@ -77,73 +92,57 @@ class YahoojpProdUrls:
             resp = await self.page.goto(url)
             await self.visite(url, resp)
     
-    async def visite(self, url: str, resp: Response, page_no: int = 1, max_pages = None) -> None:
-        print('\n'+url)
+    async def visite(self, url: str, resp: Response, pages: list = [], i: int = -1) -> None:
+        print()
+        url_b = url
+        if (pages and (i >= 0)):
+            print(pages, f"i={i}")
+            url_b += f'?b={pages[i]}'
+        print(url_b)
+        
         try:
             if resp.status >= 300:
                 raise Exception(f"Error {resp.status}")
             
-            # 取得最大可以翻的页数
-            if (max_pages is None):
+            # 取得最大可以翻的页
+            if not (pages and (i >= 0)):
                 total_sel = await self.page.querySelector('p.SearchResultsDisplayOptions_SearchResultsDisplayOptions__count__iOx2s')
                 total_txt = (await self.page.evaluate(self.GET_TXT_JS, total_sel)).strip().replace(',', '').replace('件', '')
-                max_pages = min(ceil(int(total_txt)/30), 50)
-                print("Max", max_pages, "page(s)")
+                max_items = min(int(total_txt), 1500)
+                print(f"Max {max_items:_} item(s)".replace('_', '.'))
+
+                if max_items > 30:
+                    pages = list(range(31, max_items, 30))
+                    shuffle(pages)
+                    print(pages)
+
+            raw_results = await self.page.querySelectorAll('div.SearchResult_SearchResult__imageContainerMain__nP_A2')
+            results = [(await rr.querySelector(':scope a')) for rr in raw_results if not (await rr.querySelector('p.SearchResult_SearchResult__itemMatch__iOdUC'))]
+            print(len(results), "result(s) on page")
+
+            for r in results:
+                href = await self.page.evaluate(self.GET_ATTR_JS, r, 'href')
+                href = href.split('?')[0]
+                prod_id = self.get_prod_id(href)
+                if prod_id not in self.prods_set:
+                    self.prods_set.add(prod_id)
+                    self.prods_list.append(href)
             
-            await self.page.waitForSelector(f'li#searchResults{page_no}')
+            print(len(self.prods_set), "categorie(s)")
+            print(len(self.errs_set), "error url(s)")
+            await asyncio.sleep(randint(3000, 7000)/1000.0)
 
-            i = page_no
-            while i <= max_pages:
-                li = await self.page.querySelector(f'li#searchResults{i}')
-                raw_results = await li.querySelectorAll(':scope div.SearchResult_SearchResult__imageContainerMain__nP_A2')
-                results = [(await rr.querySelector(':scope a')) for rr in raw_results if not (await rr.querySelector('p.SearchResult_SearchResult__itemMatch__iOdUC'))]
-                
-                print('\n'+url)
-                print(len(results), "result(s) on page", i)
-
-                for r in results:
-                    href = await self.page.evaluate(self.GET_ATTR_JS, r, 'href')
-                    href = href.split('?')[0]
-
-                    prod_id = href.split('/')[-1]
-                    if (prod_id.endswith('.html')):
-                        prod_id = prod_id[:-5]
-                    
-                    if prod_id not in self.prods_set:
-                        self.prods_set.add(prod_id)
-                        self.prods_list.append(href)
-                
-                print(len(self.prods_set), "categorie(s)")
-                print(len(self.errs_set), "error url(s)")
-
-                await asyncio.sleep(randint(3000, 7000)/1000.0)
-
-                if (i >= max_pages):
-                    break
-
-                i += 1
-                if ((i == 22) or (i == 43)):
-                    await asyncio.gather(
-                        self.page.evaluate(self.SCROLL_JS),
-                        self.page.waitForSelector('button.Pager_Pager__link__xLzFo')
-                    )
-
-                    next_btn = await self.page.querySelectorAll('button.Pager_Pager__link__xLzFo')[1]
-                    nav = await asyncio.gather(
-                        next_btn.click(),
-                        self.page.waitForNavigation()
-                    )
-                    await self.visite(url, nav[1], i, max_pages)
-                else:
-                    await asyncio.gather(
-                        self.page.evaluate(self.SCROLL_JS),
-                        self.page.waitForSelector(f'li#searchResults{i}')
-                    )
+            i += 1
+            if i < len(pages):
+                resp = await self.page.goto(url+f'?b={pages[i]}')
+                await self.visite(url, resp, pages, i)
         except Exception as e:
             print("Error:", str(e))
-            if prod_id not in self.errs_set:
-                self.errs_list.append(url)
-                self.errs_set.add(prod_id)
+            cat_id = self.get_cat_id(url_b)
+
+            if cat_id not in self.errs_set:
+                self.errs_list.append(url_b)
+                self.errs_set.add(cat_id)
             print(len(self.prods_set), "produit(s) url(s)")
             print(len(self.errs_set), "error url(s)")
             return
