@@ -128,6 +128,8 @@ class YahoojpProdUrls:
                 if prod_id not in self.prods_set:
                     self.prods_set.add(prod_id)
                     self.prods_list.append(href)
+                else:
+                    print("Duplicate")
             
             print(f"{len(self.prods_set):_} produit(s) url(s)".replace("_", "."))
             print(f"{len(self.errs_set):_} error url(s)".replace("_", "."))
