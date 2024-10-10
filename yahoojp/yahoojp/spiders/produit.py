@@ -14,11 +14,11 @@ class YahoojpProduit(scrapy.Spider):
     allowed_domains = ["store.shopping.yahoo.co.jp", "lohaco.yahoo.co.jp"]
     start_urls = []
 
-    FILTERS = ['instabaner', 'instagram', 'tenbai', 'delivery', 'haisou', 'info.',
+    FILTERS = ['instabaner', 'instagram', 'tenbai', 'delivery.', 'haisou', 'info.',
                'infomation', 'information', 'invoice', 'hoshou', 'bunkatsu',
-               'attention', 'yamato_huru', 'tyuui', '1000en', 'tyui', 'hosyo',
+               'attention.', 'yamato_huru', 'tyuui', '1000en', 'tyui.', 'hosyo',
                'shouhou', 'campain', 'hatubai', 'yupake', 'marketsale', 'matomegai',
-               'zcshpsl', 'zcsbzt', 'alt="sale"', 'campaign', 'yohida', 'nekoposu',
+               'zcshpsl', 'zcsbzt', 'alt="sale"', 'campaign.', 'yohida', 'nekoposu',
                'setsumei', 'takuhai.', 'oshirase', 'alt="line"', 'line.', '_line',
                'yahoolinebana', 'mohouhin', 'official.', '定期購入', '保証']
 
