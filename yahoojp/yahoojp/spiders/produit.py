@@ -97,7 +97,8 @@ class YahoojpProduit(scrapy.Spider):
                                      callback=self.parse)
 
     def locaho_parse_descr(self, descr_txt: str, tag: str = 'div'):
-        return f'<{tag} class="yahoojp-descr">{descr_txt.replace("\\u002F", "/")}</{tag}>' if descr_txt else ''
+        descr_txt = descr_txt.replace("\\u002F", "/")
+        return f'<{tag} class="yahoojp-descr">{descr_txt}</{tag}>' if descr_txt else ''
 
     def locaho_parse_specs(self, nuxt: str):
         '''
