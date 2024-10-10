@@ -18,8 +18,8 @@ class YahoojpProduit(scrapy.Spider):
                'invoice', 'hoshou', 'bunkatsu', 'attention', 'yamato_huru', 'tyuui',
                '1000en', 'tyui', 'hosyo', 'shouhou', 'campain', 'hatubai', 'yupake',
                'marketsale', 'matomegai', 'zcshpsl', 'zcsbzt', 'alt="sale"', 'campaign',
-               'yohida', 'nekoposu', 'setsumei', 'takuhai', 'oshirase', 'alt="line"',
-               '_line', 'yahoolinebana', 'mohouhin', '定期購入', '保証']
+               'yohida', 'nekoposu', 'setsumei', 'takuhai.', 'oshirase', 'alt="line"',
+               'line.', '_line', 'yahoolinebana', 'mohouhin', 'official.', '定期購入', '保証']
 
     CM_TO_IN = 0.393701
     G_TO_LB = 0.002205
