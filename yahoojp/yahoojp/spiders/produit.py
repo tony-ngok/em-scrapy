@@ -1,6 +1,5 @@
 import json
 import re
-from codecs import decode
 from datetime import datetime
 
 import requests
@@ -98,7 +97,7 @@ class YahoojpProduit(scrapy.Spider):
                                      callback=self.parse)
 
     def locaho_parse_descr(self, descr_txt: str, tag: str = 'div'):
-        return f'<{tag} class="yahoojp-descr">{decode(descr_txt, "unicode_escape")}</{tag}>' if descr_txt else ''
+        return f'<{tag} class="yahoojp-descr">{descr_txt.replace("\\u002F", "/")}</{tag}>' if descr_txt else ''
 
     def locaho_parse_specs(self, nuxt: str):
         '''
@@ -127,8 +126,8 @@ class YahoojpProduit(scrapy.Spider):
         
         specs = []
         for si in match2:
-            k = decode(si[0], 'unicode_escape')
-            v = decode(si[1], 'unicode_escape')
+            k = si[0].replace("\\u002F", "/")
+            v = si[1].replace("\\u002F", "/")
 
             if ('返品' in k) or (k == '備考'):
                 continue  
