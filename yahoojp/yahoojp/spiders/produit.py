@@ -20,7 +20,8 @@ class YahoojpProduit(scrapy.Spider):
                'tyuui', '1000en', 'tyui', 'hosyo', 'shouhou', 'campain', 'hatubai',
                'yupake', 'marketsale', 'matomegai', 'zcshpsl', 'zcsbzt', 'sale',
                'campaign', 'yohida', 'nekoposu', 'setsumei', 'takuhai', 'oshirase',
-               'line_', 'alt="line"', '_line', 'yahoolinebana', '定期購入', '保証']
+               'line_', 'alt="line"', '_line', 'yahoolinebana', 'official', 'mohouhin',
+               '定期購入', '保証']
 
     CM_TO_IN = 0.393701
     G_TO_LB = 0.002205
@@ -355,7 +356,20 @@ class YahoojpProduit(scrapy.Spider):
         if not img_list:
             return None
 
-        return ";".join([img['src'] for img in img_list if img['src'].startswith('https://item-')])
+        images = []
+        for img in img_list:
+            img_url = img['src']
+
+            filter = False
+            for filt in self.FILTERS:
+                if filt in img_url:
+                    filter = True
+                    break
+            
+            if not filter:
+                images.append(img_url)
+
+        return ";".join(images)
 
     def parse_descr(self, raw_descr: str):
         if not raw_descr:
@@ -384,6 +398,9 @@ class YahoojpProduit(scrapy.Spider):
 
         if specs_list:
             for sp in specs_list:
+                if not sp['name']:
+                    continue
+
                 spec = {
                     "name": sp['name'],
                     "value": ";".join([v['name'] for v in sp['valueList']])
