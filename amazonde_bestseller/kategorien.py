@@ -80,18 +80,18 @@ class AmazondeBSKategorien:
             await self.besuchen(k_url, i, len(self.todos))
 
     async def besuchen(self, k_url: str, i: int, total: int, level: int = 0):
-        print('\n' + " "*level + f"{i:_}/{total:_}".replace("_", "."), k_url)
+        print('\n' + "  "*level + f"{i:_}/{total:_}".replace("_", "."), k_url)
         kat = self.get_kat(k_url)
 
         try:
             if kat in self.kats:
-                print(" "*level + "Duplikat")
+                print("  "*level + "Duplikat")
                 self.count()
                 return
 
             resp = await self.page.goto(k_url)
             if resp.status >= 400:
-                print(" "*level + "Fehler", resp.status, "beim URL:", k_url)
+                print("  "*level + "Fehler", resp.status, "beim URL:", k_url)
                 self.kats[kat] = False
                 self.errs += 1
                 self.count()
@@ -111,7 +111,6 @@ class AmazondeBSKategorien:
             sublinks = await self.page.querySelectorAll('div[role="group"] a')
             if len(treeitems) == len(sublinks): # 子分类页面会缺少一个子分类要素
                 hrefs = [(await self.page.evaluate(self.GET_ATTR_JS, sublink, 'href')) for sublink in sublinks]
-                print(hrefs)
                 for j, href in enumerate(hrefs, start=1):
                     if '/ref=' in href:
                         href = href.split('/ref=')[0]
@@ -119,12 +118,12 @@ class AmazondeBSKategorien:
                     subk_url = 'https://www.amazon.de'+href
                     await self.besuchen(subk_url, j, len(sublinks), level+1)
             else:
-                print(" "*level + "Unterkategorie:", kat)
+                print("  "*level + "Unterkategorie:", kat)
                 self.kats[kat] = True
                 self.dones += 1
                 self.count()
         except Exception as e:
-            print(" "*level + "Fehler beim URL:", k_url, f"({str(e)})")
+            print("  "*level + "Fehler beim URL:", k_url, f"({str(e)})")
             self.kats[k_url] = False
             self.errs += 1
             self.count()
