@@ -104,12 +104,12 @@ class AmazondeBSKategorien:
             treeitems = await self.page.querySelectorAll('div[role="group"] > div')
             sublinks = await self.page.querySelectorAll('div[role="group"] a')
             if len(treeitems) == len(sublinks): # 子分类页面会缺少一个子分类要素
-                for j, sublink in enumerate(sublinks, start=1):
-                    href = await self.page.evaluate(self.GET_ATTR_JS, sublink, 'href')
+                hrefs = [(await self.page.evaluate(self.GET_ATTR_JS, sublink, 'href')) for sublink in sublinks]
+                for j, href in enumerate(hrefs, start=1):
                     if '/ref' in href:
                         href = href.split('/href')[0]
                     
-                    subk_url = 'https://www.amazon.de/'+href
+                    subk_url = 'https://www.amazon.de'+href
                     await self.besuchen(subk_url, j, len(sublinks))
             else:
                 print(" "*level + "Unterkategorie:", kat)
