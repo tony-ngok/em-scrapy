@@ -114,7 +114,7 @@ class AmazondeBSKategorien:
                 hrefs = [(await self.page.evaluate(self.GET_ATTR_JS, sublink, 'href')) for sublink in sublinks]
                 namen = [(await self.page.evaluate(self.GET_TXT_JS, sublink)) for sublink in sublinks]
 
-                for j, href, name in enumerate(zip(hrefs, namen), start=1):
+                for j, (href, name) in enumerate(zip(hrefs, namen), start=1):
                     filter = False
                     for filt in self.FILTERS:
                         if filt in name.lower():
