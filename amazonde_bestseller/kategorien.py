@@ -115,11 +115,9 @@ class AmazondeBSKategorien:
                 for j, href in enumerate(hrefs, start=1):
                     if '/ref=' in href:
                         href = href.split('/ref=')[0]
-                    if href.startswith('/-/en'):
-                        href = href[5:]
                     
                     subk_url = 'https://www.amazon.de'+href
-                    await self.besuchen(subk_url, j, len(sublinks))
+                    await self.besuchen(subk_url, j, len(sublinks), level+1)
             else:
                 print(" "*level + "Unterkategorie:", kat)
                 self.kats[kat] = True
