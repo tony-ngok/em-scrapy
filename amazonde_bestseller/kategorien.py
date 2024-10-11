@@ -75,12 +75,11 @@ class AmazondeBSKategorien:
 
     async def scrape(self):
         i = 1
-        for k, v in self.kats.items():
-            if not v:
-                k_url = 'https://www.amazon.de/gp/bestsellers/'+k
-                print(f"{i:_}/{self.todos:_}".replace("_", "."), k_url)
-                await self.besuchen(k_url)
-                i += 1
+        for k in self.todos:
+            k_url = 'https://www.amazon.de/gp/bestsellers/'+k
+            print(f"{i:_}/{self.todos:_}".replace("_", "."), k_url)
+            await self.besuchen(k_url)
+            i += 1
 
     async def besuchen(self, k_url: str, level: int = 0):
         print('\n' + " "*level + k_url)
