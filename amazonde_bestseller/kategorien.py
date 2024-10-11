@@ -112,12 +112,12 @@ class AmazondeBSKategorien:
             sublinks = await self.page.querySelectorAll('div[role="group"] a')
             if len(treeitems) == len(sublinks): # 子分类页面会缺少一个子分类要素
                 hrefs = [(await self.page.evaluate(self.GET_ATTR_JS, sublink, 'href')) for sublink in sublinks]
-                namen = [(await self.page.evaluate(self.GET_TXT_JS, sublink)).lower() for sublink in sublinks]
+                namen = [(await self.page.evaluate(self.GET_TXT_JS, sublink)) for sublink in sublinks]
 
                 for j, href, name in enumerate(zip(hrefs, namen), start=1):
                     filter = False
                     for filt in self.FILTERS:
-                        if filt in name:
+                        if filt in name.lower():
                             print("Gefiltert:", name)
                             filter = True
                             break

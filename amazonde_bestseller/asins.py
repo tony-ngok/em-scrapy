@@ -7,6 +7,9 @@ from pyppeteer import launch
 
 class AmazondeBSAsins:
     GET_ATTR_JS = '(elem, attr) => elem.getAttribute(attr)'
+    GET_TXT_JS = '(elem) => elem.textContent'
+
+    FILTERS = ['erotik', 'erotisch', 'lesben', 'lesbisch', 'schwul', 'bisexuell', 'transgender', 'genderstudies', 'queer', 'lgbt']
 
     HEADERS = {
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
@@ -92,6 +95,21 @@ class AmazondeBSAsins:
             if dismiss:
                 await dismiss.click()
                 await asyncio.sleep(0.5)
+
+            gr_kat = (await self.page.querySelectorAll('div[role="treeitem"] > a'))[2] # 大分类下的第一级子分类
+            gr_kat_name = (await self.page.evaluate(self.GET_TXT_JS, gr_kat)).strip()
+            if gr_kat_name == 'Erotik':
+                print("Kategorie gefiltert: Erotik")
+                self.count()
+                return
+
+            akt_kat = await self.page.querySelector('div[role="treeitem"] > span')
+            akt_kat_name = await self.page.evaluate(self.GET_TXT_JS, akt_kat)
+            for filt in self.FILTERS:
+                if filt in akt_kat_name.lower():
+                    print("Unterkategorie gefiltert:", akt_kat_name)
+                    self.count()
+                    return
 
             # 提取ASIN号
             asins_div = await self.page.querySelector('div.p13n-desktop-grid')
