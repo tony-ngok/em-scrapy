@@ -24,7 +24,7 @@ class AmazondeBSKategorien:
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"
     }
 
-    def __init__(self, review: bool = False, todos: list = []) -> None:
+    def __init__(self, review: bool = False, todos: list = []):
         self.kats = {}
         self.todos = []
         
@@ -66,14 +66,14 @@ class AmazondeBSKategorien:
     def get_kat(self, url: str):
         return url.split('/', 5)[-1]
 
-    async def init(self) -> None:
+    async def beginn(self):
         self.browser = await launch(headless=False)
         self.page = await self.browser.newPage()
         self.page.setDefaultNavigationTimeout(180000)
         await self.page.setViewport({ 'width': 1024, 'height': 768 })
         await self.page.setExtraHTTPHeaders(self.HEADERS)
 
-    async def scrape(self) -> None:
+    async def scrape(self):
         i = 1
         for k, v in self.kats.items():
             if not v:
@@ -149,7 +149,7 @@ async def main():
     ]
 
     bs = AmazondeBSKategorien(review, todos)
-    await bs.init()
+    await bs.beginn()
     await bs.scrape()
     await bs.fin()
 
