@@ -82,7 +82,7 @@ class AmazondeBSKategorien:
         print('\n' + " "*level + f"{i:_}/{total:_}".replace("_", "."), k_url)
         kat = self.get_kat(k_url)
 
-        accept = await self.page.evaluate('input#sp-cc-accept')
+        accept = await self.page.querySelector('input#sp-cc-accept')
         if accept:
             await accept.click()
             await asyncio.sleep(0.5)
