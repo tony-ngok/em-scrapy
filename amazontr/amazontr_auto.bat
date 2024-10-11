@@ -2,5 +2,6 @@
 
 @echo off
 cd /d "%~dp0"
-python asins.py 
+git pull
 python categories.py
+python asins.py 
