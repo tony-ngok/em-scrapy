@@ -74,15 +74,12 @@ class AmazondeBSKategorien:
         await self.page.setExtraHTTPHeaders(self.HEADERS)
 
     async def scrape(self):
-        i = 1
-        for k in self.todos:
+        for i, k in enumerate(self.todos, start=1):
             k_url = 'https://www.amazon.de/gp/bestsellers/'+k
-            print(f"{i:_}/{self.todos:_}".replace("_", "."), k_url)
-            await self.besuchen(k_url)
-            i += 1
+            await self.besuchen(k_url, i, len(self.todos))
 
-    async def besuchen(self, k_url: str, level: int = 0):
-        print('\n' + " "*level + k_url)
+    async def besuchen(self, k_url: str, i: int, total: int, level: int = 0):
+        print('\n' + " "*level + f"{i:_}/{total:_}".replace("_", "."), k_url)
         kat = self.get_kat(k_url)
 
         accept = await self.page.evaluate('input#sp-cc-accept')
@@ -107,13 +104,13 @@ class AmazondeBSKategorien:
             treeitems = await self.page.querySelectorAll('div[role="group"] > div')
             sublinks = await self.page.querySelectorAll('div[role="group"] a')
             if len(treeitems) == len(sublinks): # 子分类页面会缺少一个子分类要素
-                for sublink in sublinks:
+                for j, sublink in enumerate(sublinks, start=1):
                     href = await self.page.evaluate(self.GET_ATTR_JS, sublink, 'href')
                     if '/ref' in href:
                         href = href.split('/href')[0]
                     
                     subk_url = 'https://www.amazon.de/'+href
-                    await self.besuchen(subk_url, level+1)
+                    await self.besuchen(subk_url, j, len(sublinks))
             else:
                 print(" "*level + "Unterkategorie:", kat)
                 self.kats[kat] = True
