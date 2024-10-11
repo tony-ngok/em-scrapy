@@ -63,6 +63,9 @@ class AmazondeBSAsins:
         print(f"{self.dones:_} bestehende ASIN-Nummer(n)".replace('_', '.'))
         print(f"{self.errs:_} Fehler".replace('_', '.'))
 
+    def get_kat(self, url: str):
+        return url.split('/', 5)[-1]
+
     async def beginn(self):
         self.browser = await launch(headless=False)
         self.page = await self.browser.newPage()
@@ -132,7 +135,7 @@ class AmazondeBSAsins:
                 await self.besuch(url+'?ie=UTF8&pg=2')
         except Exception as e:
             print("Fehler beim URL:", url, f"({str(e)})")
-            self.asins[url] = False
+            self.asins[self.get_kat(url)] = False
             self.errs += 1
             self.count()
 
