@@ -82,11 +82,6 @@ class AmazondeBSKategorien:
         print('\n' + " "*level + f"{i:_}/{total:_}".replace("_", "."), k_url)
         kat = self.get_kat(k_url)
 
-        accept = await self.page.querySelector('input#sp-cc-accept')
-        if accept:
-            await accept.click()
-            await asyncio.sleep(0.5)
-
         try:
             if kat in self.kats:
                 print(" "*level + "Duplikat")
@@ -100,6 +95,11 @@ class AmazondeBSKategorien:
                 self.errs += 1
                 self.count()
                 return
+            
+            accept = await self.page.querySelector('input#sp-cc-accept')
+            if accept:
+                await accept.click()
+                await asyncio.sleep(0.5)
             
             treeitems = await self.page.querySelectorAll('div[role="group"] > div')
             sublinks = await self.page.querySelectorAll('div[role="group"] a')
