@@ -6,7 +6,6 @@ from pyppeteer import launch
 
 class AmazondeBSKategorien:
     GET_ATTR_JS = '(elem, attr) => elem.getAttribute(attr)'
-    GET_TXT_JS = '(elem) => elem.textContent'
 
     HEADERS = {
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
@@ -48,7 +47,6 @@ class AmazondeBSKategorien:
                         self.todos.append(kat)
             except:
                 print("Keine vorigen Fehler")
-
         else:
             print("Neustarten")
             for todo in todos:
@@ -85,23 +83,23 @@ class AmazondeBSKategorien:
 
         try:
             if kat in self.kats:
-                print("  "*level + "Duplikat")
+                print("Duplikat")
                 self.count()
                 return
 
             resp = await self.page.goto(k_url)
             if resp.status >= 400:
-                print("  "*level + "Fehler", resp.status, "beim URL:", k_url)
+                print("Fehler", resp.status, "beim URL:", k_url)
                 self.kats[kat] = False
                 self.errs += 1
                 self.count()
                 return
             
+            # 初次进入网页
             accept = await self.page.querySelector('input#sp-cc-accept')
             if accept:
                 await accept.click()
                 await asyncio.sleep(0.5)
-            
             dismiss = await self.page.querySelector('input[data-action-type="DISMISS"]')
             if dismiss:
                 await dismiss.click()
@@ -118,12 +116,12 @@ class AmazondeBSKategorien:
                     subk_url = 'https://www.amazon.de'+href
                     await self.besuchen(subk_url, j, len(sublinks), level+1)
             else:
-                print("  "*level + "Unterkategorie:", kat)
+                print("Unterkategorie:", kat)
                 self.kats[kat] = True
                 self.dones += 1
                 self.count()
         except Exception as e:
-            print("  "*level + "Fehler beim URL:", k_url, f"({str(e)})")
+            print("Fehler beim URL:", k_url, f"({str(e)})")
             self.kats[k_url] = False
             self.errs += 1
             self.count()

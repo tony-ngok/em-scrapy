@@ -164,6 +164,7 @@ cython_debug/
 *.csv
 *.html
 *.json
+*.txt
 *.xml
 *.js
 *_csvs/
