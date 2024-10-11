@@ -6,6 +6,9 @@ from pyppeteer import launch
 
 class AmazondeBSKategorien:
     GET_ATTR_JS = '(elem, attr) => elem.getAttribute(attr)'
+    GET_TXT_JS = '(elem) => elem.textContent'
+
+    FILTERS = ['erotik', 'erotisch', 'lesben', 'lesbisch', 'schwul', 'bisexuell', 'transgender', 'genderstudies', 'queer', 'lgbt']
 
     HEADERS = {
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
@@ -109,12 +112,22 @@ class AmazondeBSKategorien:
             sublinks = await self.page.querySelectorAll('div[role="group"] a')
             if len(treeitems) == len(sublinks): # 子分类页面会缺少一个子分类要素
                 hrefs = [(await self.page.evaluate(self.GET_ATTR_JS, sublink, 'href')) for sublink in sublinks]
-                for j, href in enumerate(hrefs, start=1):
-                    if '/ref=' in href:
-                        href = href.split('/ref=')[0]
-                    
-                    subk_url = 'https://www.amazon.de'+href
-                    await self.besuchen(subk_url, j, len(sublinks), level+1)
+                namen = [(await self.page.evaluate(self.GET_TXT_JS, sublink)).lower() for sublink in sublinks]
+
+                for j, href, name in enumerate(zip(hrefs, namen), start=1):
+                    filter = False
+                    for filt in self.FILTERS:
+                        if filt in name:
+                            print("Gefiltert:", name)
+                            filter = True
+                            break
+
+                    if not filter:
+                        if '/ref=' in href:
+                            href = href.split('/ref=')[0]
+                        
+                        subk_url = 'https://www.amazon.de'+href
+                        await self.besuchen(subk_url, j, len(sublinks), level+1)
             else:
                 print("Unterkategorie:", kat)
                 self.kats[kat] = True
