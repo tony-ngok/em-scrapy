@@ -101,14 +101,19 @@ class AmazondeBSKategorien:
                 await accept.click()
                 await asyncio.sleep(0.5)
             
+            dismiss = await self.page.querySelector('input[data-action-type="DISMISS"]')
+            if dismiss:
+                await dismiss.click()
+                await asyncio.sleep(0.5)
+            
             treeitems = await self.page.querySelectorAll('div[role="group"] > div')
             sublinks = await self.page.querySelectorAll('div[role="group"] a')
             if len(treeitems) == len(sublinks): # 子分类页面会缺少一个子分类要素
                 hrefs = [(await self.page.evaluate(self.GET_ATTR_JS, sublink, 'href')) for sublink in sublinks]
                 print(hrefs)
                 for j, href in enumerate(hrefs, start=1):
-                    if '/ref' in href:
-                        href = href.split('/href')[0]
+                    if '/ref=' in href:
+                        href = href.split('/ref=')[0]
                     
                     subk_url = 'https://www.amazon.de'+href
                     await self.besuchen(subk_url, j, len(sublinks))
