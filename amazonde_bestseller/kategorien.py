@@ -11,7 +11,7 @@ class AmazondeBSKategorien:
     HEADERS = {
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
         "Accept-Encoding": "gzip, deflate, br",
-        "Accept-Language": "fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7",
+        "Accept-Language": "de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7",
         "Referer": "https://www.amazon.de/",
         "Sec-CH-UA": '"Not_A Brand";v="99", "Google Chrome";v="109", "Chromium";v="109"',
         "Sec-CH-UA-Mobile": "?0",
@@ -25,50 +25,49 @@ class AmazondeBSKategorien:
     }
 
     def __init__(self, review: bool = False, todos: list = []) -> None:
+        self.kats = {}
+        self.todos = []
+        
         if review:
             try:
                 with open('amazonde_bestsellers_kategorien.txt', 'r', encoding='utf-8') as f_cats:
                     # 抓取记录
-                    self.cats = {}
                     for line in f_cats:
-                        kat, stat = line.strip().split() 
-                        self.cats[kat] = int(stat) # 0：未完成；1：已完成
+                        kat = line.strip()
+                        self.kats[kat] = True
             except:
                 print("Keine Kategorien: Neustarten")
-                self.cats = {self.get_katnr(todo): 0 for todo in todos}
+                for todo in todos:
+                    self.todos.append(self.get_kat(todo))
+
+            try:
+                with open('amazonde_bestsellers_kategorien_fehler.txt', 'r', encoding='utf-8') as f_errs:
+                    for line in f_errs:
+                        kat = line.strip()
+                        self.todos.append(kat)
+            except:
+                print("Keine vorigen Fehler")
+
         else:
             print("Neustarten")
-            self.cats = {self.get_katnr(todo): 0 for todo in todos}
+            for todo in todos:
+                self.todos.append(self.get_kat(todo))
 
-        self.init_count()
+        print(f"{len(self.kats):_} bestehende Kategorie(n)".replace('_', '.'))
+        print(f"{len(self.todos):_} URL(s) zu erledigen".replace('_', '.'))
+
+        self.dones = len(self.kats)
         self.errs = 0
-            
-    def init_count(self) -> None:
-        '''
-        数已完成（True）与未完成（False出错或None未遍历）的分类
-        '''
-
-        self.dones = 0
-        self.todos = 0
-        
-        for _, v in self.cats.items():
-            if v:
-                self.dones += 1
-            else:
-                self.todos += 1
-        
-        print(f"{self.dones:_} bestehende Kategorie(n)".replace('_', '.'))
-        print(f"{self.todos:_} URL(s) zu erledigen".replace('_', '.'))
 
     def count(self):
         print(f"{self.dones:_} bestehende Kategorie(n)".replace('_', '.'))
         print(f"{self.errs:_} Fehler".replace('_', '.'))
 
-    def get_katnr(self, url: str):
+    def get_kat(self, url: str):
         return url.split('/', 5)[-1]
 
     async def init(self) -> None:
-        self.browser = await launch()
+        self.browser = await launch(headless=False)
         self.page = await self.browser.newPage()
         self.page.setDefaultNavigationTimeout(180000)
         await self.page.setViewport({ 'width': 1024, 'height': 768 })
@@ -76,7 +75,7 @@ class AmazondeBSKategorien:
 
     async def scrape(self) -> None:
         i = 1
-        for k, v in self.cats.items():
+        for k, v in self.kats.items():
             if not v:
                 k_url = 'https://www.amazon.de/gp/bestsellers/'+k
                 print(f"{i:_}/{self.todos:_}".replace("_", "."), k_url)
@@ -85,10 +84,15 @@ class AmazondeBSKategorien:
 
     async def besuchen(self, k_url: str, level: int = 0):
         print('\n' + " "*level + k_url)
-        kat_nr = self.get_katnr(k_url)
+        kat = self.get_kat(k_url)
+
+        accept = await self.page.evaluate('input#sp-cc-accept')
+        if accept:
+            await accept.click()
+            await asyncio.sleep(0.5)
 
         try:
-            if self.cats.get(kat_nr):
+            if kat in self.kats:
                 print(" "*level + "Duplikat")
                 self.count()
                 return
@@ -96,7 +100,7 @@ class AmazondeBSKategorien:
             resp = await self.page.goto(k_url)
             if resp.status >= 400:
                 print(" "*level + "Fehler", resp.status, "beim URL:", k_url)
-                self.cats[k_url] = -1
+                self.kats[kat] = False
                 self.errs += 1
                 self.count()
                 return
@@ -109,28 +113,28 @@ class AmazondeBSKategorien:
                     if '/ref' in href:
                         href = href.split('/href')[0]
                     
-                    subk_url = 'https://www.amazon.de/gp/bestsellers/'+href
+                    subk_url = 'https://www.amazon.de/'+href
                     await self.besuchen(subk_url, level+1)
             else:
-                print(" "*level + "Unterkategorie:", kat_nr)
-                self.cats[kat_nr] = 1
+                print(" "*level + "Unterkategorie:", kat)
+                self.kats[kat] = True
                 self.dones += 1
                 self.count()
         except Exception as e:
             print(" "*level + "Fehler beim URL:", k_url, f"({str(e)})")
-            self.cats[k_url] = -1
+            self.kats[k_url] = False
             self.errs += 1
             self.count()
 
     async def fin(self):
         await self.browser.close()
 
-        with open('amazonde_bestsellers_kategorien.txt', 'w', encoding='utf-8') as f_cats:
-            for k, v in self.cats.items():
-                if v == 1:
-                    f_cats.write(f"{k} 1\n")
+        with open('amazonde_bestsellers_kategorien.txt', 'w', encoding='utf-8') as f_cats, open('amazonde_bestsellers_kategorien_fehler.txt', 'w', encoding='utf-8') as f_errs:
+            for k, v in self.kats.items():
+                if v:
+                    f_cats.write(k+'\n')
                 else:
-                    f_cats.write(f"{k} 0\n")
+                    f_errs.write(k+'\n')
 
 
 async def main():
