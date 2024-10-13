@@ -53,19 +53,6 @@ class YahoojpProduit(scrapy.Spider):
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0"
         }
 
-        # self.start_urls = [
-        #     "https://lohaco.yahoo.co.jp/store/h-lohaco/item/re41648",
-        #     "https://lohaco.yahoo.co.jp/store/h-lohaco/item/wx88723",
-        #     "https://lohaco.yahoo.co.jp/store/h-lohaco/item/hk77293",
-        #     "https://lohaco.yahoo.co.jp/store/h-lohaco/item/rk84669",
-        #     "https://lohaco.yahoo.co.jp/store/h-lohaco/item/hn23157",
-        #     "https://lohaco.yahoo.co.jp/store/h-lohaco/item/6120688",
-        #     "https://lohaco.yahoo.co.jp/store/h-lohaco3/item/p827709",
-        #     "https://lohaco.yahoo.co.jp/store/h-lohaco/item/ju16176",
-        #     "https://lohaco.yahoo.co.jp/store/h-lohaco/item/hn23160",
-        #     "https://lohaco.yahoo.co.jp/store/h-lohaco/item/ee74357",
-        #     "https://lohaco.yahoo.co.jp/store/h-lohaco/item/xn18230"
-        # ] # 测试用
         with open('yahoojp_prods_urls.json', 'r', encoding='utf-8') as f_in:
             self.start_urls = [prod for prod in json.load(f_in)]
         print(f"Total {len(self.start_urls):_} produit(s)".replace('_', '.'))
@@ -563,7 +550,7 @@ class YahoojpProduit(scrapy.Spider):
             "reviews": review.get('count'),
             "rating": review.get('average'),
             "sold_count": None,
-            "shipping_fee": round(prod_scr['postage'].get('fee', 0.00)/self.exch_rate, 2),
+            "shipping_fee": round(prod_scr.get('postage', {}).get('fee', 0.00)/self.exch_rate, 2),
             "shipping_days_min": self.parse_deliv_date(item['delivery'], now),
             "shipping_days_max": None,
             "weight": spec_info['weight'],
