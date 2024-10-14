@@ -345,7 +345,9 @@ class YahoojpProduit(scrapy.Spider):
 
         images = []
         for img in img_list:
-            img_url = img['src']
+            img_url = img.get('src')
+            if not img_url:
+                continue
 
             filter = False
             for filt in self.FILTERS:
