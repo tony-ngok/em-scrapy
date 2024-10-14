@@ -346,7 +346,7 @@ class YahoojpProduit(scrapy.Spider):
         images = []
         for img in img_list:
             img_url = img.get('src')
-            if (not img_url) or ('no_thumbnail' in img_url):
+            if (not img_url) or ('no_thumbnail' in img_url) or ('product_movie' in img_url):
                 continue
 
             filter = False
