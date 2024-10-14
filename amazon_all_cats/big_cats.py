@@ -197,7 +197,7 @@ async def main():
         review = True
 
     todos = [
-        'https://www.amazon.com',
+        'https://www.amazon.com', # https://www.amazon.com/b?ie=UTF8&node=17602470011所有分类
         # 'https://www.amazon.co.uk',
         # 'https://www.amazon.de'
     ]
