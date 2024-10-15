@@ -121,7 +121,7 @@ class AmazonCats:
             await dismiss.click()
             await asyncio.sleep(0.5)
 
-    async def visite(self, url: str, i: int, i_max: int, level: int = 0, cat_name: str = ''):
+    async def visite(self, url: str, i: int, i_max: int, level: int = 0):
         print("\n" + "  "*level + f"{i}/{i_max}".replace('_', '.'), url)
 
         cat_code = self.url_to_code(url)
@@ -155,8 +155,14 @@ class AmazonCats:
                             break
 
                     if not filt:
-                        await self.visite(url.rsplit('/', 1)[0]+sh, j, len(sub_cats), level+1, sn)
+                        await self.visite(url.rsplit('/', 1)[0]+sh, j, len(sub_cats), level+1)
             else: # 翻到子分类了
+                subcat_sel = await self.page.querySelector('li.s-navigation-indent-1 > span > span')
+                if subcat_sel:
+                    cat_name = await self.page.evaluate(self.GET_TXT_JS, subcat_sel)
+                else:
+                    return
+                
                 qty = 0
                 qty_sel = await self.page.querySelector('span[data-component-type="s-result-info-bar"] div.sg-col-inner > div > span')
                 if qty_sel:
