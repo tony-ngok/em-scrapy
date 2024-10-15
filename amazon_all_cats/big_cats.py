@@ -3,7 +3,6 @@ import re
 from sys import argv
 
 from pyppeteer import launch
-from pyppeteer.element_handle import ElementHandle
 
 
 class AmazonBigCats:
