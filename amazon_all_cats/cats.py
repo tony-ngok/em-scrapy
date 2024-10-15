@@ -156,7 +156,8 @@ class AmazonCats:
                             break
 
                     if not filt:
-                        await self.visite(url.rsplit('/', 1)[0]+sh, j, len(sub_cats), level+1)
+                        code = re.findall(r'n%3A(\d+)', sh)[-1]
+                        await self.visite(url.rsplit('/', 1)[0]+f'/s?rh=n%3A{code}&fs=true', j, len(sub_cats), level+1)
             else: # 翻到子分类了
                 subcat_sel = await self.page.querySelector('li.s-navigation-indent-1 > span > span')
                 if subcat_sel:
