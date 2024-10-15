@@ -99,7 +99,7 @@ class AmazonCats:
     async def scrape(self):
         for i, todo in enumerate(self.todos, start=1):
             url = self.code_to_url(todo)
-            
+
             headers = { **self.HEADERS, 'Referer': url.rsplit('/', 1)[0]+'/' }
             if '.de' in url:
                 headers = { **headers, "Cookie": "lc-acbde=de_DE" } # Deutsch erzwingen
@@ -121,7 +121,7 @@ class AmazonCats:
             await dismiss.click()
             await asyncio.sleep(0.5)
 
-    async def visite(self, url: str, i: int, i_max: int, level: int = 0, first: bool = False):
+    async def visite(self, url: str, i: int, i_max: int, level: int = 0, cat_name: str = '', first: bool = False):
         print("\n" + "  "*level + f"{i}/{i_max}".replace('_', '.'), url)
 
         cat_code = self.url_to_code(url)
@@ -157,14 +157,14 @@ class AmazonCats:
 
                     if not filt:
                         code = re.findall(r'n%3A(\d+)', sh)[-1]
-                        await self.visite(url.rsplit('/', 1)[0]+f'/s?rh=n%3A{code}&fs=true', j, len(sub_cats), level+1)
+                        await self.visite(url.rsplit('/', 1)[0]+f'/s?rh=n%3A{code}&fs=true', j, len(sub_cats), level+1, sn)
             else: # 翻到子分类了
                 subcat_sel = await self.page.querySelector('li.s-navigation-indent-1 > span > span')
                 if subcat_sel:
                     cat_name = await self.page.evaluate(self.GET_TXT_JS, subcat_sel)
-                else:
+                elif not cat_name:
                     return
-                
+
                 qty = 0
                 qty_sel = await self.page.querySelector('span[data-component-type="s-result-info-bar"] div.sg-col-inner > div > span')
                 if qty_sel:
