@@ -38,7 +38,7 @@ class AmazonCats:
                         cat_code = self.url_to_code(rec['url'])
                         self.cats[cat_code] = (rec['name'], rec['qty'])
             except:
-                print("No previous big cat(s)")
+                print("No previous subcat(s)")
                 for todo in todos:
                     self.todos.append(todo)
 
@@ -54,14 +54,14 @@ class AmazonCats:
             for todo in todos:
                 self.todos.append(todo)
 
-        print(f"{len(self.cats):_} existent big categorie(s)".replace('_', '.'))
+        print(f"{len(self.cats):_} existent subcategorie(s)".replace('_', '.'))
         print(f"{len(self.todos):_} URL(s) to do".replace('_', '.'))
 
         self.dones = len(self.cats)
         self.errs = 0
 
     def count(self):
-        print(f"{self.dones:_} existent big categorie(s)".replace('_', '.'))
+        print(f"{self.dones:_} existent subcategorie(s)".replace('_', '.'))
         print(f"{self.errs:_} error(s)".replace('_', '.'))
 
     def get_code(self, url: str, regex: str):
