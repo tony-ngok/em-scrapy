@@ -105,7 +105,7 @@ class AmazonCats:
                 headers = { **headers, "Cookie": "lc-acbde=de_DE" } # Deutsch erzwingen
             await self.page.setExtraHTTPHeaders(headers)
 
-            await self.visite(url, i, len(self.todos), True)
+            await self.visite(url, i, len(self.todos), first=True)
 
     async def first_visite(self):
         '''
@@ -121,7 +121,7 @@ class AmazonCats:
             await dismiss.click()
             await asyncio.sleep(0.5)
 
-    async def visite(self, url: str, i: int, i_max: int, first: bool = False, level: int = 0):
+    async def visite(self, url: str, i: int, i_max: int, level: int = 0, first: bool = False):
         print("\n" + "  "*level + f"{i}/{i_max}".replace('_', '.'), url)
 
         cat_code = self.url_to_code(url)
