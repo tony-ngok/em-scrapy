@@ -166,11 +166,14 @@ class AmazonCats:
                 elif not cat_name:
                     return
 
-                qty = 0
-                qty_sel = await self.page.querySelector('span[data-component-type="s-result-info-bar"] div.sg-col-inner > div > span')
-                if qty_sel:
-                    qty_txt = (await self.page.evaluate(self.GET_TXT_JS, qty_sel)).split()[-2]
-                    qty = int(qty_txt.replace(',', '').replace('.', ''))
+                try:
+                    qty = 0
+                    qty_sel = await self.page.querySelector('span[data-component-type="s-result-info-bar"] div.sg-col-inner > div > span')
+                    if qty_sel:
+                        qty_txt = (await self.page.evaluate(self.GET_TXT_JS, qty_sel)).split()[-2]
+                        qty = int(qty_txt.replace(',', '').replace('.', ''))
+                except:
+                    return
 
                 print("Subcategory:", cat_name, f"({qty:_} result(s))".replace('_', '.'))
                 self.cats[cat_code] = (cat_name, qty)
