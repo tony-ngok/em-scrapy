@@ -1,4 +1,5 @@
 import asyncio
+from urllib.parse import unquote
 
 from pyppeteer import launch
 from pyppeteer.network_manager import Response
@@ -39,7 +40,7 @@ class NaverCosmeticGraphqlExt:
     async def getGraphqlHash(self):
         def handle_response(response: Response): # 监听页面发出请求，以获得密文
             if 'graphql?operationName=FetchPagedLuxuryListItems' in response.url:
-                self.graphql_ext = response.url.split("&extensions=")[1]
+                self.graphql_ext = unquote(response.url.split("&extensions=")[1])
                 print("Get GraphQL extension:", self.graphql_ext)
         self.page.on('response', handle_response)
 
