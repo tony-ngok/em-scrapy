@@ -140,6 +140,7 @@ class AmazonCats:
             if first:
                 await self.first_visite()
 
+            # https://www.amazon.com/s?i=dvd&fs=true（stripbooks之后，UK之前）下漏了2个子分类
             sub_cats = await self.page.querySelectorAll('li.s-navigation-indent-2 a')
             if sub_cats:
                 print("  "*level + f"{len(sub_cats)} subcategorie(s)")
