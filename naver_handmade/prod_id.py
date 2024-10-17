@@ -60,17 +60,16 @@ class NaverHandmadeProdId:
         print(f"{self.errs:_} error(s)".replace('_', '.'))
 
     # Naver API 翻页每个分类最大可以取得1万个商品，每页最多可以有306个商品
-    def brand_cat_api(self, brand_cat: str, page: int = 1, page_size: int = 306):
-        br, cat = brand_cat.split('_')
-        return f"https://shopping.naver.com/v1/products?_nc_=1729141200000&subVertical=HANDMADE&page={page}&pageSize={page_size}&sort=RECENT&filter=ALL&displayType=CATEGORY_HOME&includeZzim=true&includeViewCount=true&includeStoreCardInfo=true&includeStockQuantity=false&includeBrandInfo=false&includeBrandLogoImage=false&includeRepresentativeReview=false&includeListCardAttribute=false&includeRanking=false&includeRankingByMenus=false&includeStoreCategoryName=false&includeIngredient=false&menuId={cat}&brandIds[]={br}&standardSizeKeys[]=&standardColorKeys[]=&attributeValueIds[]=&attributeValueIdsAll[]=&certifications[]=&includeStoreInfoWithHighRatingReview=false&guaranteeTypes[]="
+    def brand_cat_api(self, cat: str, page: int = 1, page_size: int = 306):
+        return f"https://shopping.naver.com/v1/products?_nc_=1729141200000&subVertical=HANDMADE&page={page}&pageSize={page_size}&sort=RECENT&filter=ALL&displayType=CATEGORY_HOME&includeZzim=true&includeViewCount=true&includeStoreCardInfo=true&includeStockQuantity=false&includeBrandInfo=false&includeBrandLogoImage=false&includeRepresentativeReview=false&includeListCardAttribute=false&includeRanking=false&includeRankingByMenus=false&includeStoreCategoryName=false&includeIngredient=false&menuId={cat}&brandIds[]=&standardSizeKeys[]=&standardColorKeys[]=&attributeValueIds[]=&attributeValueIdsAll[]=&certifications[]=&includeStoreInfoWithHighRatingReview=false&guaranteeTypes[]="
 
     def scrape(self):
-        for i, br_cat in enumerate(self.todos, start=1):
+        for i, cat in enumerate(self.todos, start=1):
             print()
-            self.get_ids(i, br_cat)
+            self.get_ids(i, cat)
 
-    def get_ids(self, i: int, br_cat: str, page: int = 1, page_size: int = 306):
-        api = self.brand_cat_api(br_cat, page, page_size)
+    def get_ids(self, i: int, cat: str, page: int = 1, page_size: int = 306):
+        api = self.brand_cat_api(cat, page, page_size)
         print(f"{i}/{len(self.todos)}", api)
 
         try:
@@ -91,10 +90,10 @@ class NaverHandmadeProdId:
 
             has_more = result['hasMoreProducts']
             if has_more and (page < math.ceil(10000/page_size)):
-                self.get_ids(i, br_cat, page+1, page_size)
+                self.get_ids(i, cat, page+1, page_size)
         except Exception as e:
             print("ERROR:", str(e))
-            self.prods_ids[br_cat] = False
+            self.prods_ids[f"c{cat}"] = False
             self.errs += 1
             self.count()  
 
@@ -104,7 +103,7 @@ class NaverHandmadeProdId:
                 if v:
                     f_prods_ids.write(k+'\n')
                 else:
-                    f_errs.write(k+'\n')
+                    f_errs.write(k[1:]+'\n')
 
         if self.errs:
             sys.exit(1)
@@ -119,9 +118,8 @@ if __name__ == '__main__':
 
     todos = []
     if not review:
-        with open('naver_handmade_cats_brands.txt', 'r', encoding='utf-8') as f_cats_brands:
-            for line in f_cats_brands:
-                todos.append(line.strip())
+        for c in [64, 65, 66, 68, 69, 70, 71]:
+            todos.append(f"100048{c}")
 
     nh_prods = NaverHandmadeProdId(review, todos)
     nh_prods.scrape()
