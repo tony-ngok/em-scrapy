@@ -483,10 +483,6 @@ class YahoojpProduit(scrapy.Spider):
                 return round(val*self.KG_TO_LB, 2)
             if unit in {'g', 'ml'}:
                 return round(val*self.G_TO_LB, 2)
-            # if unit == 'm':
-            #     return round(val*self.M_TO_IN, 2)
-            # if unit == 'cm':
-            #     return round(val*self.CM_TO_IN, 2)
 
     def parse(self, response: HtmlResponse):
         url = response.meta['url']
