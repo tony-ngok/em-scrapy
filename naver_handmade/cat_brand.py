@@ -80,7 +80,7 @@ class NaverHandmadeCatBrand:
     async def scrape(self):
         for i, todo in enumerate(self.todos, start=1):
             print(f'\n{i}/{len(self.todos)}', todo)
-
+            await self.get_brands(todo)
 
     async def get_brands(self, url: str):
         try:
