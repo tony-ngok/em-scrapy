@@ -62,7 +62,7 @@ class NaverHandmadeProdId:
     # Naver API 翻页每个分类最大可以取得1万个商品，每页最多可以有306个商品
     def brand_cat_api(self, brand_cat: str, page: int = 1, page_size: int = 306):
         br, cat = brand_cat.split('_')
-        return (br, cat, f"https://shopping.naver.com/v1/products?_nc_=1729141200000&subVertical=HANDMADE&page={page}&pageSize={page_size}&sort=RECENT&filter=ALL&displayType=CATEGORY_HOME&includeZzim=true&includeViewCount=true&includeStoreCardInfo=true&includeStockQuantity=false&includeBrandInfo=false&includeBrandLogoImage=false&includeRepresentativeReview=false&includeListCardAttribute=false&includeRanking=false&includeRankingByMenus=false&includeStoreCategoryName=false&includeIngredient=false&menuId={cat}&brandIds[]={br}&standardSizeKeys[]=&standardColorKeys[]=&attributeValueIds[]=&attributeValueIdsAll[]=&certifications[]=&includeStoreInfoWithHighRatingReview=false&guaranteeTypes[]=")
+        return f"https://shopping.naver.com/v1/products?_nc_=1729141200000&subVertical=HANDMADE&page={page}&pageSize={page_size}&sort=RECENT&filter=ALL&displayType=CATEGORY_HOME&includeZzim=true&includeViewCount=true&includeStoreCardInfo=true&includeStockQuantity=false&includeBrandInfo=false&includeBrandLogoImage=false&includeRepresentativeReview=false&includeListCardAttribute=false&includeRanking=false&includeRankingByMenus=false&includeStoreCategoryName=false&includeIngredient=false&menuId={cat}&brandIds[]={br}&standardSizeKeys[]=&standardColorKeys[]=&attributeValueIds[]=&attributeValueIdsAll[]=&certifications[]=&includeStoreInfoWithHighRatingReview=false&guaranteeTypes[]="
 
     def scrape(self):
         for i, br_cat in enumerate(self.todos, start=1):
