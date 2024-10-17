@@ -117,6 +117,12 @@ if __name__ == '__main__':
     if (len(sys.argv) >= 2) and (sys.argv[1] == '--review'):
         review = True
 
-    nh_prods = NaverHandmadeProdId(review)
+    todos = []
+    if not review:
+        with open('naver_handmade_cats_brands.txt', 'r', encoding='utf-8') as f_cats_brands:
+            for line in f_cats_brands:
+                todos.append(line.strip())
+
+    nh_prods = NaverHandmadeProdId(review, todos)
     nh_prods.scrape()
     nh_prods.fin()
