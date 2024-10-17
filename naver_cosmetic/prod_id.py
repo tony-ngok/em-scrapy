@@ -1,5 +1,5 @@
+import sys
 import time
-from sys import argv
 
 import requests
 
@@ -46,7 +46,7 @@ class NaverCosmeticProdId:
                 print("No existents products")
                 for url in urls:
                     self.todos.append(url)
-            
+
             try:
                 with open('naver_cosmetic_prod_ids_errs.txt', 'r', encoding='utf-8') as f_errs:
                     for line in f_errs:
@@ -63,7 +63,7 @@ class NaverCosmeticProdId:
 
         self.dones = len(self.prods_ids)
         self.errs = 0
-    
+
     def count(self):
         print(f"{self.dones:_} existent product(s)".replace('_', '.'))
         print(f"{self.errs:_} error(s)".replace('_', '.'))
@@ -73,7 +73,7 @@ class NaverCosmeticProdId:
 
     def get_graphql(self, cat_no: str, page: int = 1, page_size: int = 1000):
         return f'https://shopping.naver.com/api/shopv/graphql?operationName=FetchPagedLuxuryListItems&variables={{"productParam":{{"subVertical":"COSMETIC","soldOut":false,"deliveries":[""],"sorts":[{{"target":"POPULAR","sortDirection":"DESC"}}],"channelNos":["{cat_no}"]}},"listParam":{{"page":{page},"pageSize":{page_size}}}}}&extensions='+self.graphql_ext
-    
+
     def scrape(self):
         for i, url in enumerate(self.todos, start=1):
             print()
@@ -97,7 +97,7 @@ class NaverCosmeticProdId:
                 if pid not in self.prods_ids:
                     self.prods_ids[pid] = True
                     self.dones += 1
-        
+
             self.count()
             time.sleep(1)
 
@@ -117,16 +117,16 @@ class NaverCosmeticProdId:
                     f_prods_ids.write(k+'\n')
                 else:
                     f_errs.write(k+'\n')
-        
-        if not self.errs:
-            exit(0)
+
+        if self.errs:
+            sys.exit(1)
         else:
-            exit(1)
+            sys.exit(0)
 
 
 if __name__ == '__main__':
     review = False
-    if (len(argv) >= 2) and (argv[1] == '--review'):
+    if (len(sys.argv) >= 2) and (sys.argv[1] == '--review'):
         review = True
 
     nc_prods = NaverCosmeticProdId(review)

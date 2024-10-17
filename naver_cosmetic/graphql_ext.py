@@ -7,7 +7,7 @@ from pyppeteer.network_manager import Response
 
 class NaverCosmeticGraphqlExt:
     """
-    获得抓取化妆品API所需的GraphQL扩张参数（包含一个密文）
+    获得抓取化妆品API所需的GraphQL扩张参数（密文）
     """
 
     HEADERS = {
@@ -50,7 +50,6 @@ class NaverCosmeticGraphqlExt:
                 raise Exception(f"Status {resp.status}")
         except Exception as e:
             print("ERROR:", str(e))
-            print("Fail to get GraphQL Hash")
 
     async def fin(self):
         await self.browser.close()
@@ -58,6 +57,10 @@ class NaverCosmeticGraphqlExt:
         if self.graphql_ext:
             with open('graphql_ext.txt', 'w', encoding='utf-8') as f:
                 f.write(self.graphql_ext)
+            exit(0)
+        else:
+            print("No GraphQL hash")
+            exit(1)
 
 
 async def main():
