@@ -188,7 +188,7 @@ class AmazonCats:
     async def fin(self):
         await self.browser.close()
 
-        with open('amazon_cats.json', 'w', encoding='utf-8') as f_cats, open('amazonde_cats_errs.txt', 'w', encoding='utf-8') as f_errs:
+        with open('amazon_cats.json', 'w', encoding='utf-8') as f_cats, open('amazon_cats_errs.txt', 'w', encoding='utf-8') as f_errs:
             f_cats.write('[\n')
 
             writ = False
