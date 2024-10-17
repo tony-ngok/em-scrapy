@@ -99,8 +99,8 @@ class NaverCosmeticProduct:
         await self.page.setExtraHTTPHeaders(self.HEADERS)
 
     async def scrape(self):
-        for i, todo in enumerate(self.todos, start=1):
-            await self.get_prod_info(i, todo)
+        async for i, todo in enumerate(self.todos, start=1):
+            yield await self.get_prod_info(i, todo)
 
     async def get_basic_json(self):
         basic_json_sel = await self.page.querySelector('script[type="application/ld+json"]')
