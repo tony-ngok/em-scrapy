@@ -103,6 +103,8 @@ class NaverHandmadeCatBrand:
                     self.cats_brands[cat_brand] = True
                     self.dones += 1
                     self.count()
+
+                await asyncio.sleep(0.5)
         except Exception as e:
             print("ERROR:", str(e))
             self.cats_brands[url] = False
@@ -132,7 +134,7 @@ async def main():
 
     todos = []
     if not review:
-        for c in [64, 65, 66, 68, 70, 71]:
+        for c in [64, 65, 66, 68, 69, 70, 71]:
             todos.append(f"https://shopping.naver.com/living/handmade/category?menu=100048{c}")
 
     nh_brands = NaverHandmadeCatBrand(review, todos)
