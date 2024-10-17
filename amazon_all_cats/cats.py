@@ -1,6 +1,7 @@
 import asyncio
 import json
 import re
+import sys
 from sys import argv
 
 from pyppeteer import launch
@@ -132,7 +133,6 @@ class AmazonCats:
 
         try:
             resp = await self.page.goto(url)
-            # print(resp.request.headers)
             if resp.status >= 400:
                 raise Exception(f"Error {resp.status}")
 
@@ -166,14 +166,14 @@ class AmazonCats:
                 elif not cat_name:
                     return
 
+                qty = 0
                 try:
-                    qty = 0
                     qty_sel = await self.page.querySelector('span[data-component-type="s-result-info-bar"] div.sg-col-inner > div > span')
                     if qty_sel:
                         qty_txt = (await self.page.evaluate(self.GET_TXT_JS, qty_sel)).split()[-2]
                         qty = int(qty_txt.replace(',', '').replace('.', ''))
                 except:
-                    return
+                    pass
 
                 print("Subcategory:", cat_name, f"({qty:_} result(s))".replace('_', '.'))
                 self.cats[cat_code] = (cat_name, qty)
@@ -204,6 +204,11 @@ class AmazonCats:
                     f_errs.write(k+'\n')
 
             f_cats.write("\n]")
+
+        if self.errs:
+            sys.exit(1)
+        else:
+            sys.exit(0)
 
 async def main():
     review = False
