@@ -32,7 +32,7 @@ class NaverCosmeticProdId:
                 print("GraphQL extension:", self.graphql_ext)
         except:
             print("Fail to get GraphQL extension!")
-            self.graphql_ext = None
+            sys.exit(1)
 
         self.prods_ids = {}
         self.todos = []
@@ -43,7 +43,7 @@ class NaverCosmeticProdId:
                     for line in f_prods_ids:
                         self.prods_ids[line.strip()] = True
             except:
-                print("No existents products")
+                print("No existents prod(s) id(s)")
                 for url in urls:
                     self.todos.append(url)
 
@@ -58,14 +58,14 @@ class NaverCosmeticProdId:
             for url in urls:
                 self.todos.append(url)
 
-        print(f"{len(self.prods_ids):_} existent product(s)".replace('_', '.'))
+        print(f"{len(self.prods_ids):_} existent prod(s) id(s)".replace('_', '.'))
         print(f"{len(self.todos):_} URL(s) todo".replace('_', '.'))
 
         self.dones = len(self.prods_ids)
         self.errs = 0
 
     def count(self):
-        print(f"{self.dones:_} existent product(s)".replace('_', '.'))
+        print(f"{self.dones:_} existent prod(s) id(s)".replace('_', '.'))
         print(f"{self.errs:_} error(s)".replace('_', '.'))
 
     def get_cat_no(self, url: str):
@@ -81,15 +81,14 @@ class NaverCosmeticProdId:
             self.get_ids(i, cat_no)
 
     def get_ids(self, i: int, cat_no: str, page: int = 1):
-        try:
-            graph_url = self.get_graphql(cat_no, page)
-            print(f"{i}/{len(self.todos)}", graph_url)
+        graph_url = self.get_graphql(cat_no, page)
+        print(f"{i}/{len(self.todos)}", graph_url)
 
+        try:
             resp = requests.get(graph_url, headers=self.HEADERS, timeout=300)
             if resp.status_code >= 300:
                 raise Exception(f"Status {resp.status_code}")
 
-            # print(resp.json())
             result = resp.json()['data']['pagedLuxuryListItems']
             items = result.get('items', [])
             for item in items:

@@ -15,7 +15,7 @@ if %ERRORLEVEL% neq 0 (
 )
 
 @REM 反复运行抓取商品号，直到没有出错了为止
-:prod_id_initial
+:prod_id
 echo Start program prod_id.py...
 python prod_id.py
 echo Exit code: %ERRORLEVEL%
