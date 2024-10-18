@@ -105,7 +105,7 @@ class NaverCosmeticProdId:
                     self.dones += 1
 
             self.count()
-            time.sleep(3.6)
+            time.sleep(randint(2400, 4800)/1000.0)
 
             has_more = result['hasMore']
             if has_more:
