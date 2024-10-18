@@ -3,7 +3,6 @@ import re
 import sys
 import time
 from datetime import datetime
-from random import randint
 
 import requests
 from scrapy.http import HtmlResponse
@@ -90,7 +89,6 @@ class NaverCosmeticProduct:
     def scrape(self):
         for i, todo in enumerate(self.todos, start=1):
             yield self.get_prod_info(i, todo)
-            time.sleep(randint(2400, 4800)/1000.0)
 
     def get_exist(self):
         return (not self.prod_json['soldout'])
@@ -98,33 +96,33 @@ class NaverCosmeticProduct:
     def get_div_descr(self, prod_id: str):
         descr = ""
 
-        try:
-            descr_resp = requests.get(f'https://shopping.naver.com/product-detail/v1/products/{prod_id}/contents/pc/PC', headers=self.HEADERS, timeout=60)
-            if descr_resp.status_code >= 300:
-                raise Exception(f"Error {descr_resp.status_code}")
+        descr_resp = requests.get(f'https://shopping.naver.com/product-detail/v1/products/{prod_id}/contents/pc/PC', headers=self.HEADERS, timeout=60, allow_redirects=False)
+        if descr_resp.status_code in {204, 404}:
+            print("No div descriptions")
+            return ""
+        elif descr_resp.status_code >= 300:
+            raise Exception(f"Error {descr_resp.status_code} ({descr_resp.url})")
 
-            raw_descr = descr_resp.json()['renderContent']
-            resp_tmp = HtmlResponse('', body=raw_descr, encoding='utf-8')
-            resp_getall = resp_tmp.css('p > span, img')
+        raw_descr = descr_resp.json()['renderContent']
+        resp_tmp = HtmlResponse('', body=raw_descr, encoding='utf-8')
+        resp_getall = resp_tmp.css('p > span, img')
 
-            for sel in resp_getall:
-                if sel.root.tag == 'span':
-                    span_txt = " ".join(sel.css('::text').get().replace("\n", "").strip().split())
-                    descr += f'<p>{span_txt}</p>'
-                else:
-                    img_url = sel.css('::attr(data-src)').get()
-                    if not img_url:
-                        continue
+        for sel in resp_getall:
+            if sel.root.tag == 'span':
+                span_txt = " ".join(sel.css('::text').get().replace("\n", "").strip().split())
+                descr += f'<p>{span_txt}</p>'
+            else:
+                img_url = sel.css('::attr(data-src)').get()
+                if not img_url:
+                    continue
 
-                    filter = False
-                    for f in self.DESC_IMG_FILTER:
-                        if f in img_url:
-                            filter = True
-                            break
-                    if not filter:
-                        descr += f'<p><img src="{img_url}"></p>'
-        except Exception as e:
-            print("Text description fail:", str(e))
+                filter = False
+                for f in self.DESC_IMG_FILTER:
+                    if f in img_url:
+                        filter = True
+                        break
+                if not filter:
+                    descr += f'<p><img src="{img_url}"></p>'
 
         return (f'<div class="naver-handmade-descr">{descr}</div>' if descr else "")
 
@@ -311,7 +309,7 @@ class NaverCosmeticProduct:
                 print("Product not found")
                 return
             elif resp.status_code >= 300:
-                raise Exception(f'Status {resp.status_code}')
+                raise Exception(f'Status {resp.status_code} ({resp.url})')
 
             self.prod_json = resp.json()
 
@@ -321,7 +319,7 @@ class NaverCosmeticProduct:
                 return
 
             existence = self.get_exist()
-            time.sleep(randint(2400, 4800)/1000.0)
+            time.sleep(3.6)
             description = self.get_div_descr(prod_id)+self.get_table_descr()
             price_krw = self.prod_json.get('discountedSalePrice', self.prod_json.get('salePrice', 0))
             options, variants = self.get_opts_vars(price_krw)
@@ -366,11 +364,17 @@ class NaverCosmeticProduct:
             print(product)
             self.dones += 1
             self.count()
+            time.sleep(3.6)
             return product
         except Exception as e:
             print("ERROR:", str(e))
             self.errs += 1
             self.count()
+
+            for s in range(120, 0, -1):
+                print(f"PAUSE: {s:03d}", end='\r')
+                time.sleep(1)
+
             return prod_id
 
     def write_files(self): # TODO: 写入文件的函数

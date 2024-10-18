@@ -47,7 +47,7 @@ class NaverCosmeticGraphqlExt:
         try:
             resp = await self.page.goto('https://shopping.naver.com/luxury/cosmetic/category?optionFilters=CH_101180106')
             if resp.status >= 300:
-                raise Exception(f"Status {resp.status}")
+                raise Exception(f"Status {resp.status} ({resp.url})")
         except Exception as e:
             print("ERROR:", str(e))
 

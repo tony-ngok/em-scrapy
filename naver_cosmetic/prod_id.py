@@ -1,6 +1,5 @@
 import sys
 import time
-from random import randint
 
 import requests
 
@@ -86,9 +85,9 @@ class NaverCosmeticProdId:
         print(f"{i}/{len(self.todos)}", graph_url)
 
         try:
-            resp = requests.get(graph_url, headers=self.HEADERS, timeout=300)
+            resp = requests.get(graph_url, headers=self.HEADERS, timeout=300, allow_redirects=False)
             if resp.status_code >= 300:
-                raise Exception(f"Status {resp.status_code}")
+                raise Exception(f"Status {resp.status_code} ({resp.url})")
 
             result = resp.json()['data']['pagedLuxuryListItems']
             items = result.get('items', [])
@@ -99,7 +98,7 @@ class NaverCosmeticProdId:
                     self.dones += 1
 
             self.count()
-            time.sleep(randint(2400, 4800)/1000.0)
+            time.sleep(3.6)
 
             has_more = result['hasMore']
             if has_more:
