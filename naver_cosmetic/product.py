@@ -83,13 +83,13 @@ class NaverCosmeticProduct:
             self.krw_rate = rate_resp.json()['rates']['KRW']
         except:
             print("Fail to get USD/KRW rate")
-            self.krw_rate = 1362.494318
+            self.krw_rate = 1370.330216
         finally:
             print(f"USD/KRW rate: {self.krw_rate:_}".replace(".", ",").replace("_", "."))
 
     def count(self):
         print(f"{self.dones:_} existent product(s)".replace('_', '.'))
-        print(f"{self.errs:_} URL(s) todo".replace('_', '.'))
+        print(f"{self.errs:_} err(s)".replace('_', '.'))
 
     async def start(self):
         self.browser = await launch(headless=False)
@@ -130,7 +130,7 @@ class NaverCosmeticProduct:
             self.var_json = var_json['productDetail']['A']['contents']
 
     def get_exist(self):
-        return (not self.var_json['soldOut']) and ('instock' in self.basic_json['offers']['availability'].lower())
+        return (not self.var_json['soldout']) and ('instock' in self.basic_json['offers']['availability'].lower())
 
     def get_div_descr(self, prod_id: str):
         descr = ""
