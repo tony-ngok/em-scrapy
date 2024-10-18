@@ -422,7 +422,7 @@ class NaverCosmeticProduct:
                     else:
                         f_prods.write(',\n')
 
-                    json.dump(y, f_prods)
+                    json.dump(y, f_prods, ensure_ascii=False)
                 else: # 出错的商品号
                     f_errs.write(y+'\n')
 
