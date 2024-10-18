@@ -95,7 +95,7 @@ class NaverCosmeticProduct:
         descr = ""
 
         try:
-            descr_resp = requests.get(f'https://shopping.naver.com/product-detail/v1/products/{prod_id}/contents/pc/PC', headers=self.HEADERS, timeout=10)
+            descr_resp = requests.get(f'https://shopping.naver.com/product-detail/v1/products/{prod_id}/contents/pc/PC', headers=self.HEADERS, timeout=60)
             if descr_resp.status_code >= 300:
                 raise Exception(f"Error {descr_resp.status_code}")
             
