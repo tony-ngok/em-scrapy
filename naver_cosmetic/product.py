@@ -259,7 +259,7 @@ class NaverCosmeticProduct:
 
                     for oc in opt_combos:
                         opt_vals = []
-                        for i, o in zip(options):
+                        for i, o in enumerate(options):
                             opt_vals.append({
                                 "option_id": o['id'],
                                 "option_value_id": None,
@@ -342,73 +342,73 @@ class NaverCosmeticProduct:
         url = 'https://shopping.naver.com/luxury/cosmetic/products/'+prod_id
         print(f'\n{i:_}/{len(self.todos):_}'.replace("_", "."), url)
 
-        # try:
-        resp = await self.page.goto(url)
-        if resp.status == 404:
-            print("Product not found")
-            return
-        elif resp.status >= 300:
-            raise Exception(f'Status {resp.status}')
+        try:
+            resp = await self.page.goto(url)
+            if resp.status == 404:
+                print("Product not found")
+                return
+            elif resp.status >= 300:
+                raise Exception(f'Status {resp.status}')
 
-        await self.get_basic_json()
-        await self.get_var_json()
+            await self.get_basic_json()
+            await self.get_var_json()
 
-        images = self.get_images()
-        if not images:
-            print("No images")
-            return
+            images = self.get_images()
+            if not images:
+                print("No images")
+                return
 
-        existence = self.get_exist()
-        description = self.get_div_descr(prod_id)+self.get_table_descr()
-        price_krw = self.basic_json.get('offers', {}).get('price', 0)
-        options, variants = self.get_opts_vars(price_krw)
-        reviews, rating = self.get_recensions()
-        ship_dmin, ship_dmax = self.get_deliv_days()
+            existence = self.get_exist()
+            description = self.get_div_descr(prod_id)+self.get_table_descr()
+            price_krw = self.basic_json.get('offers', {}).get('price', 0)
+            options, variants = self.get_opts_vars(price_krw)
+            reviews, rating = self.get_recensions()
+            ship_dmin, ship_dmax = self.get_deliv_days()
 
-        product = {
-            "date": datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
-            "url": url,
-            "source": "Naver",
-            "product_id": prod_id,
-            "existence": existence,
-            "title": self.basic_json['name'],
-            "title_en": None,
-            "description": (description if description else None),
-            "description_en": None,
-            "summary": None,
-            "sku": str(self.basic_json['sku']),
-            "upc": prod_id,
-            "brand": self.basic_json.get('description'),
-            "specifications": self.get_specs(),
-            "categories": self.get_cats(),
-            "images": images,
-            "videos": None,
-            "price": round(price_krw/self.krw_rate, 2),
-            "available_qty": self.get_avail_qty(existence),
-            "options": options,
-            "variants": variants,
-            "has_only_default_variant": not (variants and (len(variants) > 1)),
-            "returnable": False,
-            "reviews": reviews,
-            "rating": rating,
-            "sold_count": None,
-            "shipping_fee": self.get_deliv_fee(),
-            "shipping_days_min": ship_dmin,
-            "shipping_days_max": ship_dmax,
-            "weight": None, # 有的商品参数中有两个不同的重量值
-            "length": None,
-            "width": None,
-            "height": None
-        }
-        print(product)
-        self.dones += 1
-        self.count()
-        return product
-        # except Exception as e:
-        #     print("ERROR:", str(e))
-        #     self.errs += 1
-        #     self.count()
-        #     return prod_id
+            product = {
+                "date": datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
+                "url": url,
+                "source": "Naver",
+                "product_id": prod_id,
+                "existence": existence,
+                "title": self.basic_json['name'],
+                "title_en": None,
+                "description": (description if description else None),
+                "description_en": None,
+                "summary": None,
+                "sku": str(self.basic_json['sku']),
+                "upc": prod_id,
+                "brand": self.basic_json.get('description'),
+                "specifications": self.get_specs(),
+                "categories": self.get_cats(),
+                "images": images,
+                "videos": None,
+                "price": round(price_krw/self.krw_rate, 2),
+                "available_qty": self.get_avail_qty(existence),
+                "options": options,
+                "variants": variants,
+                "has_only_default_variant": not (variants and (len(variants) > 1)),
+                "returnable": False,
+                "reviews": reviews,
+                "rating": rating,
+                "sold_count": None,
+                "shipping_fee": self.get_deliv_fee(),
+                "shipping_days_min": ship_dmin,
+                "shipping_days_max": ship_dmax,
+                "weight": None, # 有的商品参数中有两个不同的重量值
+                "length": None,
+                "width": None,
+                "height": None
+            }
+            print(product)
+            self.dones += 1
+            self.count()
+            return product
+        except Exception as e:
+            print("ERROR:", str(e))
+            self.errs += 1
+            self.count()
+            return prod_id
 
     async def write_files(self): # TODO: 写入文件的函数
         with open('naver_cosmetic_prods.json', 'a', encoding='utf-8') as f_prods, open('naver_cosmetic_prods_errs.txt', 'w', encoding='utf-8') as f_errs:
