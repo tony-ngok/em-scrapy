@@ -114,7 +114,7 @@ class NaverHandmadeProduct:
             start_time = time.time()
             yield await self.get_prod_info(i, todo)
 
-            r = randint(18, 40)
+            r = randint(12, 26)
             remain = int(r+start_time-time.time())
             if remain > 0:
                 await self.pause(remain)
@@ -151,7 +151,7 @@ class NaverHandmadeProduct:
         descr = ""
 
         try:
-            descr_resp = requests.get(f'https://shopping.naver.com/product-detail/v1/products/{prod_id}/contents/pc/PC', headers=self.HEADERS, timeout=10, allow_redirects=False)
+            descr_resp = requests.get(f'https://shopping.naver.com/product-detail/v1/products/{prod_id}/contents/pc/PC', headers=self.HEADERS, timeout=6, allow_redirects=False)
             if descr_resp.status_code >= 300:
                 raise Exception(f"Error {descr_resp.status_code}")
 
