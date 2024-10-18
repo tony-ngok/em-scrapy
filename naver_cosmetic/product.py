@@ -1,7 +1,7 @@
 import json
 import re
 import sys
-import time
+# import time
 from datetime import datetime
 
 import requests
@@ -86,7 +86,7 @@ class NaverCosmeticProduct:
     def scrape(self):
         for i, todo in enumerate(self.todos, start=1):
             yield self.get_prod_info(i, todo)
-            time.sleep(0.5)
+            # time.sleep(0.5)
 
     def get_exist(self):
         return (not self.prod_json['soldout'])
@@ -317,7 +317,7 @@ class NaverCosmeticProduct:
                 return
 
             existence = self.get_exist()
-            time.sleep(0.5)
+            # time.sleep(0.5)
             description = self.get_div_descr(prod_id)+self.get_table_descr()
             price_krw = self.prod_json.get('discountedSalePrice', self.prod_json.get('salePrice', 0))
             options, variants = self.get_opts_vars(price_krw)
