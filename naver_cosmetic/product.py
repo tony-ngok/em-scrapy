@@ -379,7 +379,7 @@ class NaverCosmeticProduct:
                 if isinstance(y, dict):
                     json.dump(y, f_prods, ensure_ascii=False)
                     f_prods.write(',\n')
-                else: # 出错的商品号
+                elif isinstance(y, str): # 出错的商品号
                     f_errs.write(y+'\n')
 
         if self.errs:

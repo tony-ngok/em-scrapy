@@ -1,5 +1,6 @@
 import sys
 import time
+from random import randint
 
 import requests
 
@@ -98,7 +99,7 @@ class NaverCosmeticProdId:
                     self.dones += 1
 
             self.count()
-            time.sleep(1)
+            time.sleep(randint(1000, 3000)/1000.0)
 
             has_more = result['hasMore']
             if has_more:
