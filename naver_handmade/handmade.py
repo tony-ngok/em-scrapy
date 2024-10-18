@@ -12,7 +12,7 @@ from pyppeteer import launch
 from scrapy.http import HtmlResponse
 
 
-class NaverCosmeticProductPyppeteer:
+class NaverHandmadeProduct:
     GET_ATTR_JS = '(elem, attr) => elem.getAttribute(attr)'
     GET_TXT_JS = '(elem) => elem.textContent'
 
@@ -31,7 +31,7 @@ class NaverCosmeticProductPyppeteer:
         "sec-fetch-site": "none",
         "sec-fetch-user": "?1",
         "upgrade-insecure-requests": "1",
-        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0"
+        "user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Yeti/1.1; +https://naver.me/spd) Chrome/106.0.5249.0 Safari/537.36"
     }
 
     # 若描述图片文件名中包含以下字样，则过滤掉
@@ -43,14 +43,15 @@ class NaverCosmeticProductPyppeteer:
     ]
 
     def __init__(self, review: bool = False, todos: list = []):
-        # self.prods = {}
+        self.review = False
         self.dones = 0
         self.todos = []
 
         if review:
             try:
                 with open('naver_cosmetic_prods.json', 'r', encoding='utf-8') as f_prods:
-                    self.dones = len(json.load(f_prods))
+                    for _ in f_prods:
+                        self.dones += 1
             except:
                 print("No existents product(s)")
                 for todo in todos:
@@ -75,7 +76,7 @@ class NaverCosmeticProductPyppeteer:
 
     def get_rate(self):
         try:
-            rate_resp = requests.get('https://open.er-api.com/v6/latest/USD')
+            rate_resp = requests.get('https://open.er-api.com/v6/latest/USD', timeout=10, allow_redirects=False)
             if rate_resp.status_code >= 300:
                 raise Exception()
             
@@ -449,7 +450,7 @@ async def main():
             for line in prods_ids:
                 todos.append(line.strip())
 
-    nc_recs = NaverCosmeticProductPyppeteer(review, todos)
+    nc_recs = NaverHandmadeProduct(review, todos)
     await nc_recs.start()
     await nc_recs.write_files()
 

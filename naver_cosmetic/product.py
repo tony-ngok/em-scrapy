@@ -3,6 +3,7 @@ import re
 import sys
 import time
 from datetime import datetime
+from random import randint
 
 import requests
 from scrapy.http import HtmlResponse
@@ -70,7 +71,7 @@ class NaverCosmeticProduct:
 
     def get_rate(self):
         try:
-            rate_resp = requests.get('https://open.er-api.com/v6/latest/USD')
+            rate_resp = requests.get('https://open.er-api.com/v6/latest/USD', timeout=10, allow_redirects=False)
             if rate_resp.status_code >= 300:
                 raise Exception()
 
@@ -94,14 +95,25 @@ class NaverCosmeticProduct:
         return (not self.prod_json['soldout'])
 
     def get_div_descr(self, prod_id: str):
+        desc_url = f'https://shopping.naver.com/product-detail/v1/products/{prod_id}/contents/pc/PC'
         descr = ""
 
-        descr_resp = requests.get(f'https://shopping.naver.com/product-detail/v1/products/{prod_id}/contents/pc/PC', headers=self.HEADERS, timeout=60, allow_redirects=False)
-        if descr_resp.status_code in {204, 404}:
+        j = 1
+        descr_resp = requests.get(desc_url, headers=self.HEADERS, timeout=60, allow_redirects=False)
+        while descr_resp.status_code >= 300:
+            if descr_resp.status_code == 404:
+                print("No div descriptions")
+                return ""
+            else:
+                print(f"API call fail with status {resp.status_code}: {desc_url} ({j}/100)")
+                j += 1
+                if j >= 100:
+                    raise Exception(f'Status {resp.status_code}')
+                time.sleep(randint(2400, 4800)/1000.0)
+                resp = requests.get(desc_url, headers=self.HEADERS, timeout=300, allow_redirects=False)
+        if descr_resp.status_code == 204:
             print("No div descriptions")
             return ""
-        elif descr_resp.status_code >= 300:
-            raise Exception(f"Error {descr_resp.status_code} ({descr_resp.url})")
 
         raw_descr = descr_resp.json()['renderContent']
         resp_tmp = HtmlResponse('', body=raw_descr, encoding='utf-8')
@@ -304,12 +316,19 @@ class NaverCosmeticProduct:
         print(f'\n{i:_}/{len(self.todos):_}'.replace("_", "."), url)
 
         try:
+            j = 1
             resp = requests.get(url, headers=self.HEADERS, timeout=300, allow_redirects=False)
-            if resp.status_code == 404:
-                print("Product not found")
-                return
-            elif resp.status_code >= 300:
-                raise Exception(f'Status {resp.status_code} ({resp.url})')
+            while resp.status_code >= 300:
+                if resp.status_code == 404:
+                    print("Product not found")
+                    return
+                else:
+                    print(f"API call fail with status {resp.status_code}: {url} ({j}/100)")
+                    j += 1
+                    if j >= 100:
+                        raise Exception(f'Status {resp.status_code}')
+                    time.sleep(randint(2400, 4800)/1000.0)
+                    resp = requests.get(url, headers=self.HEADERS, timeout=300, allow_redirects=False)
 
             self.prod_json = resp.json()
 
@@ -319,7 +338,7 @@ class NaverCosmeticProduct:
                 return
 
             existence = self.get_exist()
-            time.sleep(3.6)
+            time.sleep(randint(2400, 4800)/1000.0)
             description = self.get_div_descr(prod_id)+self.get_table_descr()
             price_krw = self.prod_json.get('discountedSalePrice', self.prod_json.get('salePrice', 0))
             options, variants = self.get_opts_vars(price_krw)
@@ -364,14 +383,14 @@ class NaverCosmeticProduct:
             print(product)
             self.dones += 1
             self.count()
-            time.sleep(3.6)
+            time.sleep(randint(2400, 4800)/1000.0)
             return product
         except Exception as e:
             print("ERROR:", str(e))
             self.errs += 1
             self.count()
 
-            for s in range(120, 0, -1):
+            for s in range(120, -1, -1):
                 print(f"PAUSE: {s:03d}", end='\r')
                 time.sleep(1)
 

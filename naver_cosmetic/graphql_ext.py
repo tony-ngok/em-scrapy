@@ -24,7 +24,7 @@ class NaverCosmeticGraphqlExt:
         "sec-fetch-site": "none",
         "sec-fetch-user": "?1",
         "upgrade-insecure-requests": "1",
-        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0"
+        "user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Yeti/1.1; +https://naver.me/spd) Chrome/106.0.5249.0 Safari/537.36"
     }
 
     def __init__(self):
@@ -47,7 +47,7 @@ class NaverCosmeticGraphqlExt:
         try:
             resp = await self.page.goto('https://shopping.naver.com/luxury/cosmetic/category?optionFilters=CH_101180106')
             if resp.status >= 300:
-                raise Exception(f"Status {resp.status} ({resp.url})")
+                raise Exception(f"Status {resp.status}")
         except Exception as e:
             print("ERROR:", str(e))
 

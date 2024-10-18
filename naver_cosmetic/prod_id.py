@@ -1,5 +1,6 @@
 import sys
 import time
+from random import randint
 
 import requests
 
@@ -22,7 +23,7 @@ class NaverCosmeticProdId:
         "sec-fetch-site": "none",
         "sec-fetch-user": "?1",
         "upgrade-insecure-requests": "1",
-        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0"
+        "user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Yeti/1.1; +https://naver.me/spd) Chrome/106.0.5249.0 Safari/537.36"
     }
 
     def __init__(self, review: bool = False):
@@ -85,9 +86,15 @@ class NaverCosmeticProdId:
         print(f"{i}/{len(self.todos)}", graph_url)
 
         try:
+            j = 1
             resp = requests.get(graph_url, headers=self.HEADERS, timeout=300, allow_redirects=False)
-            if resp.status_code >= 300:
-                raise Exception(f"Status {resp.status_code} ({resp.url})")
+            while resp.status_code >= 300:
+                print(f"API call fail with status {resp.status_code}: {graph_url} ({j}/100)")
+                j += 1
+                if j >= 100:
+                    raise Exception(f"Status {resp.status_code}")
+                time.sleep(randint(2400, 4800)/1000.0)
+                resp = requests.get(graph_url, headers=self.HEADERS, timeout=300, allow_redirects=False)
 
             result = resp.json()['data']['pagedLuxuryListItems']
             items = result.get('items', [])

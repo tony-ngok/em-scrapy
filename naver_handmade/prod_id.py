@@ -1,6 +1,7 @@
 import math
 import sys
 import time
+from random import randint
 
 import requests
 
@@ -21,7 +22,7 @@ class NaverHandmadeProdId:
         "sec-fetch-site": "none",
         "sec-fetch-user": "?1",
         "upgrade-insecure-requests": "1",
-        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0"
+        "user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Yeti/1.1; +https://naver.me/spd) Chrome/106.0.5249.0 Safari/537.36"
     }
 
     def __init__(self, review: bool = False, todos: list = []):
@@ -73,9 +74,15 @@ class NaverHandmadeProdId:
         print(f"{i}/{len(self.todos)}", api)
 
         try:
-            resp = requests.get(api, headers=self.HEADERS, timeout=300)
-            if resp.status_code >= 300:
-                raise Exception(f"Status {resp.status_code}")
+            j = 1
+            resp = requests.get(api, headers=self.HEADERS, timeout=300, allow_redirects=False)
+            while resp.status_code >= 300:
+                print(f"API call fail with status {resp.status_code}: {api} ({j}/100)")
+                j += 1
+                if j >= 100:
+                    raise Exception(f"Status {resp.status_code}")
+                time.sleep(randint(2400, 4800)/1000.0)
+                resp = requests.get(api, headers=self.HEADERS, timeout=300, allow_redirects=False)
 
             result = resp.json()
             products = result['products']
@@ -86,7 +93,7 @@ class NaverHandmadeProdId:
                     self.dones += 1
 
             self.count()
-            time.sleep(1)
+            time.sleep(randint(2400, 4800)/1000.0)
 
             has_more = result['hasMoreProducts']
             if has_more and (page < math.ceil(10000/page_size)):
@@ -95,7 +102,11 @@ class NaverHandmadeProdId:
             print("ERROR:", str(e))
             self.prods_ids[f"c{cat}"] = False
             self.errs += 1
-            self.count()  
+            self.count()
+
+            for s in range(120, -1, -1):
+                print(f"PAUSE: {s:03d}", end='\r')
+                time.sleep(1)
 
     def fin(self):
         with open('naver_handmade_prods_ids.txt', 'w', encoding='utf-8') as f_prods_ids, open('naver_handmade_prod_ids_errs.txt', 'w', encoding='utf-8') as f_errs:
