@@ -450,7 +450,6 @@ async def main():
 
     nc_recs = NaverCosmeticProduct(review, todos)
     await nc_recs.start()
-    await nc_recs.scrape()
     await nc_recs.write_files()
 
 
