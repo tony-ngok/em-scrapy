@@ -6,6 +6,7 @@ import re
 import sys
 import time
 from datetime import datetime
+from random import randint
 
 import requests
 from pyppeteer import launch
@@ -43,17 +44,18 @@ class NaverHandmadeProduct:
     ]
 
     def __init__(self, review: bool = False, todos: list = []):
-        self.review = False
+        self.review = review
         self.dones = 0
         self.todos = []
 
-        if review:
+        if self.review:
             try:
-                with open('naver_cosmetic_prods.json', 'r', encoding='utf-8') as f_prods:
+                with open('naver_cosmetic_prods.txt', 'r', encoding='utf-8') as f_prods:
                     for _ in f_prods:
                         self.dones += 1
             except:
                 print("No existents product(s)")
+                self.review = False
                 for todo in todos:
                     self.todos.append(todo)
 
@@ -79,7 +81,7 @@ class NaverHandmadeProduct:
             rate_resp = requests.get('https://open.er-api.com/v6/latest/USD', timeout=10, allow_redirects=False)
             if rate_resp.status_code >= 300:
                 raise Exception()
-            
+
             print("Get USD/KRW rate")
             self.krw_rate = rate_resp.json()['rates']['KRW']
         except:
@@ -92,6 +94,11 @@ class NaverHandmadeProduct:
         print(f"{self.dones:_} existent product(s)".replace('_', '.'))
         print(f"{self.errs:_} err(s)".replace('_', '.'))
 
+    async def pause(self, secs: int):
+        for s in range(secs, -1, -1):
+            print(f"PAUSE: {s:03d}", end='\r')
+            await asyncio.sleep(1)
+
     async def start(self):
         self.browser = await launch(headless=False)
         self.page = await self.browser.newPage()
@@ -101,13 +108,20 @@ class NaverHandmadeProduct:
 
     async def scrape(self):
         for i, todo in enumerate(self.todos, start=1):
+            if i % 1 == 1:
+                await self.start()
+
             start_time = time.time()
             yield await self.get_prod_info(i, todo)
 
-            remain = 30+start_time-time.time()
+            r = randint(18, 40)
+            remain = int(r+start_time-time.time())
             if remain > 0:
-                print("Wait")
-                await asyncio.sleep(remain)
+                await self.pause(remain)
+
+            if i % 1 == 0:
+                await self.browser.close()
+                await self.pause(10)
 
     async def get_basic_json(self):
         basic_json_sel = await self.page.querySelector('script[type="application/ld+json"]')
@@ -137,10 +151,10 @@ class NaverHandmadeProduct:
         descr = ""
 
         try:
-            descr_resp = requests.get(f'https://shopping.naver.com/product-detail/v1/products/{prod_id}/contents/pc/PC', headers=self.HEADERS, timeout=10)
+            descr_resp = requests.get(f'https://shopping.naver.com/product-detail/v1/products/{prod_id}/contents/pc/PC', headers=self.HEADERS, timeout=10, allow_redirects=False)
             if descr_resp.status_code >= 300:
                 raise Exception(f"Error {descr_resp.status_code}")
-            
+
             raw_descr = descr_resp.json()['renderContent']
             resp_tmp = HtmlResponse('', body=raw_descr, encoding='utf-8')
             resp_getall = resp_tmp.css('p > span, img')
@@ -153,7 +167,7 @@ class NaverHandmadeProduct:
                     img_url = sel.css('::attr(data-src)').get()
                     if not img_url:
                         continue
-                
+
                     filter = False
                     for f in self.DESC_IMG_FILTER:
                         if f in img_url:
@@ -189,9 +203,9 @@ class NaverHandmadeProduct:
                         v1 += "</ul>"
                     else:
                         v1 = v.replace("\n", "")
-                    
+
                     t_descr += f"<tr><th>{k}</th><td>{v1}</td></tr>"
-                
+
                 return (f'<table class="naver-handmade-descr">{t_descr}</table>' if t_descr else "")
         except:
             pass
@@ -210,7 +224,7 @@ class NaverHandmadeProduct:
                     "name": k,
                     "value": v
                 })
-        
+
         fields2 = self.var_json.get('detailAttributes')
         if fields2:
             for k, v in fields2.items():
@@ -218,7 +232,7 @@ class NaverHandmadeProduct:
                     "name": k,
                     "value": v
                 })
-        
+
         return (specs if specs else None)
 
     def get_cats(self):
@@ -270,7 +284,7 @@ class NaverHandmadeProduct:
                         variants.append({
                             "variant_id": str(oc["id"]),
                             "barcode": None,
-                            "sku": "",
+                            "sku": str(oc["id"]),
                             "option_values": opt_vals,
                             "images": None,
                             "price": round((price_krw+oc['price'])/self.krw_rate, 2),
@@ -291,7 +305,7 @@ class NaverHandmadeProduct:
                         variants.append({
                             "variant_id": str(opt["id"]),
                             "barcode": None,
-                            "sku": "",
+                            "sku": str(opt["id"]),
                             "option_values": [{
                                 "option_id": None,
                                 "option_value_id": None,
@@ -340,7 +354,7 @@ class NaverHandmadeProduct:
         return (None, None)
 
     async def get_prod_info(self, i: int, prod_id: str):
-        url = 'https://shopping.naver.com/luxury/cosmetic/products/'+prod_id
+        url = 'https://shopping.naver.com/window-products/handmade/'+prod_id
         print(f'\n{i:_}/{len(self.todos):_}'.replace("_", "."), url)
 
         try:
@@ -377,7 +391,7 @@ class NaverHandmadeProduct:
                 "description": (description if description else None),
                 "description_en": None,
                 "summary": None,
-                "sku": str(self.basic_json['sku']),
+                "sku": prod_id,
                 "upc": prod_id,
                 "brand": self.basic_json.get('description'),
                 "specifications": self.get_specs(),
@@ -409,30 +423,24 @@ class NaverHandmadeProduct:
             print("ERROR:", str(e))
             self.errs += 1
             self.count()
+            await self.pause(270)
             return prod_id
 
-    async def write_files(self): # TODO: 写入文件的函数
-        with open('naver_cosmetic_prods.json', 'a', encoding='utf-8') as f_prods, open('naver_cosmetic_prods_errs.txt', 'w', encoding='utf-8') as f_errs:
-            f_prods.write('[\n')
-
-            writ = False
+    async def write_files(self):
+        mode = 'a' if self.review else 'w'
+        with open('naver_cosmetic_prods.txt', mode, encoding='utf-8') as f_prods, open('naver_cosmetic_prods_errs.txt', 'w', encoding='utf-8') as f_errs:
             async for y in self.scrape():
                 if isinstance(y, dict):
-                    if not writ:
-                        writ = True
-                    else:
-                        f_prods.write(',\n')
-
                     json.dump(y, f_prods, ensure_ascii=False)
-                else: # 出错的商品号
+                    f_prods.write(',\n')
+                elif isinstance(y, str): # 出错的商品号
                     f_errs.write(y+'\n')
 
-            if self.errs:
-                f_prods.write(",")
-            else:
-                f_prods.write("\n]")
+        try:
+            await self.browser.close()
+        except:
+            pass
 
-        await self.browser.close()
         if self.errs:
             sys.exit(1)
         else:

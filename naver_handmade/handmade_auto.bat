@@ -27,5 +27,28 @@ if %ERRORLEVEL% neq 0 (
 echo Program prod_id.py success
 goto end
 
+:product
+echo Start program product.py...
+python product.py
+echo Exit code: %ERRORLEVEL%
+if %ERRORLEVEL% neq 0 (
+    echo Program product.py ends with errors. Rerun...
+    goto product_review
+)
+echo Program product.py success
+goto end
+
+:product_review
+python product.py --review
+echo Exit code: %ERRORLEVEL%
+if %ERRORLEVEL% neq 0 (
+    echo Program product.py --review ends with errors. Rerun...
+    goto product_review
+)
+echo Program product.py success
+goto end
+
 :end
+echo Pack up JSON...
+python jsons_list.py
 echo END
