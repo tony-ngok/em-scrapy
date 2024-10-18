@@ -4,6 +4,7 @@ import asyncio
 import json
 import re
 import sys
+import time
 from datetime import datetime
 
 import requests
@@ -42,14 +43,14 @@ class NaverCosmeticProduct:
     ]
 
     def __init__(self, review: bool = False, todos: list = []):
-        self.prods = {}
+        # self.prods = {}
+        self.dones = 0
         self.todos = []
 
         if review:
             try:
                 with open('naver_cosmetic_prods.json', 'r', encoding='utf-8') as f_prods:
-                    for line in f_prods:
-                        self.prods[line.strip()] = True
+                    self.dones = len(json.load(f_prods))
             except:
                 print("No existents product(s)")
                 for todo in todos:
@@ -66,10 +67,9 @@ class NaverCosmeticProduct:
             for todo in todos:
                 self.todos.append(todo)
 
-        print(f"{len(self.prods):_} existent product(s)".replace('_', '.'))
+        print(f"{self.dones:_} existent product(s)".replace('_', '.'))
         print(f"{len(self.todos):_} URL(s) todo".replace('_', '.'))
 
-        self.dones = len(self.prods)
         self.errs = 0
         self.get_rate()
 
@@ -99,8 +99,13 @@ class NaverCosmeticProduct:
         await self.page.setExtraHTTPHeaders(self.HEADERS)
 
     async def scrape(self):
-        async for i, todo in enumerate(self.todos, start=1):
+        for i, todo in enumerate(self.todos, start=1):
+            start_time = time.time()
             yield await self.get_prod_info(i, todo)
+
+            remain = 30+start_time-time.time()
+            if remain > 0:
+                asyncio.sleep(remain)
 
     async def get_basic_json(self):
         basic_json_sel = await self.page.querySelector('script[type="application/ld+json"]')
@@ -359,7 +364,7 @@ class NaverCosmeticProduct:
             reviews, rating = self.get_recensions()
             ship_dmin, ship_dmax = self.get_deliv_days()
 
-            yield {
+            product = {
                 "date": datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
                 "url": url,
                 "source": "Naver",
@@ -394,30 +399,38 @@ class NaverCosmeticProduct:
                 "width": None,
                 "height": None
             }
+            print(product)
+            self.dones += 1
+            self.count()
+            yield product
         except Exception as e:
             print("ERROR:", str(e))
-            self.prods[prod_id] = False
             self.errs += 1
             self.count()
+            yield prod_id
 
-    def fin(self): # TODO: 写入文件的函数
+    async def write_files(self): # TODO: 写入文件的函数
         with open('naver_cosmetic_prods.json', 'a', encoding='utf-8') as f_prods, open('naver_cosmetic_prods_errs.txt', 'w', encoding='utf-8') as f_errs:
             f_prods.write('[\n')
 
             writ = False
-            for k, v in self.prods.items():
-                if v:
+            async for y in self.scrape():
+                if isinstance(y, dict):
                     if not writ:
                         writ = True
                     else:
                         f_prods.write(',\n')
 
-                    f_prods.write(k+'\n')
-                else:
-                    f_errs.write(k+'\n')
+                    json.dump(y, f_prods)
+                else: # 出错的商品号
+                    f_errs.write(y+'\n')
 
-            f_prods.write("\n]")
+            if self.errs:
+                f_prods.write(",")
+            else:
+                f_prods.write("\n]")
 
+        await self.browser.close()
         if self.errs:
             sys.exit(1)
         else:
@@ -438,7 +451,7 @@ async def main():
     nc_recs = NaverCosmeticProduct(review, todos)
     await nc_recs.start()
     await nc_recs.scrape()
-    await nc_recs.fin()
+    await nc_recs.write_files()
 
 
 if __name__ == '__main__':
