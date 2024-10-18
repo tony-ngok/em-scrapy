@@ -423,7 +423,7 @@ class NaverHandmadeProduct:
             print("ERROR:", str(e))
             self.errs += 1
             self.count()
-            await self.pause(270)
+            await self.pause(280)
             return prod_id
 
     async def write_files(self):
