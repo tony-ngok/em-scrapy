@@ -153,13 +153,13 @@ class NaverCosmeticProduct:
                     if not img_url:
                         continue
                 
-                filter = False
-                for f in self.DESC_IMG_FILTER:
-                    if f in img_url:
-                        filter = True
-                        break
-                if not filter:
-                    descr += f'<p><img src="{img_url}"></p>'
+                    filter = False
+                    for f in self.DESC_IMG_FILTER:
+                        if f in img_url:
+                            filter = True
+                            break
+                    if not filter:
+                        descr += f'<p><img src="{img_url}"></p>'
         except Exception as e:
             print("Text description fail:", str(e))
 
