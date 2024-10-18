@@ -6,7 +6,7 @@ if __name__ == '__main__':
         with open("naver_cosmetic_prods.txt", "r", encoding='utf-8') as f:
             with open('json_tmp', "w", encoding='utf-8') as f_temp:
                 f_temp.write("[\n")
-                f_temp.write(f.read()[-2])
+                f_temp.write(f.read()[:-2])
                 f_temp.write("\n]")
 
         os.remove("naver_cosmetic_prods.txt")
