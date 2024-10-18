@@ -101,10 +101,11 @@ class NaverCosmeticProduct:
     async def scrape(self):
         for i, todo in enumerate(self.todos, start=1):
             start_time = time.time()
-            yield self.get_prod_info(i, todo)
+            yield await self.get_prod_info(i, todo)
 
             remain = 30+start_time-time.time()
             if remain > 0:
+                print("Wait")
                 await asyncio.sleep(remain)
 
     async def get_basic_json(self):
@@ -402,19 +403,19 @@ class NaverCosmeticProduct:
             print(product)
             self.dones += 1
             self.count()
-            yield product
+            return product
         except Exception as e:
             print("ERROR:", str(e))
             self.errs += 1
             self.count()
-            yield prod_id
+            return prod_id
 
     async def write_files(self): # TODO: 写入文件的函数
         with open('naver_cosmetic_prods.json', 'a', encoding='utf-8') as f_prods, open('naver_cosmetic_prods_errs.txt', 'w', encoding='utf-8') as f_errs:
             f_prods.write('[\n')
 
             writ = False
-            async for y in self.scrape():
+            for y in self.scrape():
                 if isinstance(y, dict):
                     if not writ:
                         writ = True
