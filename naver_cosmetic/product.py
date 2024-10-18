@@ -321,6 +321,7 @@ class NaverCosmeticProduct:
                 return
 
             existence = self.get_exist()
+            time.sleep(randint(2400, 4800)/1000.0)
             description = self.get_div_descr(prod_id)+self.get_table_descr()
             price_krw = self.prod_json.get('discountedSalePrice', self.prod_json.get('salePrice', 0))
             options, variants = self.get_opts_vars(price_krw)
