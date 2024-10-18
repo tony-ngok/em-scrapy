@@ -329,7 +329,7 @@ class NaverCosmeticProduct:
 
             product = {
                 "date": datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
-                "url": url,
+                "url": 'https://shopping.naver.com/luxury/cosmetic/products/'+prod_id,
                 "source": "Naver",
                 "product_id": prod_id,
                 "existence": existence,
