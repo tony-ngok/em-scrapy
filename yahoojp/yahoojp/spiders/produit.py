@@ -105,14 +105,14 @@ class YahoojpProduit(scrapy.Spider):
 
         if not nuxt:
             return specs_info
-        
+
         match1 = re.findall(r'specList\s*:\s*{\s*items\s*:(\[\s*[^\[\]]*\s*\])\s*}', nuxt)
         if not match1:
             return specs_info
         match2 = re.findall(r'{\s*name\s*:\s*"([^"]*)"\s*,\s*value\s*:\s*"([^"]*)"\s*}', match1[0])
         if not match2:
             return specs_info
-        
+
         specs = []
         for si in match2:
             k = si[0].replace("\\u002F", "/")
@@ -232,14 +232,14 @@ class YahoojpProduit(scrapy.Spider):
                     dim_map['height'] = [value, unit]
                 else:
                     dim_map[dim] = [value, unit]
-    
+
         # 填补缺失的单位
         for k in dim_map.keys():
             if not dim_map[k][1]:
                 dim_map[k][1] = default_unit
 
         return dim_map
-    
+
     def locaho_calc_dim(self, dim_list: list):
         value, unit = dim_list
 
@@ -354,7 +354,7 @@ class YahoojpProduit(scrapy.Spider):
                 if filt in img_url:
                     filter = True
                     break
-            
+
             if not filter:
                 images.append(img_url)
 
@@ -379,11 +379,43 @@ class YahoojpProduit(scrapy.Spider):
             if not filter:
                 descr += r
 
-        # 过滤其中的iframe内容
-        descr = re.sub(r'<iframe(.*)</iframe>', '', descr)
-        descr = descr.replace('<center></center>', '')
-
+        descr = self.clean_descr(descr) # 过滤其中的iframe等内容
         return f'<div class="yahoojp-descr">{descr}</div>' if descr else ''
+
+    def clean_descr(self, descr: str):
+        """
+        反复清除掉没用的空HTML要素
+        """
+
+        r1 = re.search(r'<iframe(.*)</iframe>', descr)
+        r2 = ('<center></center>' in descr)
+        r3 = re.search(r'<div([^<>]*)></div>', descr)
+        r4 = ('<div></div>' in descr)
+        r5 = re.search(r'<font([^<>]*)></font>', descr)
+        r6 = ('<strong></strong>' in descr)
+
+        while r1 or r2 or r3 or r4 or r5 or r6:
+            if r1:
+                descr = re.sub(r'<iframe(.*)</iframe>', '', descr)
+            if r2:
+                descr = descr.replace('<center></center>', '')
+            if r3:
+                descr = re.sub(r'<div([^<>]*)></div>', '', descr)
+            if r4:
+                descr = descr.replace('<div></div>', '')
+            if r5:
+                descr = re.sub(r'<font([^<>]*)></font>', '', descr)
+            if r6:
+                descr = descr.replace('<strong></strong>', '')
+
+            r1 = re.search(r'<iframe(.*)</iframe>', descr)
+            r2 = ('<center></center>' in descr)
+            r3 = re.search(r'<div([^<>]*)></div>', descr)
+            r4 = ('<div></div>' in descr)
+            r5 = re.search(r'<font([^<>]*)></font>', descr)
+            r6 = ('<strong></strong>' in descr)
+
+        return descr
 
     def parse_specs(self, specs_list: list):
         specifications = []
