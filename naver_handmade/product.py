@@ -50,7 +50,7 @@ class NaverHandmadeProduct:
 
         if self.review:
             try:
-                with open('naver_cosmetic_prods.txt', 'r', encoding='utf-8') as f_prods:
+                with open('naver_handmade_prods.txt', 'r', encoding='utf-8') as f_prods:
                     for _ in f_prods:
                         self.dones += 1
             except:
@@ -60,7 +60,7 @@ class NaverHandmadeProduct:
                     self.todos.append(todo)
 
             try:
-                with open('naver_cosmetic_prods_errs.txt', 'r', encoding='utf-8') as f_errs:
+                with open('naver_handmade_prods_errs.txt', 'r', encoding='utf-8') as f_errs:
                     for line in f_errs:
                         self.todos.append(line.strip())
             except:
@@ -428,7 +428,7 @@ class NaverHandmadeProduct:
 
     async def write_files(self):
         mode = 'a' if self.review else 'w'
-        with open('naver_cosmetic_prods.txt', mode, encoding='utf-8') as f_prods, open('naver_cosmetic_prods_errs.txt', 'w', encoding='utf-8') as f_errs:
+        with open('naver_handmade_prods.txt', mode, encoding='utf-8') as f_prods, open('naver_handmade_prods_errs.txt', 'w', encoding='utf-8') as f_errs:
             async for y in self.scrape():
                 if isinstance(y, dict):
                     json.dump(y, f_prods, ensure_ascii=False)
@@ -454,7 +454,7 @@ async def main():
 
     todos = []
     if not review:
-        with open('naver_cosmetic_prods_ids.txt', 'r', encoding='utf-8') as prods_ids:
+        with open('naver_handmade_prods_ids.txt', 'r', encoding='utf-8') as prods_ids:
             for line in prods_ids:
                 todos.append(line.strip())
 
