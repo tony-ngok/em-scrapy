@@ -1,7 +1,7 @@
 import json
 import re
 import sys
-# import time
+import time
 from datetime import datetime
 
 import requests
@@ -36,15 +36,18 @@ class NaverCosmeticProduct:
     ]
 
     def __init__(self, review: bool = False, todos: list = []):
+        self.review = review
         self.dones = 0
         self.todos = []
 
-        if review:
+        if self.review:
             try:
                 with open('naver_cosmetic_prods.json', 'r', encoding='utf-8') as f_prods:
-                    self.dones = len(json.load(f_prods))
+                    for _ in f_prods:
+                        self.dones += 1
             except:
                 print("No existents product(s)")
+                self.review = False
                 for todo in todos:
                     self.todos.append(todo)
 
@@ -70,7 +73,7 @@ class NaverCosmeticProduct:
             rate_resp = requests.get('https://open.er-api.com/v6/latest/USD')
             if rate_resp.status_code >= 300:
                 raise Exception()
-            
+
             print("Get USD/KRW rate")
             self.krw_rate = rate_resp.json()['rates']['KRW']
         except:
@@ -86,7 +89,7 @@ class NaverCosmeticProduct:
     def scrape(self):
         for i, todo in enumerate(self.todos, start=1):
             yield self.get_prod_info(i, todo)
-            # time.sleep(0.5)
+            time.sleep(0.5)
 
     def get_exist(self):
         return (not self.prod_json['soldout'])
@@ -98,7 +101,7 @@ class NaverCosmeticProduct:
             descr_resp = requests.get(f'https://shopping.naver.com/product-detail/v1/products/{prod_id}/contents/pc/PC', headers=self.HEADERS, timeout=60)
             if descr_resp.status_code >= 300:
                 raise Exception(f"Error {descr_resp.status_code}")
-            
+
             raw_descr = descr_resp.json()['renderContent']
             resp_tmp = HtmlResponse('', body=raw_descr, encoding='utf-8')
             resp_getall = resp_tmp.css('p > span, img')
@@ -111,7 +114,7 @@ class NaverCosmeticProduct:
                     img_url = sel.css('::attr(data-src)').get()
                     if not img_url:
                         continue
-                
+
                     filter = False
                     for f in self.DESC_IMG_FILTER:
                         if f in img_url:
@@ -147,9 +150,9 @@ class NaverCosmeticProduct:
                         v1 += "</ul>"
                     else:
                         v1 = v.replace("\n", "")
-                    
+
                     t_descr += f"<tr><th>{k}</th><td>{v1}</td></tr>"
-                
+
                 return (f'<table class="naver-handmade-descr">{t_descr}</table>' if t_descr else "")
         except:
             pass
@@ -168,7 +171,7 @@ class NaverCosmeticProduct:
                     "name": k,
                     "value": v
                 })
-        
+
         fields2 = self.prod_json.get('detailAttributes')
         if fields2:
             for k, v in fields2.items():
@@ -176,7 +179,7 @@ class NaverCosmeticProduct:
                     "name": k,
                     "value": v
                 })
-        
+
         return (specs if specs else None)
 
     def get_cats(self):
@@ -317,7 +320,7 @@ class NaverCosmeticProduct:
                 return
 
             existence = self.get_exist()
-            # time.sleep(0.5)
+            time.sleep(0.5)
             description = self.get_div_descr(prod_id)+self.get_table_descr()
             price_krw = self.prod_json.get('discountedSalePrice', self.prod_json.get('salePrice', 0))
             options, variants = self.get_opts_vars(price_krw)
@@ -370,25 +373,14 @@ class NaverCosmeticProduct:
             return prod_id
 
     def write_files(self): # TODO: 写入文件的函数
-        with open('naver_cosmetic_prods.json', 'a', encoding='utf-8') as f_prods, open('naver_cosmetic_prods_errs.txt', 'w', encoding='utf-8') as f_errs:
-            f_prods.write('[\n')
-
-            writ = False
+        mode = 'a' if self.review else 'w'
+        with open('naver_cosmetic_prods.json', mode, encoding='utf-8') as f_prods, open('naver_cosmetic_prods_errs.txt', 'w', encoding='utf-8') as f_errs:
             for y in self.scrape():
                 if isinstance(y, dict):
-                    if not writ:
-                        writ = True
-                    else:
-                        f_prods.write(',\n')
-
                     json.dump(y, f_prods, ensure_ascii=False)
+                    f_prods.write(',\n')
                 else: # 出错的商品号
                     f_errs.write(y+'\n')
-
-            if self.errs:
-                f_prods.write(",")
-            else:
-                f_prods.write("\n]")
 
         if self.errs:
             sys.exit(1)
