@@ -43,7 +43,7 @@ class NaverCosmeticProduct:
 
         if self.review:
             try:
-                with open('naver_cosmetic_prods.json', 'r', encoding='utf-8') as f_prods:
+                with open('naver_cosmetic_prods.txt', 'r', encoding='utf-8') as f_prods:
                     for _ in f_prods:
                         self.dones += 1
             except:
@@ -374,7 +374,7 @@ class NaverCosmeticProduct:
 
     def write_files(self): # TODO: 写入文件的函数
         mode = 'a' if self.review else 'w'
-        with open('naver_cosmetic_prods.json', mode, encoding='utf-8') as f_prods, open('naver_cosmetic_prods_errs.txt', 'w', encoding='utf-8') as f_errs:
+        with open('naver_cosmetic_prods.txt', mode, encoding='utf-8') as f_prods, open('naver_cosmetic_prods_errs.txt', 'w', encoding='utf-8') as f_errs:
             for y in self.scrape():
                 if isinstance(y, dict):
                     json.dump(y, f_prods, ensure_ascii=False)
