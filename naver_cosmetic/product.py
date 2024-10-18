@@ -25,7 +25,7 @@ class NaverCosmeticProduct:
         "sec-fetch-site": "none",
         "sec-fetch-user": "?1",
         "upgrade-insecure-requests": "1",
-        "user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Yeti/1.1; +https://naver.me/spd) Chrome/106.0.5249.0 Safari/537.36"
+        "user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Yeti/1.1; +https://naver.me/spd) Chrome/106.0.5249.0 Safari/537.36" # https://seoapi.com/naverbot/
     }
 
     # 若描述图片文件名中包含以下字样，则过滤掉
@@ -90,7 +90,7 @@ class NaverCosmeticProduct:
     def scrape(self):
         for i, todo in enumerate(self.todos, start=1):
             yield self.get_prod_info(i, todo)
-            time.sleep(randint(1000, 3000)/1000.0)
+            time.sleep(randint(2400, 4800)/1000.0)
 
     def get_exist(self):
         return (not self.prod_json['soldout'])
