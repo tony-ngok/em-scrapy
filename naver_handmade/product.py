@@ -108,7 +108,7 @@ class NaverHandmadeProduct:
 
     async def scrape(self):
         for i, todo in enumerate(self.todos, start=1):
-            if i % 1 == 1:
+            if i % 10 == 1:
                 await self.start()
 
             start_time = time.time()
@@ -119,7 +119,7 @@ class NaverHandmadeProduct:
             if remain > 0:
                 await self.pause(remain)
 
-            if i % 1 == 0:
+            if i % 10 == 0:
                 await self.browser.close()
                 await self.pause(10)
 
@@ -459,7 +459,6 @@ async def main():
                 todos.append(line.strip())
 
     nc_recs = NaverHandmadeProduct(review, todos)
-    await nc_recs.start()
     await nc_recs.write_files()
 
 
