@@ -10,6 +10,6 @@ if __name__ == '__main__':
                 f_temp.write("\n]")
 
         os.remove("naver_cosmetic_prods.txt")
-        os.rename("naver_cosmetic_prods.json", 'json_tmp')
+        os.rename('json_tmp', "naver_cosmetic_prods.json")
     except Exception as e:
         print("ERROR:", str(e))
