@@ -101,11 +101,11 @@ class NaverCosmeticProduct:
     async def scrape(self):
         for i, todo in enumerate(self.todos, start=1):
             start_time = time.time()
-            yield await self.get_prod_info(i, todo)
+            yield self.get_prod_info(i, todo)
 
             remain = 30+start_time-time.time()
             if remain > 0:
-                asyncio.sleep(remain)
+                await asyncio.sleep(remain)
 
     async def get_basic_json(self):
         basic_json_sel = await self.page.querySelector('script[type="application/ld+json"]')
@@ -450,7 +450,7 @@ async def main():
 
     nc_recs = NaverCosmeticProduct(review, todos)
     await nc_recs.start()
-    nc_recs.write_files()
+    await nc_recs.write_files()
 
 
 if __name__ == '__main__':
