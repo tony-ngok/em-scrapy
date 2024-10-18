@@ -379,6 +379,10 @@ class YahoojpProduit(scrapy.Spider):
             if not filter:
                 descr += r
 
+        # 过滤其中的iframe内容
+        descr = re.sub(r'<iframe(.*)</iframe>', '', descr)
+        descr = descr.replace('<center></center>', '')
+
         return f'<div class="yahoojp-descr">{descr}</div>' if descr else ''
 
     def parse_specs(self, specs_list: list):
