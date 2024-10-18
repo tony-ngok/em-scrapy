@@ -1,3 +1,6 @@
+# https://blog.naver.com/spson0153/223390335136
+
+import asyncio
 import json
 import re
 import sys
@@ -5,10 +8,14 @@ import time
 from datetime import datetime
 
 import requests
+from pyppeteer import launch
 from scrapy.http import HtmlResponse
 
 
-class NaverCosmeticProduct:
+class NaverCosmeticProductPyppeteer:
+    GET_ATTR_JS = '(elem, attr) => elem.getAttribute(attr)'
+    GET_TXT_JS = '(elem) => elem.textContent'
+
     HEADERS = {
         "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
         "accept-encoding": "gzip, deflate, br, zstd",
@@ -36,6 +43,7 @@ class NaverCosmeticProduct:
     ]
 
     def __init__(self, review: bool = False, todos: list = []):
+        # self.prods = {}
         self.dones = 0
         self.todos = []
 
@@ -83,13 +91,46 @@ class NaverCosmeticProduct:
         print(f"{self.dones:_} existent product(s)".replace('_', '.'))
         print(f"{self.errs:_} err(s)".replace('_', '.'))
 
-    def scrape(self):
+    async def start(self):
+        self.browser = await launch(headless=False)
+        self.page = await self.browser.newPage()
+        self.page.setDefaultNavigationTimeout(300000)
+        await self.page.setViewport({ 'width': 1024, 'height': 768 })
+        await self.page.setExtraHTTPHeaders(self.HEADERS)
+
+    async def scrape(self):
         for i, todo in enumerate(self.todos, start=1):
-            yield self.get_prod_info(i, todo)
-            time.sleep(0.5)
+            start_time = time.time()
+            yield await self.get_prod_info(i, todo)
+
+            remain = 30+start_time-time.time()
+            if remain > 0:
+                print("Wait")
+                await asyncio.sleep(remain)
+
+    async def get_basic_json(self):
+        basic_json_sel = await self.page.querySelector('script[type="application/ld+json"]')
+        basic_json_text = await self.page.evaluate(self.GET_TXT_JS, basic_json_sel)
+        self.basic_json = json.loads(basic_json_text)
+
+    async def get_var_json(self):
+        var_json = None
+
+        for scr in (await self.page.querySelectorAll('script')):
+            scr_txt = (await self.page.evaluate(self.GET_TXT_JS, scr)).strip()
+            if '__PRELOADED_STATE__' in scr_txt:
+                var_json_match = re.findall(r'window.__PRELOADED_STATE__\s*=\s*(\{.+\})', scr_txt)
+                if var_json_match:
+                    var_json = json.loads(var_json_match[0])
+                    break
+
+        if 'product' in var_json:
+            self.var_json = var_json['product']['A']
+        elif 'productDetail' in var_json:
+            self.var_json = var_json['productDetail']['A']['contents']
 
     def get_exist(self):
-        return (not self.prod_json['soldout'])
+        return (not self.var_json['soldout']) and ('instock' in self.basic_json['offers']['availability'].lower())
 
     def get_div_descr(self, prod_id: str):
         descr = ""
@@ -126,7 +167,7 @@ class NaverCosmeticProduct:
 
     def get_table_descr(self):
         try:
-            fields = self.prod_json['productInfoProvidedNoticeView']['basic']
+            fields = self.prelJson['productInfoProvidedNoticeView']['basic']
             if fields:
                 t_descr = ""
                 for k, v in fields.items():
@@ -159,7 +200,7 @@ class NaverCosmeticProduct:
     def get_specs(self):
         specs = []
 
-        fields1 = self.prod_json.get('viewAttributes')
+        fields1 = self.var_json.get('viewAttributes')
         if fields1:
             for k, v in fields1.items():
                 if ('이벤트' in k) or ('사은품' in k):
@@ -169,7 +210,7 @@ class NaverCosmeticProduct:
                     "value": v
                 })
         
-        fields2 = self.prod_json.get('detailAttributes')
+        fields2 = self.var_json.get('detailAttributes')
         if fields2:
             for k, v in fields2.items():
                 specs.append({
@@ -180,13 +221,13 @@ class NaverCosmeticProduct:
         return (specs if specs else None)
 
     def get_cats(self):
-        cats_txt = self.prod_json.get('category', {}).get('wholeCategoryName', '')
+        cats_txt = self.basic_json.get('category')
         if not cats_txt:
             return None
         return " > ".join(cats_txt.split(">"))
 
     def get_images(self):
-        img_list = self.prod_json.get('productImages')
+        img_list = self.var_json.get('productImages')
         if not img_list:
             return None
         return ";".join([img['url'] for img in img_list])
@@ -194,19 +235,19 @@ class NaverCosmeticProduct:
     def get_avail_qty(self, existence: bool):
         if not existence:
             return 0
-        return self.prod_json.get('stockQuantity')
+        return self.var_json.get('stockQuantity')
 
     def get_opts_vars(self, price_krw: int):
-        has_opts = self.prod_json.get('optionUsable')
+        has_opts = self.var_json.get('optionUsable')
         if not has_opts:
             return (None, None)
 
         options = []
         variants = []
 
-        opt_list = self.prod_json.get('options')
+        opt_list = self.var_json.get('options')
         if opt_list:
-            opt_combos = self.prod_json.get('optionCombinations')
+            opt_combos = self.var_json.get('optionCombinations')
             if opt_combos: # 复合选项
                 opt_list = list(filter(lambda opt: (opt['optionType'] == 'COMBINATION'), opt_list))
                 if opt_list:
@@ -228,7 +269,7 @@ class NaverCosmeticProduct:
                         variants.append({
                             "variant_id": str(oc["id"]),
                             "barcode": None,
-                            "sku": str(oc["id"]),
+                            "sku": "",
                             "option_values": opt_vals,
                             "images": None,
                             "price": round((price_krw+oc['price'])/self.krw_rate, 2),
@@ -249,7 +290,7 @@ class NaverCosmeticProduct:
                         variants.append({
                             "variant_id": str(opt["id"]),
                             "barcode": None,
-                            "sku": str(opt["id"]),
+                            "sku": "",
                             "option_values": [{
                                 "option_id": None,
                                 "option_value_id": None,
@@ -264,20 +305,20 @@ class NaverCosmeticProduct:
         return ((options if options else None), (variants if variants else None))
 
     def get_recensions(self):
-        recens = self.prod_json.get('reviewAmount')
+        recens = self.basic_json.get('aggregateRating')
         if not recens:
             return (None, None)
-        return (recens['totalReviewCount'], recens['averageReviewScore'])
+        return (recens['reviewCount'], recens['ratingValue'])
 
     def get_deliv_fee(self):
-        deliv_info = self.prod_json.get('productDeliveryInfo')
+        deliv_info = self.var_json.get('productDeliveryInfo')
         if (not deliv_info) or (deliv_info['deliveryFeeType'].lower() == 'free'):
             return 0.00
         return round(deliv_info['baseFee']/self.krw_rate, 2)
 
     def get_deliv_days(self):
         try:
-            deliv_txt = self.prod_json['productInfoProvidedNoticeView']['additional']['주문 이후 예상되는 배송기간']
+            deliv_txt = self.var_json['productInfoProvidedNoticeView']['additional']['주문 이후 예상되는 배송기간']
 
             deliv_match1 = re.findall(r'(\d+)일 이내', deliv_txt)
             deliv_match2 = re.findall(r'(\d+)일 이상', deliv_txt)
@@ -297,19 +338,20 @@ class NaverCosmeticProduct:
 
         return (None, None)
 
-    def get_prod_info(self, i: int, prod_id: str):
-        url = f'https://shopping.naver.com/shopv/v1/luxury/products/{prod_id}/detail?subVertical=COSMETIC'
+    async def get_prod_info(self, i: int, prod_id: str):
+        url = 'https://shopping.naver.com/luxury/cosmetic/products/'+prod_id
         print(f'\n{i:_}/{len(self.todos):_}'.replace("_", "."), url)
 
         try:
-            resp = requests.get(url, headers=self.HEADERS, timeout=300, allow_redirects=False)
-            if resp.status_code == 404:
+            resp = await self.page.goto(url)
+            if resp.status == 404:
                 print("Product not found")
                 return
-            elif resp.status_code >= 300:
-                raise Exception(f'Status {resp.status_code}')
+            elif resp.status >= 300:
+                raise Exception(f'Status {resp.status}')
 
-            self.prod_json = resp.json()
+            await self.get_basic_json()
+            await self.get_var_json()
 
             images = self.get_images()
             if not images:
@@ -317,9 +359,8 @@ class NaverCosmeticProduct:
                 return
 
             existence = self.get_exist()
-            time.sleep(0.5)
             description = self.get_div_descr(prod_id)+self.get_table_descr()
-            price_krw = self.prod_json.get('discountedSalePrice', self.prod_json.get('salePrice', 0))
+            price_krw = self.basic_json.get('offers', {}).get('price', 0)
             options, variants = self.get_opts_vars(price_krw)
             reviews, rating = self.get_recensions()
             ship_dmin, ship_dmax = self.get_deliv_days()
@@ -330,14 +371,14 @@ class NaverCosmeticProduct:
                 "source": "Naver",
                 "product_id": prod_id,
                 "existence": existence,
-                "title": self.prod_json['name'],
+                "title": self.basic_json['name'],
                 "title_en": None,
                 "description": (description if description else None),
                 "description_en": None,
                 "summary": None,
-                "sku": prod_id,
+                "sku": str(self.basic_json['sku']),
                 "upc": prod_id,
-                "brand": (self.prod_json['brandStoreName'] if self.prod_json.get('brandStoreName') else None),
+                "brand": self.basic_json.get('description'),
                 "specifications": self.get_specs(),
                 "categories": self.get_cats(),
                 "images": images,
@@ -369,12 +410,12 @@ class NaverCosmeticProduct:
             self.count()
             return prod_id
 
-    def write_files(self): # TODO: 写入文件的函数
+    async def write_files(self): # TODO: 写入文件的函数
         with open('naver_cosmetic_prods.json', 'a', encoding='utf-8') as f_prods, open('naver_cosmetic_prods_errs.txt', 'w', encoding='utf-8') as f_errs:
             f_prods.write('[\n')
 
             writ = False
-            for y in self.scrape():
+            async for y in self.scrape():
                 if isinstance(y, dict):
                     if not writ:
                         writ = True
@@ -390,13 +431,14 @@ class NaverCosmeticProduct:
             else:
                 f_prods.write("\n]")
 
+        await self.browser.close()
         if self.errs:
             sys.exit(1)
         else:
             sys.exit(0)
 
 
-if __name__ == '__main__':
+async def main():
     review = False
     if (len(sys.argv) >= 2) and (sys.argv[1] == '--review'):
         review = True
@@ -407,5 +449,10 @@ if __name__ == '__main__':
             for line in prods_ids:
                 todos.append(line.strip())
 
-    nc_recs = NaverCosmeticProduct(review, todos)
-    nc_recs.write_files()
+    nc_recs = NaverCosmeticProductPyppeteer(review, todos)
+    await nc_recs.start()
+    await nc_recs.write_files()
+
+
+if __name__ == '__main__':
+    asyncio.run(main())
