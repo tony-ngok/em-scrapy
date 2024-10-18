@@ -415,7 +415,7 @@ class NaverCosmeticProduct:
             f_prods.write('[\n')
 
             writ = False
-            for y in self.scrape():
+            async for y in self.scrape():
                 if isinstance(y, dict):
                     if not writ:
                         writ = True
