@@ -95,7 +95,7 @@ class NaverHandmadeProduct:
         print(f"{self.errs:_} err(s)".replace('_', '.'))
 
     async def pause(self, secs: int):
-        for s in range(secs, -1, -1):
+        for s in range(secs, 0, -1):
             print(f"PAUSE: {s:03d}", end='\r')
             await asyncio.sleep(1)
 
@@ -163,7 +163,7 @@ class NaverHandmadeProduct:
                 if j >= 3:
                     raise Exception(f'Status {descr_resp.status_code}')
 
-                for s in range(300, -1, -1):
+                for s in range(300, 0, -1):
                     print(f"PAUSE: {s:03d}", end='\r')
                     time.sleep(1)
 

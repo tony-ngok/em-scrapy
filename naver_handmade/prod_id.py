@@ -104,7 +104,7 @@ class NaverHandmadeProdId:
             self.errs += 1
             self.count()
 
-            for s in range(120, -1, -1):
+            for s in range(120, 0, -1):
                 print(f"PAUSE: {s:03d}", end='\r')
                 time.sleep(1)
 
