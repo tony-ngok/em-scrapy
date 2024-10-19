@@ -159,7 +159,7 @@ class NaverHandmadeProduct:
                 print("No div descriptions")
                 return ""
             else:
-                print(f"API call fail with status {descr_resp.status_code}: {desc_url} ({j}/100)")
+                print(f"API call fail with status {descr_resp.status_code}: {desc_url} ({j}/3)")
                 j += 1
                 if j >= 3:
                     raise Exception(f'Status {descr_resp.status_code}')
