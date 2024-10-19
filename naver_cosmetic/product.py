@@ -110,7 +110,7 @@ class NaverCosmeticProduct:
                 if j >= 100:
                     raise Exception(f'Status {descr_resp.status_code}')
                 time.sleep(randint(2400, 4800)/1000.0)
-                descr_resp = requests.get(desc_url, headers=self.HEADERS, timeout=300, allow_redirects=False)
+                descr_resp = requests.get(desc_url, headers=self.HEADERS, timeout=60, allow_redirects=False)
         if descr_resp.status_code == 204:
             print("No div descriptions")
             return ""

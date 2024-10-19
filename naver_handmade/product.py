@@ -148,35 +148,50 @@ class NaverHandmadeProduct:
         return (not self.var_json['soldout']) and ('instock' in self.basic_json['offers']['availability'].lower())
 
     def get_div_descr(self, prod_id: str):
+        desc_url = f'https://shopping.naver.com/product-detail/v1/products/{prod_id}/contents/pc/PC'
         descr = ""
 
-        try:
-            descr_resp = requests.get(f'https://shopping.naver.com/product-detail/v1/products/{prod_id}/contents/pc/PC', headers=self.HEADERS, timeout=6, allow_redirects=False)
-            if descr_resp.status_code >= 300:
-                raise Exception(f"Error {descr_resp.status_code}")
+        j = 1
+        descr_resp = requests.get(desc_url, headers=self.HEADERS, timeout=60, allow_redirects=False)
+        while descr_resp.status_code >= 300:
+            if descr_resp.status_code == 404:
+                print("No div descriptions")
+                return ""
+            else:
+                print(f"API call fail with status {descr_resp.status_code}: {desc_url} ({j}/100)")
+                j += 1
+                if j >= 3:
+                    raise Exception(f'Status {descr_resp.status_code}')
 
-            raw_descr = descr_resp.json()['renderContent']
-            resp_tmp = HtmlResponse('', body=raw_descr, encoding='utf-8')
-            resp_getall = resp_tmp.css('p > span, img')
+                for s in range(300, -1, -1):
+                    print(f"PAUSE: {s:03d}", end='\r')
+                    time.sleep(1)
 
-            for sel in resp_getall:
-                if sel.root.tag == 'span':
-                    span_txt = " ".join(sel.css('::text').get().replace("\n", "").strip().split())
-                    descr += f'<p>{span_txt}</p>'
-                else:
-                    img_url = sel.css('::attr(data-src)').get()
-                    if not img_url:
-                        continue
+                descr_resp = requests.get(desc_url, headers=self.HEADERS, timeout=60, allow_redirects=False)
+        if descr_resp.status_code == 204:
+            print("No div descriptions")
+            return ""
 
-                    filter = False
-                    for f in self.DESC_IMG_FILTER:
-                        if f in img_url:
-                            filter = True
-                            break
-                    if not filter:
-                        descr += f'<p><img src="{img_url}"></p>'
-        except Exception as e:
-            print("Text description fail:", str(e))
+        raw_descr = descr_resp.json()['renderContent']
+        resp_tmp = HtmlResponse('', body=raw_descr, encoding='utf-8')
+        resp_getall = resp_tmp.css('p > span, img')
+
+        for sel in resp_getall:
+            if sel.root.tag == 'span':
+                span_txt = " ".join(sel.css('::text').get().replace("\n", "").strip().split())
+                descr += f'<p>{span_txt}</p>'
+            else:
+                img_url = sel.css('::attr(data-src)').get()
+                if not img_url:
+                    continue
+
+                filter = False
+                for f in self.DESC_IMG_FILTER:
+                    if f in img_url:
+                        filter = True
+                        break
+                if not filter:
+                    descr += f'<p><img src="{img_url}"></p>'
 
         return (f'<div class="naver-handmade-descr">{descr}</div>' if descr else "")
 
@@ -358,12 +373,20 @@ class NaverHandmadeProduct:
         print(f'\n{i:_}/{len(self.todos):_}'.replace("_", "."), url)
 
         try:
+            j = 1
             resp = await self.page.goto(url)
-            if resp.status == 404:
-                print("Product not found")
-                return
-            elif resp.status >= 300:
-                raise Exception(f'Status {resp.status}')
+            while (resp.status >= 300) or ('internalerror' in resp.url):
+                resp = await self.page.goto(url)
+                if resp.status == 404:
+                    print("Product not found")
+                    return
+                else:
+                    print(f"Nav fail with status {resp.status}: {url} -> {resp.url} ({j}/3)")
+                    j += 1
+                    if j >= 3:
+                        raise Exception(f'{url} -> {resp.url} (status {resp.status})')
+                    await self.pause(300)
+                    resp = await self.page.goto(url)
 
             await self.get_basic_json()
             await self.get_var_json()
