@@ -98,6 +98,7 @@ class NaverHandmadeProduct:
         for s in range(secs, 0, -1):
             print(f"PAUSE: {s:03d}", end='\r')
             await asyncio.sleep(1)
+        print()
 
     async def start(self):
         self.browser = await launch(headless=False)
