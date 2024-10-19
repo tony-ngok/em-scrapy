@@ -162,11 +162,9 @@ class NaverHandmadeProduct:
                 j += 1
                 if j >= 3:
                     raise Exception(f'Status {descr_resp.status_code}')
-
                 for s in range(300, 0, -1):
                     print(f"PAUSE: {s:03d}", end='\r')
                     time.sleep(1)
-
                 descr_resp = requests.get(desc_url, headers=self.HEADERS, timeout=60, allow_redirects=False)
         if descr_resp.status_code == 204:
             print("No div descriptions")
