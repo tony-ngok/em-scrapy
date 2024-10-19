@@ -1,6 +1,7 @@
 # 有些文字描述没抓到的要重新抓
 
 import json
+import os
 import time
 from random import randint
 
@@ -54,7 +55,7 @@ def get_descr(prod_id: str):
     if descr_resp.status_code == 204:
         print("No div descriptions")
         return ""
-    
+
     raw_descr = descr_resp.json()['renderContent']
     resp_tmp = HtmlResponse('', body=raw_descr, encoding='utf-8')
     resp_getall = resp_tmp.css('p > span, img')
@@ -83,7 +84,7 @@ if __name__ == '__main__':
     try:
         with open('naver_handmade_prods.txt', 'r', encoding='utf-8') as f_orig, open('prods_temp', 'w', encoding='utf-8') as f_new:
             for line in f_orig:
-                data = json.load(line[:-1])
+                data = json.loads(line[:-1])
                 prod_id = data['prod_id']
                 descr = data['description']
 
@@ -96,5 +97,8 @@ if __name__ == '__main__':
                 json.dump(data, f_new, ensure_ascii=False)
                 f_new.write(',\n')
                 time.sleep(randint(2400, 4800)/1000.0)
+
+            os.remove("naver_handmade_prods.txt")
+            os.rename('prods_temp', "naver_handmade_prods.txt")
     except Exception as e:
         print("ERROR:", str(e))
