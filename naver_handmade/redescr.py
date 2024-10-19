@@ -101,7 +101,7 @@ if __name__ == '__main__':
                 json.dump(data, f_new, ensure_ascii=False)
                 f_new.write(',\n')
 
-            os.remove("naver_handmade_prods.txt")
-            os.rename('prods_temp', "naver_handmade_prods.txt")
+        os.remove("naver_handmade_prods.txt")
+        os.rename('prods_temp', "naver_handmade_prods.txt")
     except Exception as e:
         print("ERROR:", str(e))

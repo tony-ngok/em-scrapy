@@ -172,6 +172,7 @@ class NaverCosmeticProduct:
 
     def get_specs(self):
         specs = []
+        weight = None
 
         fields1 = self.prod_json.get('viewAttributes')
         if fields1:
@@ -190,8 +191,15 @@ class NaverCosmeticProduct:
                     "name": k,
                     "value": v
                 })
+                if ('용량' in k) or ('중량' in k):
+                    weight = self.parse_weight(v.lower())
 
-        return (specs if specs else None)
+        return ((specs if specs else None), weight)
+
+    def parse_weight(self, txt: str):
+        weight_match = re.findall(r'(\d+(?:\.\d+)?)\s*(?:g|ml)', txt)
+        if weight_match:
+            return round(float(weight_match[0])/453.59237, 2)
 
     def get_cats(self):
         cats_txt = self.prod_json.get('category', {}).get('wholeCategoryName', '')
