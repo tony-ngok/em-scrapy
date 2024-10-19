@@ -177,7 +177,7 @@ class NaverHandmadeProduct:
 
         for sel in resp_getall:
             if sel.root.tag == 'span':
-                span_txt = " ".join(sel.css('::text').get().replace("\n", "").strip().split())
+                span_txt = " ".join(sel.css('::text').get('').replace("\n", "").strip().split())
                 descr += f'<p>{span_txt}</p>'
             else:
                 img_url = sel.css('::attr(data-src)').get()

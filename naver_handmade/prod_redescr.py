@@ -1,4 +1,4 @@
-# 有些文字描述没抓到的要重新抓
+# 有些文字描述因失误没抓到的要重新抓
 
 import json
 import os
@@ -62,7 +62,7 @@ def get_descr(prod_id: str):
 
     for sel in resp_getall:
         if sel.root.tag == 'span':
-            span_txt = " ".join(sel.css('::text').get().replace("\n", "").strip().split())
+            span_txt = " ".join(sel.css('::text').get('').replace("\n", "").strip().split())
             descr += f'<p>{span_txt}</p>'
         else:
             img_url = sel.css('::attr(data-src)').get()
@@ -77,26 +77,29 @@ def get_descr(prod_id: str):
             if not filter:
                 descr += f'<p><img src="{img_url}"></p>'
 
+    print("Redescription")
     return (f'<div class="naver-handmade-descr">{descr}</div>' if descr else "")
 
 
 if __name__ == '__main__':
     try:
         with open('naver_handmade_prods.txt', 'r', encoding='utf-8') as f_orig, open('prods_temp', 'w', encoding='utf-8') as f_new:
-            for line in f_orig:
-                data = json.loads(line[:-1])
-                prod_id = data['prod_id']
+            for i, line in enumerate(f_orig, start=1):
+                print("Description", f"({i:_})".replace("_", "."))
+                data = json.loads(line[:-2])
+                prod_id = data['product_id']
                 descr = data['description']
 
                 if not descr:
                     got_descr = get_descr(prod_id)
                     data['description'] = (got_descr if got_descr else None)
+                    time.sleep(randint(2400, 4800)/1000.0)
                 elif not (descr.startswith('<div ')):
                     data['description'] = get_descr(prod_id)+descr
+                    time.sleep(randint(2400, 4800)/1000.0)
 
                 json.dump(data, f_new, ensure_ascii=False)
                 f_new.write(',\n')
-                time.sleep(randint(2400, 4800)/1000.0)
 
             os.remove("naver_handmade_prods.txt")
             os.rename('prods_temp', "naver_handmade_prods.txt")
