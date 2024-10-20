@@ -159,11 +159,11 @@ class NaverHandmadeProduct:
                 print("No div descriptions")
                 return ""
             else:
-                print(f"API call fail with status {descr_resp.status_code}: {desc_url} ({j}/3)")
+                print(f"API call fail with status {descr_resp.status_code}: {desc_url} ({j}/5)")
                 j += 1
-                if j >= 3:
+                if j >= 5:
                     raise Exception(f'Status {descr_resp.status_code}')
-                for s in range(300, 0, -1):
+                for s in range(120, 0, -1):
                     print(f"PAUSE: {s:03d}", end='\r')
                     time.sleep(1)
                 descr_resp = requests.get(desc_url, headers=self.HEADERS, timeout=60, allow_redirects=False)
