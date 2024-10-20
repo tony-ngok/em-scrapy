@@ -348,6 +348,7 @@ class NaverCosmeticProduct:
             existence = self.get_exist()
             time.sleep(randint(2400, 4800)/1000.0)
             description = self.get_div_descr(prod_id)+self.get_table_descr()
+            specifications, weight = self.get_specs()
             price_krw = self.prod_json.get('discountedSalePrice', self.prod_json.get('salePrice', 0))
             options, variants = self.get_opts_vars(price_krw)
             reviews, rating = self.get_recensions()
@@ -367,7 +368,7 @@ class NaverCosmeticProduct:
                 "sku": prod_id,
                 "upc": prod_id,
                 "brand": (self.prod_json['brandStoreName'] if self.prod_json.get('brandStoreName') else None),
-                "specifications": self.get_specs(),
+                "specifications": specifications,
                 "categories": self.get_cats(),
                 "images": images,
                 "videos": None,
@@ -383,7 +384,7 @@ class NaverCosmeticProduct:
                 "shipping_fee": self.get_deliv_fee(),
                 "shipping_days_min": ship_dmin,
                 "shipping_days_max": ship_dmax,
-                "weight": None, # 有的商品参数中有两个不同的重量值
+                "weight": weight,
                 "length": None,
                 "width": None,
                 "height": None
