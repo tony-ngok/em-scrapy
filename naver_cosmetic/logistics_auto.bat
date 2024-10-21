@@ -24,7 +24,7 @@ if %ERRORLEVEL% neq 0 (
     goto prod_id_review
 )
 echo Program 'prod_id.py logistics' success
-goto end
+goto product
 
 :prod_id_review
 python prod_id.py logistics --review
@@ -34,7 +34,7 @@ if %ERRORLEVEL% neq 0 (
     goto prod_id_review
 )
 echo Program 'prod_id.py logistics' success
-goto end
+goto product
 
 :product
 echo Start program 'product.py' logistics...
