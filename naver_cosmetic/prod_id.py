@@ -114,10 +114,11 @@ class NaverCosmeticProdId:
 
             if self.mode == 'cosmetic':
                 result = resp.json()['data']['pagedLuxuryListItems']
+                items = result.get('items', [])
             elif self.mode == 'logistics':
                 result = resp.json()['data']['pagedLogisticsProducts']
+                items = result.get('products', [])
 
-            items = result.get('items', [])
             for item in items:
                 pid = item['productId']
                 if pid not in self.prods_ids:
