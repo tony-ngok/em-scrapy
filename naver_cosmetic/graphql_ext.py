@@ -1,4 +1,5 @@
 import asyncio
+import sys
 from urllib.parse import unquote
 
 from pyppeteer import launch
@@ -7,7 +8,7 @@ from pyppeteer.network_manager import Response
 
 class NaverCosmeticGraphqlExt:
     """
-    获得抓取化妆品API所需的GraphQL扩张参数（密文）
+    获得抓取化妆品及logistics杂货API所需的GraphQL扩张参数（密文）
     """
 
     HEADERS = {
@@ -27,7 +28,8 @@ class NaverCosmeticGraphqlExt:
         "user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Yeti/1.1; +https://naver.me/spd) Chrome/106.0.5249.0 Safari/537.36"
     }
 
-    def __init__(self):
+    def __init__(self, mode: str = 'cosmetic'):
+        self.mode = mode
         self.graphql_ext = None
 
     async def start(self):
@@ -45,7 +47,11 @@ class NaverCosmeticGraphqlExt:
         self.page.on('response', handle_response)
 
         try:
-            resp = await self.page.goto('https://shopping.naver.com/luxury/cosmetic/category?optionFilters=CH_101180106')
+            if self.mode == 'cosmetic':
+                resp = await self.page.goto('https://shopping.naver.com/luxury/cosmetic/category?optionFilters=CH_101180106')
+            elif self.mode == 'logistics':
+                resp = await self.page.goto('https://shopping.naver.com/logistics/category?menu=10000110')
+
             if resp.status >= 300:
                 raise Exception(f"Status {resp.status}")
         except Exception as e:
@@ -55,19 +61,20 @@ class NaverCosmeticGraphqlExt:
         await self.browser.close()
 
         if self.graphql_ext:
-            with open('graphql_ext.txt', 'w', encoding='utf-8') as f:
+            with open(f'graphql_ext_{self.mode}.txt', 'w', encoding='utf-8') as f:
                 f.write(self.graphql_ext)
-            exit(0)
+            sys.exit(0)
         else:
             print("No GraphQL hash")
-            exit(1)
+            sys.exit(1)
 
 
 async def main():
-    nc_ext = NaverCosmeticGraphqlExt()
-    await nc_ext.start()
-    await nc_ext.getGraphqlHash()
-    await nc_ext.fin()
+    if (len(sys.argv) >= 2) or (sys.argv[1] == 'cosmetic') or (sys.argv[1] == 'logistics'):
+        nc_ext = NaverCosmeticGraphqlExt(sys.argv[1])
+        await nc_ext.start()
+        await nc_ext.getGraphqlHash()
+        await nc_ext.fin()
 
 
 if __name__ == '__main__':

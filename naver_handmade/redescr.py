@@ -4,6 +4,7 @@ import json
 import os
 import time
 from random import randint
+from sys import argv
 
 import requests
 from scrapy.http import HtmlResponse
@@ -88,16 +89,19 @@ if __name__ == '__main__':
                 print("Description", f"({i:_})".replace("_", "."))
                 data = json.loads(line[:-2])
                 prod_id = data['product_id']
-                descr = data['description']
 
-                if not descr:
+                if (len(argv) >= 2) and (argv[1] == '--redo'): # 模式1：仅重抓描述缺失的
+                    descr = data['description']
+                    if not descr:
+                        got_descr = get_descr(prod_id)
+                        data['description'] = (got_descr if got_descr else None)
+                    elif not (descr.startswith('<div ')):
+                        data['description'] = get_descr(prod_id)+descr
+                else: # 模式2：整个描述重抓
                     got_descr = get_descr(prod_id)
                     data['description'] = (got_descr if got_descr else None)
-                    time.sleep(randint(2400, 4800)/1000.0)
-                elif not (descr.startswith('<div ')):
-                    data['description'] = get_descr(prod_id)+descr
-                    time.sleep(randint(2400, 4800)/1000.0)
 
+                time.sleep(randint(2400, 4800)/1000.0)
                 json.dump(data, f_new, ensure_ascii=False)
                 f_new.write(',\n')
 

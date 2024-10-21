@@ -36,14 +36,15 @@ class NaverCosmeticProduct:
         "%EB%AA%A8%EB%93%A0%EC%A0%9C%ED%92%88"
     ]
 
-    def __init__(self, review: bool = False, todos: list = []):
+    def __init__(self, mode: str = 'cosmetic', review: bool = False, todos: list = []):
+        self.mode = mode
         self.review = review
         self.dones = 0
         self.todos = []
 
         if self.review:
             try:
-                with open('naver_cosmetic_prods.txt', 'r', encoding='utf-8') as f_prods:
+                with open(f'naver_{mode}_prods.txt', 'r', encoding='utf-8') as f_prods:
                     for _ in f_prods:
                         self.dones += 1
             except:
@@ -53,7 +54,7 @@ class NaverCosmeticProduct:
                     self.todos.append(todo)
 
             try:
-                with open('naver_cosmetic_prods_errs.txt', 'r', encoding='utf-8') as f_errs:
+                with open(f'naver_{mode}_prods_errs.txt', 'r', encoding='utf-8') as f_errs:
                     for line in f_errs:
                         self.todos.append(line.strip())
             except:
@@ -79,7 +80,7 @@ class NaverCosmeticProduct:
             self.krw_rate = rate_resp.json()['rates']['KRW']
         except:
             print("Fail to get USD/KRW rate")
-            self.krw_rate = 1369.181377
+            self.krw_rate = 1368.537958
         finally:
             print(f"USD/KRW rate: {self.krw_rate:_}".replace(".", ",").replace("_", "."))
 
@@ -320,7 +321,10 @@ class NaverCosmeticProduct:
         return (None, None)
 
     def get_prod_info(self, i: int, prod_id: str):
-        url = f'https://shopping.naver.com/shopv/v1/luxury/products/{prod_id}/detail?subVertical=COSMETIC'
+        if self.mode == 'cosmetic':
+            url = f'https://shopping.naver.com/shopv/v1/luxury/products/{prod_id}/detail?subVertical=COSMETIC'
+        elif self.mode == 'logistics':
+            url = f'https://shopping.naver.com/shopv/v1/logistics/products/{prod_id}/detail'
         print(f'\n{i:_}/{len(self.todos):_}'.replace("_", "."), url)
 
         try:
@@ -345,6 +349,11 @@ class NaverCosmeticProduct:
                 print("No images")
                 return
 
+            if self.mode == 'cosmetic':
+                url_root = 'https://shopping.naver.com/luxury/cosmetic/products/'
+            elif self.mode == 'logistics':
+                url_root = 'https://shopping.naver.com/logistics/products/'
+
             existence = self.get_exist()
             time.sleep(randint(2400, 4800)/1000.0)
             description = self.get_div_descr(prod_id)+self.get_table_descr()
@@ -356,7 +365,7 @@ class NaverCosmeticProduct:
 
             product = {
                 "date": datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
-                "url": 'https://shopping.naver.com/luxury/cosmetic/products/'+prod_id,
+                "url": url_root+prod_id,
                 "source": "Naver",
                 "product_id": prod_id,
                 "existence": existence,
@@ -407,7 +416,7 @@ class NaverCosmeticProduct:
 
     def write_files(self): # TODO: 写入文件的函数
         mode = 'a' if self.review else 'w'
-        with open('naver_cosmetic_prods.txt', mode, encoding='utf-8') as f_prods, open('naver_cosmetic_prods_errs.txt', 'w', encoding='utf-8') as f_errs:
+        with open(f'naver_{self.mode}_prods.txt', mode, encoding='utf-8') as f_prods, open(f'naver_{self.mode}_prods_errs.txt', 'w', encoding='utf-8') as f_errs:
             for y in self.scrape():
                 if isinstance(y, dict):
                     json.dump(y, f_prods, ensure_ascii=False)
@@ -422,15 +431,16 @@ class NaverCosmeticProduct:
 
 
 if __name__ == '__main__':
-    review = False
-    if (len(sys.argv) >= 2) and (sys.argv[1] == '--review'):
-        review = True
+    if (len(sys.argv) >= 2) and ((sys.argv[1] == 'cosmetic') or (sys.argv[1] == 'logistics')):
+        review = False
+        if (len(sys.argv) >= 3) and (sys.argv[2] == '--review'):
+            review = True
 
-    todos = []
-    if not review:
-        with open('naver_cosmetic_prods_ids.txt', 'r', encoding='utf-8') as prods_ids:
-            for line in prods_ids:
-                todos.append(line.strip())
+        todos = []
+        if not review:
+            with open(f'naver_{sys.argv[1]}_prods_ids.txt', 'r', encoding='utf-8') as prods_ids:
+                for line in prods_ids:
+                    todos.append(line.strip())
 
-    nc_recs = NaverCosmeticProduct(review, todos)
-    nc_recs.write_files()
+        nc_recs = NaverCosmeticProduct(sys.argv[1], review, todos)
+        nc_recs.write_files()

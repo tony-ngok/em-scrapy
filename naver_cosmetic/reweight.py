@@ -3,6 +3,7 @@
 import json
 import os
 import re
+import sys
 
 
 def parse_weight(txt: str):
@@ -12,24 +13,25 @@ def parse_weight(txt: str):
 
 
 if __name__ == '__main__':
-    try:
-        with open('naver_cosmetic_prods.txt', 'r', encoding='utf-8') as f_orig, open('prods_temp', 'w', encoding='utf-8') as f_new:
-            for i, line in enumerate(f_orig, start=1):
-                print("Item", f"{i:_}".replace("_", "."))
-                data = json.loads(line[:-2])
-                specs = data['specifications']
+    if (len(sys.argv) >= 2) or (sys.argv[1] == 'cosmetic') or (sys.argv[1] == 'logistics'):
+        try:
+            with open(f'naver_{sys.argv[1]}_prods.txt', 'r', encoding='utf-8') as f_orig, open('prods_temp', 'w', encoding='utf-8') as f_new:
+                for i, line in enumerate(f_orig, start=1):
+                    print("Item", f"{i:_}".replace("_", "."))
+                    data = json.loads(line[:-2])
+                    specs = data['specifications']
 
-                for spec in specs:
-                    if ('용량' in spec['name']) or ('중량' in spec['name']):
-                        print(f"Reweight ({spec['name']})")
-                        data['weight'] = parse_weight(spec['value'])
-                        print(f"Weight: {data['weight']}".replace(".", ","))
-                        break
+                    for spec in specs:
+                        if ('용량' in spec['name']) or ('중량' in spec['name']):
+                            print(f"Reweight ({spec['name']})")
+                            data['weight'] = parse_weight(spec['value'])
+                            print(f"Weight: {data['weight']}".replace(".", ","))
+                            break
 
-                json.dump(data, f_new, ensure_ascii=False)
-                f_new.write(',\n')
+                    json.dump(data, f_new, ensure_ascii=False)
+                    f_new.write(',\n')
 
-        os.remove("naver_cosmetic_prods.txt")
-        os.rename('prods_temp', "naver_cosmetic_prods.txt")
-    except Exception as e:
-        print("ERROR:", str(e))
+            os.remove(f"naver_{sys.argv[1]}_prods.txt")
+            os.rename('prods_temp', f"naver_{sys.argv[1]}_prods.txt")
+        except Exception as e:
+            print("ERROR:", str(e))

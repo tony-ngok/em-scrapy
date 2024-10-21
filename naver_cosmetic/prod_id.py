@@ -4,7 +4,7 @@ from random import randint
 
 import requests
 
-from cats_urls import urls
+from cats_urls import urls1, urls2
 
 
 class NaverCosmeticProdId:
@@ -26,9 +26,11 @@ class NaverCosmeticProdId:
         "user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Yeti/1.1; +https://naver.me/spd) Chrome/106.0.5249.0 Safari/537.36"
     }
 
-    def __init__(self, review: bool = False):
+    def __init__(self, mode: str = 'cosmetic', review: bool = False):
+        self.mode = mode
+        
         try:
-            with open('graphql_ext.txt', 'r', encoding='utf-8') as f:
+            with open(f'graphql_ext_{mode}.txt', 'r', encoding='utf-8') as f:
                 self.graphql_ext = f.read()
                 print("GraphQL extension:", self.graphql_ext)
         except:
@@ -40,24 +42,32 @@ class NaverCosmeticProdId:
 
         if review:
             try:
-                with open('naver_cosmetic_prods_ids.txt', 'r', encoding='utf-8') as f_prods_ids:
+                with open(f'naver_{mode}_prods_ids.txt', 'r', encoding='utf-8') as f_prods_ids:
                     for line in f_prods_ids:
                         self.prods_ids[line.strip()] = True
             except:
                 print("No existents prod(s) id(s)")
-                for url in urls:
-                    self.todos.append(url)
+                if mode == 'cosmetic':
+                    for url in urls1:
+                        self.todos.append(url)
+                elif mode == 'logistics':
+                    for url in urls2:
+                        self.todos.append(url)
 
             try:
-                with open('naver_cosmetic_prod_ids_errs.txt', 'r', encoding='utf-8') as f_errs:
+                with open(f'naver_{mode}_prod_ids_errs.txt', 'r', encoding='utf-8') as f_errs:
                     for line in f_errs:
                         self.todos.append(line.strip())
             except:
                 print("No prev(s) err(s)")
         else:
             print("Start anew")
-            for url in urls:
-                self.todos.append(url)
+            if mode == 'cosmetic':
+                for url in urls1:
+                    self.todos.append(url)
+            elif mode == 'logistics':
+                for url in urls2:
+                    self.todos.append(url)
 
         print(f"{len(self.prods_ids):_} existent prod(s) id(s)".replace('_', '.'))
         print(f"{len(self.todos):_} URL(s) todo".replace('_', '.'))
@@ -70,10 +80,16 @@ class NaverCosmeticProdId:
         print(f"{self.errs:_} error(s)".replace('_', '.'))
 
     def get_cat_no(self, url: str):
-        return url.split('CH_')[1]
+        if self.mode == 'cosmetic':
+            return url.split('CH_')[1]
+        elif self.mode == 'logistics':
+            return url.split('menu=')[1]
 
     def get_graphql(self, cat_no: str, page: int = 1, page_size: int = 1000):
-        return f'https://shopping.naver.com/api/shopv/graphql?operationName=FetchPagedLuxuryListItems&variables={{"productParam":{{"subVertical":"COSMETIC","soldOut":false,"deliveries":[""],"sorts":[{{"target":"POPULAR","sortDirection":"DESC"}}],"channelNos":["{cat_no}"]}},"listParam":{{"page":{page},"pageSize":{page_size}}}}}&extensions='+self.graphql_ext
+        if self.mode == 'cosmetic':
+            return f'https://shopping.naver.com/api/shopv/graphql?operationName=FetchPagedLuxuryListItems&variables={{"productParam":{{"subVertical":"COSMETIC","soldOut":false,"deliveries":[""],"sorts":[{{"target":"POPULAR","sortDirection":"DESC"}}],"channelNos":["{cat_no}"]}},"listParam":{{"page":{page},"pageSize":{page_size}}}}}&extensions='+self.graphql_ext
+        elif self.mode == 'logistics':
+            return f'https://shopping.naver.com/responsive/api/shopv/graphql?operationName=FetchPagedLogisticsProducts&variables={{"productParam":{{"vertical":"LOGISTICS","subVertical":"LOGISTICS","soldOut":false,"menuId":"{cat_no}","sorts":[{{"target":"POPULAR","sortDirection":"DESC"}}],"zipCode":"06236"}},"listParam":{{"page":{page},"pageSize":{page_size}}},"menuId":"{cat_no}","includePriorityProducts":true,"hasOptionFilter":false,"includePromotionProducts":false}}&extensions='+self.graphql_ext
 
     def scrape(self):
         for i, url in enumerate(self.todos, start=1):
@@ -96,7 +112,11 @@ class NaverCosmeticProdId:
                 time.sleep(randint(2400, 4800)/1000.0)
                 resp = requests.get(graph_url, headers=self.HEADERS, timeout=300, allow_redirects=False)
 
-            result = resp.json()['data']['pagedLuxuryListItems']
+            if self.mode == 'cosmetic':
+                result = resp.json()['data']['pagedLuxuryListItems']
+            elif self.mode == 'logistics':
+                result = resp.json()['data']['pagedLogisticsProducts']
+
             items = result.get('items', [])
             for item in items:
                 pid = item['productId']
@@ -112,12 +132,17 @@ class NaverCosmeticProdId:
                 self.get_ids(i, cat_no, page+1)
         except Exception as e:
             print("ERROR:", str(e))
-            self.prods_ids[f'CH_{cat_no}'] = False
+
+            if self.mode == 'cosmetic':
+                self.prods_ids[f'CH_{cat_no}'] = False
+            elif self.mode == 'logistics':
+                self.prods_ids[f'menu={cat_no}'] = False
+
             self.errs += 1
             self.count()    
 
     def fin(self):
-        with open('naver_cosmetic_prods_ids.txt', 'w', encoding='utf-8') as f_prods_ids, open('naver_cosmetic_prod_ids_errs.txt', 'w', encoding='utf-8') as f_errs:
+        with open(f'naver_{self.mode}_prods_ids.txt', 'w', encoding='utf-8') as f_prods_ids, open(f'naver_{self.mode}_prod_ids_errs.txt', 'w', encoding='utf-8') as f_errs:
            for k, v in self.prods_ids.items():
                 if v:
                     f_prods_ids.write(k+'\n')
@@ -131,10 +156,11 @@ class NaverCosmeticProdId:
 
 
 if __name__ == '__main__':
-    review = False
-    if (len(sys.argv) >= 2) and (sys.argv[1] == '--review'):
-        review = True
+    if (len(sys.argv) >= 2) and ((sys.argv[1] == 'cosmetic') or (sys.argv[1] == 'logistics')):
+        review = False
+        if (len(sys.argv) >= 3) and (sys.argv[2] == '--review'):
+            review = True
 
-    nc_prods = NaverCosmeticProdId(review)
-    nc_prods.scrape()
-    nc_prods.fin()
+        nc_prods = NaverCosmeticProdId(sys.argv[1], review)
+        nc_prods.scrape()
+        nc_prods.fin()

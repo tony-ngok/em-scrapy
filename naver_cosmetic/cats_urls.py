@@ -1,4 +1,5 @@
-urls = [
+# 化粧品
+urls1 = [
     "https://shopping.naver.com/luxury/cosmetic/category?optionFilters=CH_101180106",
     "https://shopping.naver.com/luxury/cosmetic/category?optionFilters=CH_101923673",
     "https://shopping.naver.com/luxury/cosmetic/category?optionFilters=CH_101194012",
@@ -77,4 +78,35 @@ urls = [
     "https://shopping.naver.com/luxury/cosmetic/category?optionFilters=CH_101727908",
     "https://shopping.naver.com/luxury/cosmetic/category?optionFilters=CH_101769329",
     "https://shopping.naver.com/luxury/cosmetic/category?optionFilters=CH_101640286"
+]
+
+# 其他logistics类杂货
+urls2 = [
+    "https://shopping.naver.com/logistics/category?menu=10000110",
+    "https://shopping.naver.com/logistics/category?menu=10000111",
+    "https://shopping.naver.com/logistics/category?menu=10000115",
+    "https://shopping.naver.com/logistics/category?menu=10000116",
+    "https://shopping.naver.com/logistics/category?menu=10000117",
+    "https://shopping.naver.com/logistics/category?menu=10000118",
+    "https://shopping.naver.com/logistics/category?menu=10001011",
+    "https://shopping.naver.com/logistics/category?menu=10001013",
+    "https://shopping.naver.com/logistics/category?menu=10000333",
+    "https://shopping.naver.com/logistics/category?menu=10000338",
+    "https://shopping.naver.com/logistics/category?menu=10011349",
+    "https://shopping.naver.com/logistics/category?menu=10011350",
+    "https://shopping.naver.com/logistics/category?menu=10000148",
+    "https://shopping.naver.com/logistics/category?menu=10000149",
+    "https://shopping.naver.com/logistics/category?menu=10000150",
+    "https://shopping.naver.com/logistics/category?menu=10000151",
+    "https://shopping.naver.com/logistics/category?menu=10001003",
+    "https://shopping.naver.com/logistics/category?menu=10000018",
+    "https://shopping.naver.com/logistics/category?menu=10000292",
+    "https://shopping.naver.com/logistics/category?menu=10000302",
+    "https://shopping.naver.com/logistics/category?menu=10000406",
+    "https://shopping.naver.com/logistics/category?menu=10000409",
+    "https://shopping.naver.com/logistics/category?menu=10000436",
+    "https://shopping.naver.com/logistics/category?menu=10030795",
+    "https://shopping.naver.com/logistics/category?menu=10000038",
+    "https://shopping.naver.com/logistics/category?menu=10000022",
+    "https://shopping.naver.com/logistics/category?menu=10000147"
 ]
