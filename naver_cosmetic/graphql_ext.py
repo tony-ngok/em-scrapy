@@ -41,7 +41,7 @@ class NaverCosmeticGraphqlExt:
 
     async def getGraphqlHash(self):
         def handle_response(response: Response): # 监听页面发出请求，以获得密文
-            if 'graphql?operationName=FetchPagedLuxuryListItems' in response.url:
+            if ((self.mode == 'cosmetic') and ('graphql?operationName=FetchPagedLuxuryListItems' in response.url)) or ((self.mode == 'logistics') and ('graphql?operationName=FetchPagedLogisticsProducts' in response.url)):
                 self.graphql_ext = unquote(response.url.split("&extensions=")[1])
                 print("Get GraphQL extension:", self.graphql_ext)
         self.page.on('response', handle_response)
