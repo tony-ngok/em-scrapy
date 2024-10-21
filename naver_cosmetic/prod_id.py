@@ -28,7 +28,7 @@ class NaverCosmeticProdId:
 
     def __init__(self, mode: str = 'cosmetic', review: bool = False):
         self.mode = mode
-        
+
         try:
             with open(f'graphql_ext_{mode}.txt', 'r', encoding='utf-8') as f:
                 self.graphql_ext = f.read()
@@ -85,6 +85,11 @@ class NaverCosmeticProdId:
         elif self.mode == 'logistics':
             return url.split('menu=')[1]
 
+    def pause(self, secs: int):
+        for s in range(secs, 0, -1):
+            print(f"PAUSE: {s:03d}", end='\r')
+            time.sleep(1)
+
     def get_graphql(self, cat_no: str, page: int = 1, page_size: int = 1000):
         if self.mode == 'cosmetic':
             return f'https://shopping.naver.com/api/shopv/graphql?operationName=FetchPagedLuxuryListItems&variables={{"productParam":{{"subVertical":"COSMETIC","soldOut":false,"deliveries":[""],"sorts":[{{"target":"POPULAR","sortDirection":"DESC"}}],"channelNos":["{cat_no}"]}},"listParam":{{"page":{page},"pageSize":{page_size}}}}}&extensions='+self.graphql_ext
@@ -105,11 +110,11 @@ class NaverCosmeticProdId:
             j = 1
             resp = requests.get(graph_url, headers=self.HEADERS, timeout=300, allow_redirects=False)
             while resp.status_code >= 300:
-                print(f"API call fail with status {resp.status_code}: {graph_url} ({j}/100)")
+                print(f"API call fail with status {resp.status_code}: {graph_url} ({j}/5)")
                 j += 1
-                if j >= 100:
+                if j >= 5:
                     raise Exception(f"Status {resp.status_code}")
-                time.sleep(randint(2400, 4800)/1000.0)
+                self.pause(120)
                 resp = requests.get(graph_url, headers=self.HEADERS, timeout=300, allow_redirects=False)
 
             if self.mode == 'cosmetic':
@@ -140,7 +145,8 @@ class NaverCosmeticProdId:
                 self.prods_ids[f'menu={cat_no}'] = False
 
             self.errs += 1
-            self.count()    
+            self.count()
+            self.pause(120)
 
     def fin(self):
         with open(f'naver_{self.mode}_prods_ids.txt', 'w', encoding='utf-8') as f_prods_ids, open(f'naver_{self.mode}_prod_ids_errs.txt', 'w', encoding='utf-8') as f_errs:

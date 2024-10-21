@@ -95,6 +95,11 @@ class NaverCosmeticProduct:
     def get_exist(self):
         return (not self.prod_json['soldout'])
 
+    def pause(self, secs: int):
+        for s in range(secs, 0, -1):
+            print(f"PAUSE: {s:03d}", end='\r')
+            time.sleep(1)
+
     def get_div_descr(self, prod_id: str):
         desc_url = f'https://shopping.naver.com/product-detail/v1/products/{prod_id}/contents/pc/PC'
         descr = ""
@@ -106,11 +111,11 @@ class NaverCosmeticProduct:
                 print("No div descriptions")
                 return ""
             else:
-                print(f"API call fail with status {descr_resp.status_code}: {desc_url} ({j}/100)")
+                print(f"API call fail with status {descr_resp.status_code}: {desc_url} ({j}/5)")
                 j += 1
-                if j >= 100:
+                if j >= 5:
                     raise Exception(f'Status {descr_resp.status_code}')
-                time.sleep(randint(2400, 4800)/1000.0)
+                self.pause(120)
                 descr_resp = requests.get(desc_url, headers=self.HEADERS, timeout=60, allow_redirects=False)
         if descr_resp.status_code == 204:
             print("No div descriptions")
@@ -335,11 +340,11 @@ class NaverCosmeticProduct:
                     print("Product not found")
                     return
                 else:
-                    print(f"API call fail with status {resp.status_code}: {url} ({j}/100)")
+                    print(f"API call fail with status {resp.status_code}: {url} ({j}/5)")
                     j += 1
-                    if j >= 100:
+                    if j >= 5:
                         raise Exception(f'Status {resp.status_code}')
-                    time.sleep(randint(2400, 4800)/1000.0)
+                    self.pause(120)
                     resp = requests.get(url, headers=self.HEADERS, timeout=300, allow_redirects=False)
 
             self.prod_json = resp.json()
@@ -407,10 +412,7 @@ class NaverCosmeticProduct:
             print("ERROR:", str(e))
             self.errs += 1
             self.count()
-
-            for s in range(120, 0, -1):
-                print(f"PAUSE: {s:03d}", end='\r')
-                time.sleep(1)
+            self.pause(120)
 
             return prod_id
 
