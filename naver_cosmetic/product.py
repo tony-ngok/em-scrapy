@@ -142,7 +142,7 @@ class NaverCosmeticProduct:
                 if not filter:
                     descr += f'<p><img src="{img_url}"></p>'
 
-        return (f'<div class="naver-handmade-descr">{descr}</div>' if descr else "")
+        return (f'<div class="naver-{self.mode}-descr">{descr}</div>' if descr else "")
 
     def get_table_descr(self):
         try:
@@ -170,7 +170,7 @@ class NaverCosmeticProduct:
 
                     t_descr += f"<tr><th>{k}</th><td>{v1}</td></tr>"
 
-                return (f'<table class="naver-handmade-descr">{t_descr}</table>' if t_descr else "")
+                return (f'<table class="naver-{self.mode}-descr">{t_descr}</table>' if t_descr else "")
         except:
             pass
 
