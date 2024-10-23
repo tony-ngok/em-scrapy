@@ -36,6 +36,12 @@ DESC_IMG_FILTER = [
 ]
 
 
+def pause(secs: int):
+    for s in range(secs, 0, -1):
+        print(f"PAUSE: {s:03d}", end='\r')
+        time.sleep(1)
+
+
 def get_descr(prod_id: str):
     desc_url = f'https://shopping.naver.com/product-detail/v1/products/{prod_id}/contents/pc/PC'
     descr = ""
@@ -50,10 +56,9 @@ def get_descr(prod_id: str):
             print(f"API call fail with status {descr_resp.status_code}: {desc_url} ({j}/10)")
             j += 1
             if j > 10:
-                raise Exception(f'Status {descr_resp.status_code}')
-            for s in range(120, 0, -1):
-                print(f"PAUSE: {s:03d}", end='\r')
-                time.sleep(1)
+                print("Redescription fail")
+                return "descr_fail"
+            pause(120)
             descr_resp = requests.get(desc_url, headers=HEADERS, timeout=60, allow_redirects=False)
     if descr_resp.status_code == 204:
         print("No div descriptions")
@@ -80,7 +85,7 @@ def get_descr(prod_id: str):
             if not filter:
                 descr += f'<p><img src="{img_url}"></p>'
 
-    print("Redescription")
+    print("Redescription done")
     return (f'<div class="naver-handmade-descr">{descr}</div>' if descr else "")
 
 
@@ -88,24 +93,22 @@ if __name__ == '__main__':
     try:
         with open('naver_handmade_prods.txt', 'r', encoding='utf-8') as f_orig, open('prods_temp', 'w', encoding='utf-8') as f_new:
             for i, line in enumerate(f_orig, start=1):
-                print("Description", f"({i:_})".replace("_", "."))
-                data = json.loads(line[:-2])
-                prod_id = data['product_id']
+                if line.endswith('descr_fail'):
+                    print("\nFor redescription", f"({i:_})".replace("_", "."))
+                    data = json.loads(line[:-12])
+                    prod_id = data['product_id']
 
-                if (len(argv) >= 2) and (argv[1] == '--redo'): # 模式1：仅重抓描述缺失的
-                    descr = data['description']
-                    if not descr:
-                        got_descr = get_descr(prod_id)
-                        data['description'] = (got_descr if got_descr else None)
-                    elif not (descr.startswith('<div ')):
-                        data['description'] = get_descr(prod_id)+descr
-                else: # 模式2：整个描述重抓
                     got_descr = get_descr(prod_id)
-                    data['description'] = (got_descr if got_descr else None)
-
-                time.sleep(randint(1000, 3000)/1000.0)
-                json.dump(data, f_new, ensure_ascii=False)
-                f_new.write(',\n')
+                    if got_descr == 'descr_fail':
+                        f_new.write(line) # 如果重抓描述失败，把原来的失败记录写回去
+                        pause(120)
+                    else:
+                        data['description'] = (got_descr if got_descr else None)
+                        json.dump(data, f_new, ensure_ascii=False)
+                        f_new.write(',\n')
+                        time.sleep(randint(1000, 3000)/1000.0)
+                else:
+                    f_new.write(line) # 把原来就没有失败的数据写回去
 
         os.remove("naver_handmade_prods.txt")
         os.rename('prods_temp', "naver_handmade_prods.txt")
