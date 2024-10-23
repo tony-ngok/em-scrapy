@@ -114,7 +114,7 @@ class NaverHandmadeProduct:
             start_time = time.time()
             yield await self.get_prod_info(i, todo)
 
-            r = randint(13, 25)
+            r = randint(10, 20)
             remain = int(r+start_time-time.time())
             if remain > 0:
                 await self.pause(remain)
