@@ -158,9 +158,9 @@ class NaverHandmadeProduct:
                 print("No div descriptions")
                 return ""
             else:
-                print(f"API call fail with status {descr_resp.status_code}: {desc_url} ({j}/5)")
+                print(f"API call fail with status {descr_resp.status_code}: {desc_url} ({j}/10)")
                 j += 1
-                if j > 5:
+                if j > 10:
                     raise Exception(f'Status {descr_resp.status_code}')
                 for s in range(120, 0, -1):
                     print(f"PAUSE: {s:03d}", end='\r')
@@ -379,9 +379,9 @@ class NaverHandmadeProduct:
                     print("Product not found")
                     return
                 else:
-                    print(f"Nav fail with status {resp.status}: {url} -> {resp.url} ({j}/3)")
+                    print(f"Nav fail with status {resp.status}: {url} -> {resp.url} ({j}/5)")
                     j += 1
-                    if j > 3:
+                    if j > 5:
                         raise Exception(f'{url} -> {resp.url} (status {resp.status})')
                     await self.pause(300)
                     resp = await self.page.goto(url)

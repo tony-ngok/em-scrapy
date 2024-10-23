@@ -113,9 +113,9 @@ class NaverCosmeticProduct:
                 print("No div descriptions")
                 return ""
             else:
-                print(f"API call fail with status {descr_resp.status_code}: {desc_url} ({j}/5)")
+                print(f"API call fail with status {descr_resp.status_code}: {desc_url} ({j}/10)")
                 j += 1
-                if j > 5:
+                if j > 10:
                     raise Exception(f'Status {descr_resp.status_code}')
                 self.pause(120)
                 descr_resp = requests.get(desc_url, headers=self.HEADERS, timeout=60, allow_redirects=False)
@@ -342,9 +342,9 @@ class NaverCosmeticProduct:
                     print("Product not found")
                     return
                 else:
-                    print(f"API call fail with status {resp.status_code}: {url} ({j}/5)")
+                    print(f"API call fail with status {resp.status_code}: {url} ({j}/10)")
                     j += 1
-                    if j > 5:
+                    if j > 10:
                         raise Exception(f'Status {resp.status_code}')
                     self.pause(120)
                     resp = requests.get(url, headers=self.HEADERS, timeout=300, allow_redirects=False)

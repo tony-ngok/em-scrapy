@@ -110,9 +110,9 @@ class NaverCosmeticProdId:
             j = 1
             resp = requests.get(graph_url, headers=self.HEADERS, timeout=300, allow_redirects=False)
             while resp.status_code >= 300:
-                print(f"API call fail with status {resp.status_code}: {graph_url} ({j}/5)")
+                print(f"API call fail with status {resp.status_code}: {graph_url} ({j}/10)")
                 j += 1
-                if j > 5:
+                if j > 10:
                     raise Exception(f"Status {resp.status_code}")
                 self.pause(120)
                 resp = requests.get(graph_url, headers=self.HEADERS, timeout=300, allow_redirects=False)
