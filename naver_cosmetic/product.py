@@ -91,6 +91,8 @@ class NaverCosmeticProduct:
     def scrape(self):
         for i, todo in enumerate(self.todos, start=1):
             yield self.get_prod_info(i, todo)
+            if i % 50 == 0:
+                self.pause(10)
 
     def get_exist(self):
         return (not self.prod_json['soldout'])
