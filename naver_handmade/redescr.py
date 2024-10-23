@@ -49,7 +49,7 @@ def get_descr(prod_id: str):
         else:
             print(f"API call fail with status {descr_resp.status_code}: {desc_url} ({j}/10)")
             j += 1
-            if j >= 10:
+            if j > 10:
                 raise Exception(f'Status {descr_resp.status_code}')
             for s in range(120, 0, -1):
                 print(f"PAUSE: {s:03d}", end='\r')
@@ -103,7 +103,7 @@ if __name__ == '__main__':
                     got_descr = get_descr(prod_id)
                     data['description'] = (got_descr if got_descr else None)
 
-                time.sleep(randint(2400, 4800)/1000.0)
+                time.sleep(randint(1000, 3000)/1000.0)
                 json.dump(data, f_new, ensure_ascii=False)
                 f_new.write(',\n')
 

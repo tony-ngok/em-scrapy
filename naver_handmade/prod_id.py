@@ -64,6 +64,11 @@ class NaverHandmadeProdId:
     def brand_cat_api(self, cat: str, page: int = 1, page_size: int = 306):
         return f"https://shopping.naver.com/v1/products?_nc_=1729141200000&subVertical=HANDMADE&page={page}&pageSize={page_size}&sort=RECENT&filter=ALL&displayType=CATEGORY_HOME&includeZzim=true&includeViewCount=true&includeStoreCardInfo=true&includeStockQuantity=false&includeBrandInfo=false&includeBrandLogoImage=false&includeRepresentativeReview=false&includeListCardAttribute=false&includeRanking=false&includeRankingByMenus=false&includeStoreCategoryName=false&includeIngredient=false&menuId={cat}&brandIds[]=&standardSizeKeys[]=&standardColorKeys[]=&attributeValueIds[]=&attributeValueIdsAll[]=&certifications[]=&includeStoreInfoWithHighRatingReview=false&guaranteeTypes[]="
 
+    def pause(self, secs: int):
+        for s in range(secs, 0, -1):
+            print(f"PAUSE: {s:03d}", end='\r')
+            time.sleep(1)
+
     def scrape(self):
         for i, cat in enumerate(self.todos, start=1):
             print()
@@ -77,11 +82,11 @@ class NaverHandmadeProdId:
             j = 1
             resp = requests.get(api, headers=self.HEADERS, timeout=300, allow_redirects=False)
             while resp.status_code >= 300:
-                print(f"API call fail with status {resp.status_code}: {api} ({j}/100)")
+                print(f"API call fail with status {resp.status_code}: {api} ({j}/5)")
                 j += 1
-                if j >= 100:
+                if j > 5:
                     raise Exception(f"Status {resp.status_code}")
-                time.sleep(randint(2400, 4800)/1000.0)
+                self.pause(120)
                 resp = requests.get(api, headers=self.HEADERS, timeout=300, allow_redirects=False)
 
             result = resp.json()
@@ -93,7 +98,7 @@ class NaverHandmadeProdId:
                     self.dones += 1
 
             self.count()
-            time.sleep(randint(2400, 4800)/1000.0)
+            time.sleep(randint(1000, 3000)/1000.0)
 
             has_more = result['hasMoreProducts']
             if has_more and (page < math.ceil(10000/page_size)):
@@ -103,10 +108,7 @@ class NaverHandmadeProdId:
             self.prods_ids[f"c{cat}"] = False
             self.errs += 1
             self.count()
-
-            for s in range(120, 0, -1):
-                print(f"PAUSE: {s:03d}", end='\r')
-                time.sleep(1)
+            self.pause(120)
 
     def fin(self):
         with open('naver_handmade_prods_ids.txt', 'w', encoding='utf-8') as f_prods_ids, open('naver_handmade_prod_ids_errs.txt', 'w', encoding='utf-8') as f_errs:

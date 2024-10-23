@@ -112,7 +112,7 @@ class NaverCosmeticProdId:
             while resp.status_code >= 300:
                 print(f"API call fail with status {resp.status_code}: {graph_url} ({j}/5)")
                 j += 1
-                if j >= 5:
+                if j > 5:
                     raise Exception(f"Status {resp.status_code}")
                 self.pause(120)
                 resp = requests.get(graph_url, headers=self.HEADERS, timeout=300, allow_redirects=False)
@@ -131,7 +131,7 @@ class NaverCosmeticProdId:
                     self.dones += 1
 
             self.count()
-            time.sleep(randint(2400, 4800)/1000.0)
+            time.sleep(randint(1000, 3000)/1000.0)
 
             has_more = result['hasMore']
             if has_more:

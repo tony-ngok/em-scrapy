@@ -113,7 +113,7 @@ class NaverCosmeticProduct:
             else:
                 print(f"API call fail with status {descr_resp.status_code}: {desc_url} ({j}/5)")
                 j += 1
-                if j >= 5:
+                if j > 5:
                     raise Exception(f'Status {descr_resp.status_code}')
                 self.pause(120)
                 descr_resp = requests.get(desc_url, headers=self.HEADERS, timeout=60, allow_redirects=False)
@@ -342,7 +342,7 @@ class NaverCosmeticProduct:
                 else:
                     print(f"API call fail with status {resp.status_code}: {url} ({j}/5)")
                     j += 1
-                    if j >= 5:
+                    if j > 5:
                         raise Exception(f'Status {resp.status_code}')
                     self.pause(120)
                     resp = requests.get(url, headers=self.HEADERS, timeout=300, allow_redirects=False)
@@ -360,7 +360,7 @@ class NaverCosmeticProduct:
                 url_root = 'https://shopping.naver.com/logistics/products/'
 
             existence = self.get_exist()
-            time.sleep(randint(2400, 4800)/1000.0)
+            time.sleep(randint(1000, 3000)/1000.0)
             description = self.get_div_descr(prod_id)+self.get_table_descr()
             specifications, weight = self.get_specs()
             price_krw = self.prod_json.get('discountedSalePrice', self.prod_json.get('salePrice', 0))
@@ -406,7 +406,7 @@ class NaverCosmeticProduct:
             print(product)
             self.dones += 1
             self.count()
-            time.sleep(randint(2400, 4800)/1000.0)
+            time.sleep(randint(1000, 3000)/1000.0)
             return product
         except Exception as e:
             print("ERROR:", str(e))
