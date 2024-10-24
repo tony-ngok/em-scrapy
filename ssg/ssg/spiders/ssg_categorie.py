@@ -61,10 +61,8 @@ class SsgCategorie(scrapy.Spider):
         
         for cat in all_cats:
             children = cat.css(':scope > *')
-            print(children)
-            print(children[0].root.tag)
             if (len(children) == 1) and (children[0].root.tag == 'a'):
-                src = children[0].css('::attr(src)').get()
+                src = children[0].css('::attr(href)').get()
                 if src:
                     cat_no = src.split("ctgId=")[1]
                     self.write_cat(cat_no)
