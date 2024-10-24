@@ -76,7 +76,7 @@ class SsgCategorie(scrapy.Spider):
             for sc in sub_cats:
                 cat_no = sc.css("a::attr(data-ilparam-value)").get("")
                 print(supers, cat_no)
-                if "none_child" not in sc.css("::attr(class)"):
+                if "none_child" not in sc.css("::attr(class)").get(""):
                     headers = { **self.HEADERS, 'referer': response.url }
                     yield scrapy.Request('https://www.ssg.com/disp/category.ssg?ctgId='+cat_no,
                                          headers=headers,
@@ -88,6 +88,8 @@ class SsgCategorie(scrapy.Spider):
 
     def write_cat(self, cat_no: str):
         print("Is subcategory")
-        mode = 'a' if (os.path.exists(self.output_file)) and self.retry else 'w'
+        mode = 'a' if self.retry else 'w'
         with open(self.output_file, mode, encoding="utf-8") as f_out:
             f_out.write(cat_no+'\n')
+        if not self.retry:
+            self.retry = True
