@@ -172,5 +172,8 @@ class SsgCatsErrsMiddleware:
 
         return response
 
+    def spider_opened(self, spider):
+        spider.logger.info("Spider opened: %s" % spider.name)
+
     def spider_closed(self, spider):
         sys.exit(self.errs)
