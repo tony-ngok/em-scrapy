@@ -66,9 +66,9 @@ class SsgCategorie(scrapy.Spider):
                                      meta={ "cookiejar": response.meta["cookiejar"] },
                                      callback=self.parse)
     
-    def parse(self, response: HtmlResponse):
+    def parse(self, response: HtmlResponse, level: int = 0):
         cat_no = response.request.url.split('ctgId=')[1]
-        print("Category", cat_no)
+        print("  "*level + "Category", cat_no)
 
         write = False
 
@@ -83,7 +83,8 @@ class SsgCategorie(scrapy.Spider):
                     yield scrapy.Request('https://www.ssg.com/disp/category.ssg?ctgId='+cat_no,
                                          headers=headers,
                                          meta={ "cookiejar": response.meta["cookiejar"] },
-                                         callback=self.parse)
+                                         callback=self.parse,
+                                         cb_kwargs={ "level": level+1 })
                 else:
                     write = True
 
