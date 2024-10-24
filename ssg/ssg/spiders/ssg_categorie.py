@@ -6,7 +6,7 @@ from scrapy.http import HtmlResponse
 
 # scrapy crawl ssg_categorie
 class SsgCategorie(scrapy.Spider):
-    name = "ssg_categories"
+    name = "ssg_categorie"
     allowed_domains = ["www.ssg.com"]
 
     custom_settings = {
