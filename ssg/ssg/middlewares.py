@@ -145,7 +145,7 @@ class SsgCatsErrsMiddleware:
         elif (response.status >= 400):
             try_times = request.meta.get('try_times', 1)
             spider.logger.error(f'Request fail: {request.url} (Status {response.status}) ({try_times:_}/{self.max_tries:_})'.replace("_", "."))
-            spider.logger.info(response.text[:1000])
+            spider.logger.info(response.text[:2000])
 
             if try_times < self.max_tries: # 允许返回非正常状态码时重试
                 re_request = request.copy()
