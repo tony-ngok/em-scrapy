@@ -5,10 +5,10 @@ from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 
 
-# scrapy ssg_prod_urls_retry
-class SsgProdsUrlsErrsRetryCmd(ScrapyCommand):
+# scrapy ssg_prods_errs_retry
+class SsgProdsErrsRetryCmd(ScrapyCommand):
     def run(self, args, opts):
-        err_file = 'ssg_prods_urls_errs.txt'
+        err_file = 'ssg_prods_errs.txt'
         if not os.path.exists(err_file):
             print("Error file not found:", err_file)
             return
@@ -21,5 +21,5 @@ class SsgProdsUrlsErrsRetryCmd(ScrapyCommand):
 
         # 设置抓取的爬虫并传递失败的URL列表
         process = CrawlerProcess(get_project_settings())
-        process.crawl('ssg_prod_url', start_urls=todos, retry=True)
+        process.crawl('ssg_prod', start_urls=todos, retry=True)
         process.start()

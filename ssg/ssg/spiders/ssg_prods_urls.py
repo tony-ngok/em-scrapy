@@ -38,13 +38,15 @@ class SsgProdsUrls(scrapy.Spider):
         self.start_urls = start_urls if retry else None
         self.output_file = "ssg_prods_urls.txt"
 
-        self.prevs = None
+        self.prods_ids = {}
         if retry: # 重试模式
             print("Retry mode")
 
             if os.path.exists(self.output_file): # 以前收集到的数据，用于去重
                 with open(self.output_file, 'r', encoding='utf-8') as f_output:
-                    self.prevs = { line.strip(): True for line in f_output if line.strip() }
+                    for line in f_output:
+                        if line.strip():
+                            self.prods_ids[line.strip()] = True
                 open(self.output_file, 'w').close()
             else: # 以前没有收集到数据
                 print("Data file not found:", self.output_file)
@@ -59,7 +61,7 @@ class SsgProdsUrls(scrapy.Spider):
             else:
                 print("Categories files not found:", cats_file)
 
-        self.prods_count = len(self.prevs) if self.prevs else 0
+        self.prods_count = len(self.prods_ids)
 
     def start_requests(self):
         for i, url in enumerate(self.start_urls):
@@ -82,12 +84,11 @@ class SsgProdsUrls(scrapy.Spider):
         for item in items:
             if not item.css('::attr(data-advertkindcd)').get(): # 过滤掉广告类商品
                 prod_id = item.css(':scope div.ssgitem_detail > a::attr(data-info)').get()
-                if prod_id:
-                    with open(self.output_file, 'a', encoding="utf-8") as f_out:
-                        f_out.write(prod_id+'\n')
-                        cat_prod_count += 1
-                        self.prods_count += 1
-        
+                if prod_id and (prod_id not in self.prods_ids):
+                    self.prods_ids[prod_id] = True
+                    cat_prod_count += 1
+                    self.prods_count += 1
+
         next_p = response.css('a.btn_next')
         if next_p or (p < len(response.css('div.com_paginate > *'))): # 总10页以内的分类没有翻页按钮
             headers = { **self.HEADERS, 'referer': response.url }
