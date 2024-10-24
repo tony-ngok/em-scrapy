@@ -50,6 +50,7 @@ class SsgProdsUrls(scrapy.Spider):
                 print("Data file not found:", self.output_file)
         else: # 从头开始
             print("Start anew")
+            open(self.output_file, 'w').close()
 
             cats_file = "ssg_categories.txt"
             if os.path.exists(cats_file): # 从分类中读取要做的
