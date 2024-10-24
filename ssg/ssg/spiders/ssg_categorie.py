@@ -85,7 +85,7 @@ class SsgCategorie(scrapy.Spider):
                                          headers=headers,
                                          meta={ "cookiejar": response.meta["cookiejar"] },
                                          callback=self.parse,
-                                         cb_kwargs={ "supers": [*supers, 'cat_no'] })
+                                         cb_kwargs={ "supers": [*supers, cat_no] })
                 else:
                     write = True
 
