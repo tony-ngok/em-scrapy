@@ -36,7 +36,6 @@ class SsgProdsUrls(scrapy.Spider):
     def __init__(self, start_urls: list[str] = [], retry: bool = False, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.start_urls = start_urls if retry else None
-        # self.retry = retry
         self.output_file = "ssg_prods_urls.txt"
 
         self.prevs = None
@@ -63,7 +62,6 @@ class SsgProdsUrls(scrapy.Spider):
 
     def start_requests(self):
         for i, url in enumerate(self.start_urls):
-            print(url)
             url = self.page_url('tgId='+url) # 分类号 -> URL
             headers = { **self.HEADERS, 'referer': 'https://www.ssg.com/monm/main.ssg' }
             yield scrapy.Request(url, headers=headers,
