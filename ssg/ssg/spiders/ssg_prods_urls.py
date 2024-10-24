@@ -79,7 +79,8 @@ class SsgProdsUrls(scrapy.Spider):
 
         items = response.css('li[data-unittype="item"]')
         for item in items:
-            if not items.css('::attr(data-advertkindcd)').get(''): # 过滤掉广告类商品
+            print([items.css('::attr(data-advertkindcd)').get()])
+            if not items.css('::attr(data-advertkindcd)').get(): # 过滤掉广告类商品
                 prod_id = item.css(':scope div.ssgitem_detail > a::attr(data-info)').get()
                 if prod_id:
                     with open(self.output_file, 'a', encoding="utf-8") as f_out:
@@ -88,7 +89,7 @@ class SsgProdsUrls(scrapy.Spider):
                         self.prods_count += 1
         
         next_p = response.css('a.btn_next')
-        if next_p:
+        if next_p or (p < len(response.css('div.com_paginate > *'))): # 总10页以内的分类没有翻页按钮
             headers = { **self.HEADERS, 'referer': response.url }
             next_url = self.page_url(response.request.url, p+1)
             yield scrapy.Request(next_url, headers=headers,
@@ -96,5 +97,5 @@ class SsgProdsUrls(scrapy.Spider):
                                  callback=self.parse,
                                  cb_kwargs={ "i": i, "p": p+1, "cat_prod_count": cat_prod_count })
         else:
-            print(f"{i:_}/{len(self.start_urls):_}".replace("_", "."), response.request.url, f"(total {cat_prod_count:_} product(s))".replace("_", "."))
+            print(f"{i:_}/{len(self.start_urls):_}".replace("_", "."), f"Total {cat_prod_count:_} product(s)".replace("_", "."))
             print(f"Total {self.prods_count:_} product(s)".replace("_", "."))
