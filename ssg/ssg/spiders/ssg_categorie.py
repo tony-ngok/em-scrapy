@@ -72,7 +72,7 @@ class SsgCategorie(scrapy.Spider):
 
         write = False
 
-        sub_cats = response.css('div.cmflt_filbox_cts ul li')
+        sub_cats = response.css('ul.cmflt_ctlist_high > li, ul.cmflt_ctlist > li')
         if not sub_cats: # 这就是子分类
             write = True
         else:
