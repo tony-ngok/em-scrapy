@@ -1,5 +1,3 @@
-import os
-
 import scrapy
 from scrapy.http import HtmlResponse
 
@@ -10,7 +8,7 @@ class SsgCategorie(scrapy.Spider):
     allowed_domains = ["www.ssg.com"]
 
     custom_settings = {
-        'DOWNLOAD_DELAY': 0.5,
+        'DOWNLOAD_DELAY': 0.2,
         'DOWNLOADER_MIDDLEWARES': { # 每发送请求后，先经过中间件返回回答，然后将回答通过回调函数处理
             'ssg.middlewares.SsgCatsErrsMiddleware': 543
         }
@@ -41,7 +39,7 @@ class SsgCategorie(scrapy.Spider):
 
     def start_requests(self):
         for i, url in enumerate(self.start_urls):
-            print(f"\n{i+1:_}/{len(self.start_urls):_}".replace("_", "."), url)
+            print(f"{i+1:_}/{len(self.start_urls):_}".replace("_", "."), url)
             if url == 'https://www.ssg.com/monm/main.ssg':
                 yield scrapy.Request(url, headers=self.HEADERS,
                                     meta={ "cookiejar": i },
@@ -58,7 +56,7 @@ class SsgCategorie(scrapy.Spider):
         """
 
         all_cats = response.css('li.mndmoon_nav_submn')
-        
+
         for cat in all_cats:
             children = cat.css(':scope > *')
             if (len(children) == 1) and (children[0].root.tag == 'a'):
@@ -66,7 +64,7 @@ class SsgCategorie(scrapy.Spider):
                 if src:
                     cat_no = src.split("ctgId=")[1]
                     self.write_cat(cat_no)
-    
+
     def parse(self, response: HtmlResponse):
         """
         针对特定子分类页面（例如inner beauty）提取叶分类
