@@ -33,7 +33,7 @@ class SsgCategorie(scrapy.Spider):
         "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0"
     }
 
-    def __init__(self, start_urls: list[str] = ['https://www.ssg.com/monm/main.ssg'], retry: bool = False, *args, **kwargs):
+    def __init__(self, start_urls: list[str] = ['https://www.ssg.com/monm/main.ssg', 'https://www.ssg.com/disp/category.ssg?ctgId=6000094876'], retry: bool = False, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.start_urls = start_urls
         self.retry = retry
@@ -46,48 +46,40 @@ class SsgCategorie(scrapy.Spider):
                 yield scrapy.Request(url, headers=self.HEADERS,
                                     meta={ "cookiejar": i },
                                     callback=self.parse_monm)
-            else:
-                yield scrapy.Request(url, headers=self.HEADERS,
+            else: # inner beauty 类需要单独处理
+                headers = { **self.HEADERS, 'referer': 'https://www.ssg.com/monm/main.ssg' }
+                yield scrapy.Request(url, headers=headers,
                                     meta={ "cookiejar": i },
                                     callback=self.parse)
 
     def parse_monm(self, response: HtmlResponse):
-        all_cats = response.css('a.mndmoon_topctg_lnk::attr(href)').getall()
+        """
+        提取大分类页面上的所有叶分类
+        """
+
+        all_cats = response.css('li.mndmoon_nav_submn')
         
         for cat in all_cats:
-            if 'category' in cat:
-                if cat.startswith('https://www.ssg.com'):
-                    url = cat
-                else:
-                    url = 'https://www.ssg.com'+cat
-
-                headers = { **self.HEADERS, 'referer': 'https://www.ssg.com' }
-                yield scrapy.Request(url, headers=headers,
-                                     meta={ "cookiejar": response.meta["cookiejar"] },
-                                     callback=self.parse,
-                                     cb_kwargs={ "supers": [url.split('ctgId=')[1]] })
-    
-    def parse(self, response: HtmlResponse, supers: list[str] = []):
-        sub_cats = response.css('ul.cmflt_ctlist_high > li, ul.cmflt_ctlist > li')
-        if not sub_cats: # 这就是子分类
-            cat_no = response.request.url.split('ctgId=')[1]
-            self.write_cat(cat_no)
-        else:
-            for sc in sub_cats:
-                cat_no = sc.css("a::attr(data-ilparam-value)").get("")
-                print(supers, cat_no)
-                if "none_child" not in sc.css("::attr(class)").get(""):
-                    headers = { **self.HEADERS, 'referer': response.url }
-                    yield scrapy.Request('https://www.ssg.com/disp/category.ssg?ctgId='+cat_no,
-                                         headers=headers,
-                                         meta={ "cookiejar": response.meta["cookiejar"] },
-                                         callback=self.parse,
-                                         cb_kwargs={ "supers": [*supers, cat_no] })
-                else:
+            children = cat.css('*')
+            if (len(children) == 1) and (children[0].root.tag == 'a'):
+                src = children[0].css('::attr(src)').get()
+                if src:
+                    cat_no = src.split("ctgId=")[1]
                     self.write_cat(cat_no)
+    
+    def parse(self, response: HtmlResponse):
+        """
+        针对特定子分类页面（例如inner beauty）提取叶分类
+        """
+
+        sub_cats = response.css('li.none_child > a')
+        for sc in sub_cats:
+            cat_no = sc.css("a::attr(data-ilparam-value)").get("")
+            if cat_no:
+                self.write_cat(cat_no)
 
     def write_cat(self, cat_no: str):
-        print("Is subcategory")
+        print(cat_no, "is leaf category")
         mode = 'a' if self.retry else 'w'
         with open(self.output_file, mode, encoding="utf-8") as f_out:
             f_out.write(cat_no+'\n')
