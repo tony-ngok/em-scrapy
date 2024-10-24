@@ -64,7 +64,8 @@ class SsgCategorie(scrapy.Spider):
                 headers = { **self.HEADERS, 'referer': 'https://www.ssg.com' }
                 yield scrapy.Request(url, headers=headers,
                                      meta={ "cookiejar": response.meta["cookiejar"] },
-                                     callback=self.parse)
+                                     callback=self.parse,
+                                     cb_kwargs={ "supers": [url.split('ctgId=')[1]] })
     
     def parse(self, response: HtmlResponse, supers: list[str] = []):
         sub_cats = response.css('ul.cmflt_ctlist_high > li, ul.cmflt_ctlist > li')
@@ -74,6 +75,7 @@ class SsgCategorie(scrapy.Spider):
         else:
             for sc in sub_cats:
                 cat_no = sc.css("a::attr(data-ilparam-value)").get("")
+                print(supers, cat_no)
                 if "none_child" not in sc.css("::attr(class)"):
                     headers = { **self.HEADERS, 'referer': response.url }
                     yield scrapy.Request('https://www.ssg.com/disp/category.ssg?ctgId='+cat_no,
