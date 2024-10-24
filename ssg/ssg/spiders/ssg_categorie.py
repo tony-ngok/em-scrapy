@@ -60,7 +60,7 @@ class SsgCategorie(scrapy.Spider):
         all_cats = response.css('li.mndmoon_nav_submn')
         
         for cat in all_cats:
-            children = cat.css('*')
+            children = cat.css(':scope > *')
             print(children)
             if (len(children) == 1) and (children[0].root.tag == 'a'):
                 src = children[0].css('::attr(src)').get()
