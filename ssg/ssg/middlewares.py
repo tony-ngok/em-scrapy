@@ -109,7 +109,6 @@ class SsgDownloaderMiddleware:
 
 class SsgCatsErrsMiddleware:
     def __init__(self, max_tries):
-        self.logger = logging.getLogger(__name__)
         self.errs_file = "ssg_categories_errs.txt"
         self.errs = 0
         self.max_tries = max_tries
@@ -130,11 +129,9 @@ class SsgCatsErrsMiddleware:
         with open(self.errs_file, 'a', encoding='utf-8') as f_err:
             f_err.write(f"{request.url.split('ctgId=')[1]}\n")
 
-        self.logger.error(f'Request fail: {request.url} - Exception: {exception}')
         spider.logger.error(f'Request fail: {request.url} - Exception: {exception}')
 
         self.errs += 1
-        self.logger.info(f"Errors: {self.errs:_}".replace("_", "."))
         spider.logger.info(f"Errors: {self.errs:_}".replace("_", "."))
 
     def process_response(self, request: Request, response: Response, spider) -> Response:
@@ -143,13 +140,10 @@ class SsgCatsErrsMiddleware:
         """
 
         if response.status == 404:
-            self.logger.info(f'Categorie not found (ignored): {request.url} (Status 404)')
             spider.logger.info(f'Categorie not found (ignored): {request.url} (Status 404)')
             return
         elif (response.status >= 400):
             try_times = request.meta.get('try_times', 1)
-            self.logger.error(f'Request fail: {request.url} (Status {response.status}) ({try_times:_}/{self.max_tries:_})'.replace("_", "."))
-            self.logger.info(response.text[:500])
             spider.logger.error(f'Request fail: {request.url} (Status {response.status}) ({try_times:_}/{self.max_tries:_})'.replace("_", "."))
             spider.logger.info(response.text[:500])
 
@@ -166,7 +160,6 @@ class SsgCatsErrsMiddleware:
                         f_err.write(f"{request.url.split('ctgId=')[1]}\n")
 
                 self.errs += 1
-                self.logger.info(f"Errors: {self.errs:_}".replace("_", "."))
                 spider.logger.info(f"Errors: {self.errs:_}".replace("_", "."))
                 return
 
