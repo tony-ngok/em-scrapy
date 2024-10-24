@@ -10,6 +10,7 @@ class SsgCategorie(scrapy.Spider):
     allowed_domains = ["www.ssg.com"]
 
     custom_settings = {
+        'DOWNLOAD_DELAY': 0.5,
         'DOWNLOADER_MIDDLEWARES': { # 每发送请求后，先经过中间件返回回答，然后将回答通过回调函数处理
             'ssg.middlewares.SsgCatsErrsMiddleware': 543
         }
