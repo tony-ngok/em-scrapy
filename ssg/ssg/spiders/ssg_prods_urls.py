@@ -63,6 +63,7 @@ class SsgProdsUrls(scrapy.Spider):
 
     def start_requests(self):
         for i, url in enumerate(self.start_urls):
+            print(url)
             url = self.page_url('tgId='+url) # 分类号 -> URL
             headers = { **self.HEADERS, 'referer': 'https://www.ssg.com/monm/main.ssg' }
             yield scrapy.Request(url, headers=headers,
