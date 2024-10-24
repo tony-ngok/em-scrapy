@@ -73,10 +73,10 @@ class SsgCategorie(scrapy.Spider):
         write = False
 
         sub_cats = response.css('ul.cmflt_ctlist_high > li, ul.cmflt_ctlist > li')
+        print(len(sub_cats))
         if not sub_cats: # 这就是子分类
             write = True
         else:
-            supers.append(cat_no)
             for sc in sub_cats:
                 cat_no = sc.css("a::attr(data-ilparam-value)").get("")
                 if "none_child" not in sc.css("::attr(class)"):
@@ -85,7 +85,7 @@ class SsgCategorie(scrapy.Spider):
                                          headers=headers,
                                          meta={ "cookiejar": response.meta["cookiejar"] },
                                          callback=self.parse,
-                                         cb_kwargs={ "supers": supers })
+                                         cb_kwargs={ "supers": [*supers, 'cat_no'] })
                 else:
                     write = True
 
