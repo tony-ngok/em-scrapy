@@ -243,6 +243,5 @@ class SsgProdsIdsErrsMiddleware:
                 for prev in self.prevs.keys():
                     f_output.write(prev+'\n')
 
-        print(f"Total {spider.prods_count:_} product(s)".replace("_", "."))
         print(f"Errors: {self.errs:_}".replace("_", "."))
         sys.exit(self.errs)

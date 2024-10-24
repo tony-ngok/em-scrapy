@@ -75,7 +75,7 @@ class SsgProdsUrls(scrapy.Spider):
             return f'https://www.ssg.com/disp/category.ssg?pageSize=100&dispCtgId={cat_match[0]}&page={p}'
 
     def parse(self, response: HtmlResponse, i: int, p: int = 1, cat_prod_count: int = 0):
-        print(f"{i:_}/{len(self.start_urls):_}".replace("_", "."), response.request.url, f"(page {p:_})".replace("_", "."))
+        print(f"{i:_}/{len(self.start_urls):_}".replace("_", "."), response.request.url)
 
         items = response.css('li[data-unittype="item"]')
         for item in items:
@@ -97,3 +97,4 @@ class SsgProdsUrls(scrapy.Spider):
                                  cb_kwargs={ "i": i, "p": p+1, "cat_prod_count": cat_prod_count })
         else:
             print(f"{i:_}/{len(self.start_urls):_}".replace("_", "."), response.request.url, f"(total {cat_prod_count:_} product(s))".replace("_", "."))
+            print(f"Total {self.prods_count:_} product(s)".replace("_", "."))
