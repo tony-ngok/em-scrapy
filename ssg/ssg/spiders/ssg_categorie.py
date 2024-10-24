@@ -67,15 +67,10 @@ class SsgCategorie(scrapy.Spider):
                                      callback=self.parse)
     
     def parse(self, response: HtmlResponse, supers: list[str] = []):
-        cat_no = response.request.url.split('ctgId=')[1]
-        print(supers, cat_no)
-
-        write = False
-
         sub_cats = response.css('ul.cmflt_ctlist_high > li, ul.cmflt_ctlist > li')
-        print(len(sub_cats))
         if not sub_cats: # 这就是子分类
-            write = True
+            cat_no = response.request.url.split('ctgId=')[1]
+            self.write_cat(cat_no)
         else:
             for sc in sub_cats:
                 cat_no = sc.css("a::attr(data-ilparam-value)").get("")
@@ -87,10 +82,10 @@ class SsgCategorie(scrapy.Spider):
                                          callback=self.parse,
                                          cb_kwargs={ "supers": [*supers, cat_no] })
                 else:
-                    write = True
+                    self.write_cat(cat_no)
 
-        if write:
-            print("Is subcategory")
-            mode = 'a' if (os.path.exists(self.output_file)) and self.retry else 'w'
-            with open(self.output_file, mode, encoding="utf-8") as f_out:
-                f_out.write(cat_no+'\n')
+    def write_cat(self, cat_no: str):
+        print("Is subcategory")
+        mode = 'a' if (os.path.exists(self.output_file)) and self.retry else 'w'
+        with open(self.output_file, mode, encoding="utf-8") as f_out:
+            f_out.write(cat_no+'\n')
