@@ -31,7 +31,8 @@ ROBOTSTXT_OBEY = False
 #CONCURRENT_REQUESTS_PER_IP = 16
 
 # Disable cookies (enabled by default)
-#COOKIES_ENABLED = False
+COOKIES_ENABLED = True
+COOKIES_DEBUG = True
 
 # Disable Telnet Console (enabled by default)
 #TELNETCONSOLE_ENABLED = False
@@ -50,10 +51,9 @@ ROBOTSTXT_OBEY = False
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
-DOWNLOADER_MIDDLEWARES = {
+#DOWNLOADER_MIDDLEWARES = {
 #    "ssg.middlewares.SsgDownloaderMiddleware": 543,
-    "ssg.middlewares.SsgErrorLogMiddleware": 543
-}
+#}
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
@@ -95,3 +95,5 @@ FEED_EXPORT_ENCODING = "utf-8"
 
 LOG_FILE = "scrapy.log"
 LOG_LEVEL = "DEBUG"
+
+MAX_TRIES = 1000
