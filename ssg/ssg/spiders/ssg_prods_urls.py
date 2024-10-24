@@ -80,7 +80,6 @@ class SsgProdsUrls(scrapy.Spider):
 
         items = response.css('li[data-unittype="item"]')
         for item in items:
-            print([items.css('::attr(data-advertkindcd)').get()])
             if not items.css('::attr(data-advertkindcd)').get(): # 过滤掉广告类商品
                 prod_id = item.css(':scope div.ssgitem_detail > a::attr(data-info)').get()
                 if prod_id:
