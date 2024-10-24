@@ -40,7 +40,7 @@ class SsgCategorie(scrapy.Spider):
 
     def start_requests(self):
         for i, url in enumerate(self.start_urls):
-            print(f"\n{i:_}/{len(self.start_urls):_}".replace("_", "."), url)
+            print(f"\n{i+1:_}/{len(self.start_urls):_}".replace("_", "."), url)
             if url == 'https://www.ssg.com/monm/main.ssg':
                 yield scrapy.Request(url, headers=self.HEADERS,
                                     meta={ "cookiejar": i },
