@@ -238,7 +238,7 @@ class SsgProdsIdsErrsMiddleware:
         spider.logger.info("Spider opened: %s" % spider.name)
 
     def spider_closed(self, spider):
-        if spider.prevs:
+        if spider.prods_ids:
             with open(self.output_file, 'a', encoding='utf-8') as f_output:
                 for pid in self.prods_ids.keys():
                     f_output.write(pid+'\n')
