@@ -202,7 +202,7 @@ class SsgProds(scrapy.Spider):
             return (deliv_date-date(toyear, tomonth, today)).days
 
     def parse(self, response: HtmlResponse, i: int):
-        url = response.request.url.split('&')[0]
+        url = response.url.split('&')[0]
         print(f"{i:_}/{len(self.start_urls):_}".replace("_", "."), url)
 
         now = datetime.now()
