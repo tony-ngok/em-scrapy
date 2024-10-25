@@ -151,7 +151,7 @@ class SsgProds(scrapy.Spider):
             qty_match = qty_match[1:]
             uitemid_match = re.findall(r"uitemId:'(\d+)'", resp_txt)[1:]
             uitemoptnnm_match = re.findall(r"uitemOptnNm\d:'([^\']+)'", resp_txt)
-            bestamt_match = re.findall(r"bestAmt:'(\d+)'")[1:]
+            bestamt_match = re.findall(r"bestAmt:'(\d+)'", resp_txt)[1:]
 
             for j, (qty, uitemid, bestamt) in enumerate(zip(qty_match, uitemid_match, bestamt_match)):
                 variants.append({
