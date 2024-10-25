@@ -199,7 +199,7 @@ class SsgProds(scrapy.Spider):
             return (deliv_date-date(toyear, tomonth, today)).days
 
     def parse(self, response: HtmlResponse, i: int):
-        url = response.request.url
+        url = response.request.url.split('&')[0]
         print(f"\n{i:_}/{len(self.start_urls):_}".replace("_", "."), response.request.url)
 
         now = datetime.now()
@@ -211,7 +211,7 @@ class SsgProds(scrapy.Spider):
             return
         prod_json = json.loads(prod_json)
 
-        images, videos = self.get_media(prod_json.get("image", []))
+        images, videos = self.get_media(prod_json.get("image", []), response)
         if not (images or videos):
             print("No media")
             return

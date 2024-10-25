@@ -263,13 +263,18 @@ class SsgProdsErrsMiddleware:
         crawler.signals.connect(s.spider_closed, signal=signals.spider_closed)
         return s
 
+    def get_prod_no(self, url: str):
+        cat_match = re.findall(r'temId=(\d+)', url)
+        if cat_match:
+            return cat_match[0]
+
     def process_exception(self, request: Request, exception: Exception, spider):
         """
         出现异常时，就写入错误
         """
 
         with open(self.errs_file, 'a', encoding='utf-8') as f_err:
-            f_err.write(f"{request.url.split('itemId=')[1]}\n")
+            f_err.write(f"{self.get_prod_no(request.url)}\n")
 
         spider.logger.error(f'Request fail: {request.url} - Exception: {exception}')
 
@@ -299,7 +304,7 @@ class SsgProdsErrsMiddleware:
                 return re_request
             else: # 尝试超过次数限制了，记录错误，放弃
                 with open(self.errs_file, 'a', encoding='utf-8') as f_err:
-                    f_err.write(f"{request.url.split('itemId=')[1]}\n")
+                    f_err.write(f"{self.get_prod_no(request.url)}\n")
 
                 self.errs += 1
                 spider.logger.info(f"Errors: {self.errs:_}".replace("_", "."))
