@@ -1,6 +1,6 @@
 import json
 import re
-from datetime import datetime
+from datetime import date, datetime
 
 import requests
 import scrapy
@@ -124,6 +124,28 @@ class SsgProds(scrapy.Spider):
             return (None, None)
         return (int(recensions["reviewCount"]), round(float(recensions["ratingValue"]), 2))
 
+    def get_deliv_fee(self, response: HtmlResponse):
+        deliv_fee = response.css('dl.cdtl_delivery_fee em.ssg_price').get()
+        if not deliv_fee:
+            return 0.00
+        return round(float(deliv_fee.replace(",", ""))/self.krw_rate, 2)
+
+    def get_ship_days(self, response: HtmlResponse, toyear: int, tomonth: int, today: int):
+        deliv_days_info = response.css('li[name="delivery_info"] p.info_detail_txt').get()
+        if not deliv_days_info:
+            return None
+        if '내일' in deliv_days_info:
+            return 1
+        
+        date_match = re.findall(r"(\d+)/(\d+)", deliv_days_info)
+        if date_match:
+            deliv_month, deliv_day = date_match[0]
+            if deliv_month < tomonth:
+                deliv_date = date(toyear+1, deliv_month, deliv_day)
+            else:
+                deliv_date = date(toyear, deliv_month, deliv_day)
+            return (deliv_date-date(toyear, tomonth, today)).days
+
     def parse(self, response: HtmlResponse, i: int):
         url = response.request.url
         print(f"\n{i:_}/{len(self.start_urls):_}".replace("_", "."), response.request.url)
@@ -147,15 +169,16 @@ class SsgProds(scrapy.Spider):
         brand = prod_json["brand"]["name"]
         categories = self.get_categories(response)
         price = round(float(prod_json["offers"]["price"])/self.krw_rate, 2)
+        reviews, rating = self.get_recensions(prod_json.get("aggregateRating", {}))
+        shipping_fee = self.get_deliv_fee(response)
+        shipping_days = self.get_ship_days(response, now.year, now.month, now.day)
 
         opts_list = response.css('dl.cdtl_opt_group > dt::text').getall()
         options = [{
             "id": None,
             "name": opt
         } for opt in opts_list] if opts_list else None
-        available_qty, variations = self.get_vars_infos(response.text, opts_list, product_id)
-
-        reviews, rating = self.get_recensions(prod_json.get("aggregateRating", {}))
+        available_qty, variants = self.get_vars_infos(response.text, opts_list, product_id)
 
         item = {
             "date": now.strftime('%Y-%m-%dT%H:%M:%S'),
@@ -176,11 +199,15 @@ class SsgProds(scrapy.Spider):
             "price": price,
             "available_qty": available_qty,
             "options": options,
-            "variants": variations,
+            "variants": variants,
+            "has_only_default_variant": not (variants and (len(variants) > 1)),
             "returnable": False,
             "reviews": reviews,
             "rating": rating,
             "sold_count": None,
+            "shipping_fee": shipping_fee,
+            "shipping_days_min": shipping_days,
+            "shipping_days_max": shipping_days,
         }
         self.write_item(item)
 
