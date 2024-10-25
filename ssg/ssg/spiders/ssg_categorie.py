@@ -31,7 +31,7 @@ class SsgCategorie(scrapy.Spider):
         "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0"
     }
 
-    def __init__(self, start_urls: list[str] = ['https://www.ssg.com/monm/main.ssg', 'https://www.ssg.com/disp/category.ssg?ctgId=6000094876'], retry: bool = False, *args, **kwargs):
+    def __init__(self, start_urls: list[str] = ['https://www.ssg.com/monm/main.ssg', 'https://www.ssg.com/disp/category.ssg?ctgId=6000173911', 'https://www.ssg.com/disp/category.ssg?ctgId=6000094876'], retry: bool = False, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.start_urls = start_urls
         self.retry = retry
@@ -63,11 +63,12 @@ class SsgCategorie(scrapy.Spider):
                 src = children[0].css('::attr(href)').get()
                 if src:
                     cat_no = src.split("ctgId=")[1]
-                    self.write_cat(cat_no)
+                    if cat_no != "6000252416": # “叶分类”6000252416重导至分类6000173911
+                        self.write_cat(cat_no)
 
     def parse(self, response: HtmlResponse):
         """
-        针对特定子分类页面（例如inner beauty）提取叶分类
+        针对特定分类页面（例如inner beauty）提取叶分类
         """
 
         sub_cats = response.css('li.none_child > a')
