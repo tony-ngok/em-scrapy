@@ -296,7 +296,7 @@ class SsgProds(scrapy.Spider):
 
         mode = 'a' if self.retry else 'w'
         with open(self.output_file, mode, encoding='utf-8') as f_out:
-            json.dump(item, f_out)
+            json.dump(item, f_out, ensure_ascii=False)
             f_out.write(",\n")
         if not self.retry:
             self.retry = True
