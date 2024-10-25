@@ -5,8 +5,9 @@ import scrapy
 from scrapy.http import HtmlResponse
 
 
-class SsgProdsUrls(scrapy.Spider):
-    name = "ssg_prod_url"
+# scrapy crawl ssg_prod_id
+class SsgProdsIds(scrapy.Spider):
+    name = "ssg_prod_id"
     allowed_domains = ["www.ssg.com"]
 
     custom_settings = {
@@ -35,7 +36,7 @@ class SsgProdsUrls(scrapy.Spider):
 
     def __init__(self, start_urls: list[str] = [], retry: bool = False, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.start_urls = start_urls if retry else None
+        self.start_urls = start_urls if retry else []
         self.output_file = "ssg_prods_ids.txt"
 
         self.prods_ids = {}
@@ -57,7 +58,9 @@ class SsgProdsUrls(scrapy.Spider):
             cats_file = "ssg_categories.txt"
             if os.path.exists(cats_file): # 从分类中读取要做的
                 with open(cats_file, 'r', encoding='utf-8') as f_cats:
-                    self.start_urls = [line.strip() for line in f_cats if line.strip()]
+                    for line in f_cats:
+                        if line.strip():
+                            self.start_urls.append(line.strip())
             else:
                 print("Categories files not found:", cats_file)
 

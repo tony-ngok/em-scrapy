@@ -136,7 +136,7 @@ class SsgCatsErrsMiddleware:
         self.errs += 1
         spider.logger.info(f"Errors: {self.errs:_}".replace("_", "."))
 
-    def process_response(self, request: Request, response: Response, spider) -> Response:
+    def process_response(self, request: Request, response: Response, spider):
         """
         如果返回错误状态，就写入错误
         """
@@ -214,7 +214,7 @@ class SsgProdsIdsErrsMiddleware:
         """
 
         if response.status == 404:
-            spider.logger.info(f'Categorie not found (ignored): {request.url} (Status 404)')
+            spider.logger.info(f'Page not found (ignored): {request.url} (Status 404)')
             return
         elif (response.status >= 400):
             try_times = request.meta.get('try_times', 1)
@@ -245,5 +245,67 @@ class SsgProdsIdsErrsMiddleware:
                 for pid in spider.prods_ids:
                     f_output.write(pid+'\n')
 
-        print(f"Errors: {self.errs:_}".replace("_", "."))
+        sys.exit(self.errs)
+
+
+class SsgProdsErrsMiddleware:
+    def __init__(self, max_tries):
+        self.errs_file = "ssg_products_errs.txt"
+        self.errs = 0
+        self.max_tries = max_tries
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        # This method is used by Scrapy to create your spiders.
+        max_tries = crawler.settings.getint("PROD_MAX_TRIES", 100)
+        s = cls(max_tries)
+        crawler.signals.connect(s.spider_opened, signal=signals.spider_opened)
+        crawler.signals.connect(s.spider_closed, signal=signals.spider_closed)
+        return s
+
+    def process_exception(self, request: Request, exception: Exception, spider):
+        """
+        出现异常时，就写入错误
+        """
+
+        with open(self.errs_file, 'a', encoding='utf-8') as f_err:
+            f_err.write(f"{request.url.split('itemId=')[1]}\n")
+
+        spider.logger.error(f'Request fail: {request.url} - Exception: {exception}')
+
+        self.errs += 1
+        spider.logger.info(f"Errors: {self.errs:_}".replace("_", "."))
+
+    def process_response(self, request: Request, response: Response, spider) -> Response:
+        """
+        如果返回错误状态，就写入错误
+        """
+
+        if response.status == 404:
+            spider.logger.info(f'Product not found (ignored): {request.url} (Status 404)')
+            return
+        elif (response.status >= 400):
+            try_times = request.meta.get('try_times', 1)
+            spider.logger.error(f'Request fail: {request.url} (Status {response.status}) ({try_times:_}/{self.max_tries:_})'.replace("_", "."))
+            spider.logger.info(response.text[:3000])
+
+            if try_times < self.max_tries: # 允许返回非正常状态码时重试
+                re_request = request.copy()
+                re_request.meta['try_times'] = try_times+1
+                re_request.dont_filter = True
+                return re_request
+            else: # 尝试超过次数限制了，记录错误，放弃
+                with open(self.errs_file, 'a', encoding='utf-8') as f_err:
+                    f_err.write(f"{request.url.split('itemId=')[1]}\n")
+
+                self.errs += 1
+                spider.logger.info(f"Errors: {self.errs:_}".replace("_", "."))
+                return
+
+        return response
+
+    def spider_opened(self, spider):
+        spider.logger.info("Spider opened: %s" % spider.name)
+
+    def spider_closed(self, spider):
         sys.exit(self.errs)
