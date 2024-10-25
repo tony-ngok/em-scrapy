@@ -11,7 +11,7 @@ BOT_NAME = "ssg"
 
 SPIDER_MODULES = ["ssg.spiders"]
 NEWSPIDER_MODULE = "ssg.spiders"
-
+COMMANDS_MODULE = "ssg.commands"
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = "ssg (+http://www.yourdomain.com)"
