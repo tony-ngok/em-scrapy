@@ -240,7 +240,7 @@ class SsgProdsIdsErrsMiddleware:
     def spider_closed(self, spider):
         if spider.prods_ids:
             with open(self.output_file, 'a', encoding='utf-8') as f_output:
-                for pid in self.prods_ids.keys():
+                for pid in spider.prods_ids.keys():
                     f_output.write(pid+'\n')
 
         print(f"Errors: {self.errs:_}".replace("_", "."))
