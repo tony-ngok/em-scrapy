@@ -192,6 +192,9 @@ class SsgProds(scrapy.Spider):
         date_match = re.findall(r"(\d+)/(\d+)", deliv_days_info)
         if date_match:
             deliv_month, deliv_day = date_match[0]
+            deliv_month = int(deliv_month)
+            deliv_day = int(deliv_day)
+
             if deliv_month < tomonth:
                 deliv_date = date(toyear+1, deliv_month, deliv_day)
             else:
@@ -284,7 +287,7 @@ class SsgProds(scrapy.Spider):
             divx = response.css('body > div')
             for div in divx:
                 if div.css('*'):
-                    item['description_en'] += div.get("")
+                    item['description_en'] += div.get()
 
         self.write_item(item)
 
