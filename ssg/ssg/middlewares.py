@@ -170,7 +170,7 @@ class SsgCatsErrsMiddleware:
     def spider_opened(self, spider):
         spider.logger.info("Spider opened: %s" % spider.name)
 
-    def close_spider(self, spider):
+    def spider_closed(self, spider):
         sys.exit(self.errs)
 
 
@@ -239,7 +239,7 @@ class SsgProdsIdsErrsMiddleware:
     def spider_opened(self, spider):
         spider.logger.info("Spider opened: %s" % spider.name)
 
-    def close_spider(self, spider):
+    def spider_closed(self, spider):
         if spider.prods_ids:
             with open(self.output_file, 'a', encoding='utf-8') as f_output:
                 for pid in spider.prods_ids:
