@@ -203,25 +203,25 @@ class SsgProds(scrapy.Spider):
 
     def parse(self, response: HtmlResponse, i: int):
         url = response.request.url.split('&')[0]
-        print(f"\n{i:_}/{len(self.start_urls):_}".replace("_", "."), url)
+        print(f"{i:_}/{len(self.start_urls):_}".replace("_", "."), url)
 
         now = datetime.now()
         product_id = url.split("itemId=")[1]
 
         prod_json = response.css('script[type="application/ld+json"]::text').get()
         if not prod_json:
-            print("No product JSON")
+            print(f"{i:_}/{len(self.start_urls):_}".replace("_", "."), "No product JSON")
             return
         prod_json = json.loads(prod_json)
 
         images, videos = self.get_media(prod_json.get("image", []), response)
         if not (images or videos):
-            print("No media")
+            print(f"{i:_}/{len(self.start_urls):_}".replace("_", "."), "No media")
             return
 
         existence = self.get_existence(prod_json["offers"]["availability"].lower(), response)
         title = prod_json["name"]
-        description, specifications = self.get_specs_etc(response)
+        specifications, description = self.get_specs_etc(response)
         brand = prod_json["brand"]["name"]
         categories = self.get_categories(response)
         price = round(float(prod_json["offers"]["price"])/self.krw_rate, 2)
@@ -274,11 +274,11 @@ class SsgProds(scrapy.Spider):
             yield scrapy.Request(iframe_url, headers=headers,
                                  meta={ "cookiejar": response.meta["cookiejar"] },
                                  callback=self.parse_descr,
-                                 cb_kwargs={ "item": item })
+                                 cb_kwargs={ "item": item, "i": i })
         else:
-            self.write_item(item)
+            self.write_item(i, item)
 
-    def parse_descr(self, response: HtmlResponse, item: dict):
+    def parse_descr(self, response: HtmlResponse, i: int, item: dict):
         """
         先提取描述URL，然后之后再分别整理
         """
@@ -287,12 +287,12 @@ class SsgProds(scrapy.Spider):
             divx = response.css('body > div')
             for div in divx:
                 if div.css('*'):
-                    item['description_en'] += div.get()
+                    item['description_en'] += " ".join(div.get().split())
 
-        self.write_item(item)
+        self.write_item(i, item)
 
-    def write_item(self, item: dict):
-        print(item)
+    def write_item(self, i: int, item: dict):
+        print(f"{i:_}/{len(self.start_urls):_}".replace("_", "."), item)
 
         mode = 'a' if self.retry else 'w'
         with open(self.output_file, mode, encoding='utf-8') as f_out:
