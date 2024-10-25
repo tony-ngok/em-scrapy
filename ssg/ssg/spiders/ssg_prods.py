@@ -1,4 +1,5 @@
 import json
+import re
 from datetime import datetime
 
 import requests
@@ -67,6 +68,15 @@ class SsgProds(scrapy.Spider):
         sold_out = response.css("a.cdtl_btn_soldout")
         return (('instock' in stock_txt) and (not sold_out))
 
+    def get_categories(self, response: HtmlResponse):
+        cats_dict = {}
+        cats_sels = response.css('div.lo_depth_01 > a::text')[1:].getall()
+        for c in cats_sels:
+            if c and c.strip() and (c.strip() not in cats_dict):
+                cats_dict[c] = True
+
+        return " > ".join(cats_dict.keys()) if cats_dict else None
+
     def get_media(self, img_list: list[str], response: HtmlResponse):
         images = ";".join(["https://"+img for img in img_list])
 
@@ -74,7 +84,41 @@ class SsgProds(scrapy.Spider):
         videos = "https://sc3po.ssgcdn.com"+vid+"_h.mp4?w=w" if vid else None
 
         return (images, videos)
-    
+
+    def get_vars_infos(self, resp_txt: str, opts_list: list[str], prod_id: str):
+        """
+        获得商品存货数量，以及所有变种资料
+        """
+
+        qty_match = re.findall(r"usablInvQty:'(\d+)'", resp_txt)
+        available_qty = int(qty_match[0])
+
+        variants = []
+        if opts_list:
+            opts = len(opts_list)
+            qty_match = qty_match[1:]
+            uitemid_match = re.findall(r"uitemId:'(\d+)'", resp_txt)[1:]
+            uitemoptnnm_match = re.findall(r"uitemOptnNm\d:'([^\']+)'", resp_txt)
+            bestamt_match = re.findall(r"bestAmt:'(\d+)'")[1:]
+
+            for j, (qty, uitemid, bestamt) in enumerate(zip(qty_match, uitemid_match, bestamt_match)):
+                variants.append({
+                    "variant_id": f"{prod_id}-{uitemid}",
+                    "barcode": None,
+                    "sku": f"{prod_id}-{uitemid}",
+                    "option_values": [{
+                        "option_id": None,
+                        "option_value_id": None,
+                        "option_name": opt,
+                        "option_value": uitemoptnnm
+                    } for opt, uitemoptnnm in zip(opts_list, uitemoptnnm_match[j*opts:(j+1)*opts])],
+                    "images": None,
+                    "price": round(float(bestamt)/self.krw_rate, 2),
+                    "available_qty": int(qty)
+                })
+
+        return (available_qty, (variants if variants else None))
+
     def get_recensions(self, recensions: dict):
         if not recensions:
             return (None, None)
@@ -101,7 +145,16 @@ class SsgProds(scrapy.Spider):
         existence = self.get_existence(prod_json["offers"]["availability"].lower(), response)
         title = prod_json["name"]
         brand = prod_json["brand"]["name"]
+        categories = self.get_categories(response)
         price = round(float(prod_json["offers"]["price"])/self.krw_rate, 2)
+
+        opts_list = response.css('dl.cdtl_opt_group > dt::text').getall()
+        options = [{
+            "id": None,
+            "name": opt
+        } for opt in opts_list] if opts_list else None
+        available_qty, variations = self.get_vars_infos(response.text, opts_list, product_id)
+
         reviews, rating = self.get_recensions(prod_json.get("aggregateRating", {}))
 
         item = {
@@ -117,9 +170,13 @@ class SsgProds(scrapy.Spider):
             "sku": product_id,
             "upc": None,
             "brand": brand,
+            "categories": categories,
             "images": images,
             "videos": videos,
             "price": price,
+            "available_qty": available_qty,
+            "options": options,
+            "variants": variations,
             "returnable": False,
             "reviews": reviews,
             "rating": rating,
