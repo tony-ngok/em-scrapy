@@ -1,4 +1,5 @@
 import json
+import os
 import re
 from datetime import date, datetime
 
@@ -52,6 +53,17 @@ class SsgProds(scrapy.Spider):
         self.start_urls = start_urls
         self.retry = retry
         self.output_file = "ssg_products.txt"
+
+        if not self.retry:
+            print("Start anew")
+            pids_file = "ssg_prods_ids.txt"
+            if os.path.exists(pids_file):
+                with open(pids_file, 'r', encoding="utf-8") as f_ids:
+                    self.start_urls.append(line.strip() for line in f_ids if line.strip())
+            else:
+                print("Pids file not found:", pids_file)
+        else:
+            print("Retry mode")
 
         self.krw_rate = 1379.40808
         rate_req = requests.get('https://open.er-api.com/v6/latest/USD')
