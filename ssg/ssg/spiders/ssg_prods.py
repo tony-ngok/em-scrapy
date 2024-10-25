@@ -10,7 +10,7 @@ from scrapy.http import HtmlResponse
 # scrapy crawl ssg_prod
 class SsgProds(scrapy.Spider):
     name = "ssg_prod"
-    allowed_domains = ["www.ssg.com", "itemdesc.ssg.com"]
+    allowed_domains = ["www.ssg.com", "itemdesc.ssg.com", "department.ssg.com"]
 
     custom_settings = {
         'DOWNLOAD_DELAY': 0.1,
