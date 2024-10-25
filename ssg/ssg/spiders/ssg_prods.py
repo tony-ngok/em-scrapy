@@ -84,7 +84,7 @@ class SsgProds(scrapy.Spider):
                                  cb_kwargs={ "i": i+1 })
 
     def get_existence(self, stock_txt: str, response: HtmlResponse):
-        sold_out = response.css("a.cdtl_btn_soldout")
+        sold_out = response.css("a.cdtl_btn_soldout, a.cdtl_btn_temp")
         return (('instock' in stock_txt) and (not sold_out))
 
     def get_specs_etc(self, response: HtmlResponse):
@@ -292,7 +292,7 @@ class SsgProds(scrapy.Spider):
         self.write_item(i, item)
 
     def write_item(self, i: int, item: dict):
-        print(f"{i:_}/{len(self.start_urls):_}".replace("_", "."), item)
+        print(f"{i:_}/{len(self.start_urls):_}".replace("_", "."), "success")
 
         mode = 'a' if self.retry else 'w'
         with open(self.output_file, mode, encoding='utf-8') as f_out:
