@@ -281,9 +281,12 @@ class SsgProdsErrsMiddleware:
         如果返回错误状态，就写入错误
         """
 
-        if response.status == 404:
-            spider.logger.info(f'Product not found (ignored): {request.url} (Status 404)')
-            return
+        if (response.status == 404):
+            if ('iframePItemDtlDesc.ssg' not in request.url):
+                spider.logger.info(f'Product not found (ignored): {request.url} (Status 404)')
+                return
+            else: # 如果描述页面返回404，则说明没有描述
+                return response
         elif (response.status >= 400):
             try_times = request.meta.get('try_times', 1)
             spider.logger.error(f'Request fail: {request.url} (Status {response.status}) ({try_times:_}/{self.max_tries:_})'.replace("_", "."))

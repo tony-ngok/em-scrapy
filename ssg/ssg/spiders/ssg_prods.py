@@ -6,11 +6,10 @@ import requests
 import scrapy
 from scrapy.http import HtmlResponse
 
-
 # scrapy crawl ssg_prod
 class SsgProds(scrapy.Spider):
     name = "ssg_prod"
-    allowed_domains = ["www.ssg.com"]
+    allowed_domains = ["www.ssg.com", "itemdesc.ssg.com"]
 
     custom_settings = {
         'DOWNLOAD_DELAY': 0.1,
@@ -18,6 +17,12 @@ class SsgProds(scrapy.Spider):
             'ssg.middlewares.SsgProdsErrsMiddleware': 543
         }
     }
+
+    DESCR_IMG_FILTERS = [
+        '배너', '%EB%B0%B0%EB%84%88', '/common/', '/top_banner', '/promotion',
+        '/brand', '/return', '/notice', '/ulfine'
+        ]
+    DESCR_TXT_FILTERS = ['ssg.com', '저작권', 'copyright']
 
     HEADERS = {
         "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
@@ -68,6 +73,39 @@ class SsgProds(scrapy.Spider):
         sold_out = response.css("a.cdtl_btn_soldout")
         return (('instock' in stock_txt) and (not sold_out))
 
+    def get_specs_etc(self, response: HtmlResponse):
+        """
+        先提取参数，重量这些的稍后分别处理
+        """
+
+        specs = []
+        table_descr = ""
+
+        thx = response.css('div[id="item_size"] > div.cdtl_option_info th, div[id="item_size"] > div.cdtl_sec th')
+        tdx = response.css('div[id="item_size"] > div.cdtl_option_info td, div[id="item_size"] > div.cdtl_sec td')
+
+        for th, td in zip(thx, tdx):
+            th_txt = th.css("::text").get("").strip()
+            td_txt = td.css("::text").get("").strip()
+
+            weight_added = False
+            if th_txt and td_txt:
+                if ('전화번호' in th_txt) or ('보증' in th_txt) or ('A/S' in th_txt) or ('반품' in th_txt) or ('인증' in th_txt):
+                    continue
+                if ('성분' in th_txt) or ('주의사항' in th_txt) or ('방법' in th_txt) or ('기한' in th_txt):
+                    table_descr += f'<tr><th>{th_txt}</th><td>{td_txt}</td></tr>'
+                if ('용량' in th_txt) and weight_added:
+                    continue
+
+                specs.append({
+                    "name": th_txt,
+                    "value": td_txt
+                })
+                if ('용량' in th_txt) or ('중량' in th_txt): # 重量参数不重复
+                    weight_added = True
+
+        return (specs if specs else None), (f'<table class="ssg-descr">{table_descr}</table>' if table_descr else "")
+
     def get_categories(self, response: HtmlResponse):
         cats_dict = {}
         cats_sels = response.css('div.lo_depth_01 > a::text')[1:].getall()
@@ -83,7 +121,7 @@ class SsgProds(scrapy.Spider):
         vid = response.css('input#vodDataFileNm::attr(value)').get()
         videos = "https://sc3po.ssgcdn.com"+vid+"_h.mp4?w=w" if vid else None
 
-        return (images, videos)
+        return images, videos
 
     def get_vars_infos(self, resp_txt: str, opts_list: list[str], prod_id: str):
         """
@@ -117,12 +155,12 @@ class SsgProds(scrapy.Spider):
                     "available_qty": int(qty)
                 })
 
-        return (available_qty, (variants if variants else None))
+        return available_qty, (variants if variants else None)
 
     def get_recensions(self, recensions: dict):
         if not recensions:
-            return (None, None)
-        return (int(recensions["reviewCount"]), round(float(recensions["ratingValue"]), 2))
+            return None, None
+        return int(recensions["reviewCount"]), round(float(recensions["ratingValue"]), 2)
 
     def get_deliv_fee(self, response: HtmlResponse):
         deliv_fee = response.css('dl.cdtl_delivery_fee em.ssg_price').get()
@@ -136,7 +174,7 @@ class SsgProds(scrapy.Spider):
             return None
         if '내일' in deliv_days_info:
             return 1
-        
+
         date_match = re.findall(r"(\d+)/(\d+)", deliv_days_info)
         if date_match:
             deliv_month, deliv_day = date_match[0]
@@ -166,6 +204,7 @@ class SsgProds(scrapy.Spider):
 
         existence = self.get_existence(prod_json["offers"]["availability"].lower(), response)
         title = prod_json["name"]
+        description, specifications = self.get_specs_etc(response)
         brand = prod_json["brand"]["name"]
         categories = self.get_categories(response)
         price = round(float(prod_json["offers"]["price"])/self.krw_rate, 2)
@@ -188,11 +227,13 @@ class SsgProds(scrapy.Spider):
             "existence": existence,
             "title": title,
             "title_en": None,
-            "description_en": None,
+            "description": description, # 暂时先只存放表格描述
+            "description_en": "", # 存放iframe描述的临时空间
             "summary": None,
             "sku": product_id,
             "upc": None,
             "brand": brand,
+            "specifications": specifications,
             "categories": categories,
             "images": images,
             "videos": videos,
@@ -207,8 +248,30 @@ class SsgProds(scrapy.Spider):
             "sold_count": None,
             "shipping_fee": shipping_fee,
             "shipping_days_min": shipping_days,
-            "shipping_days_max": shipping_days,
+            "shipping_days_max": shipping_days
         }
+
+        iframe_url = response.css('iframe#_ifr_html::attr(src)').get()
+        if iframe_url:
+            headers = { **self.HEADERS, 'referer': url }
+            yield scrapy.Request(iframe_url, headers=headers,
+                                 meta={ "cookiejar": response.meta["cookiejar"] },
+                                 callback=self.parse_descr,
+                                 cb_kwargs={ "item": item })
+        else:
+            self.write_item(item)
+
+    def parse_descr(self, response: HtmlResponse, item: dict):
+        """
+        先提取描述URL，然后之后再分别整理
+        """
+
+        if response.status != 404:
+            divx = response.css('body > div')
+            for div in divx:
+                if div.css('*'):
+                    item['description_en'] += div.get("")
+
         self.write_item(item)
 
     def write_item(self, item: dict):
