@@ -78,6 +78,17 @@ class SsgProdsUrls(scrapy.Spider):
             return f'https://www.ssg.com/disp/category.ssg?pageSize=100&dispCtgId={cat_match[0]}&page={p}'
 
     def parse(self, response: HtmlResponse, i: int, p: int = 1, cat_prod_count: int = 0):
+        # 进入分类前先检查重导
+        if (p == 1) and ("location.href = '/disp/category.ssg?dispCtgId=" in response.text):
+            cat_match = re.findall(r'dispCtgId=(\d+)', response.text)
+            if cat_match:
+                red_url = self.page_url("tgId="+cat_match[0])
+                headers = { **self.HEADERS, 'referer': response.url }
+                yield scrapy.Request(red_url, headers=headers,
+                                     meta={ "cookiejar": i },
+                                     callback=self.parse,
+                                     cb_kwargs={ "i": i+1 })
+
         print(f"{i:_}/{len(self.start_urls):_}".replace("_", "."), response.request.url)
 
         items = response.css('li[data-unittype="item"]')
