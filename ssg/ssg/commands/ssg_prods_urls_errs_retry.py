@@ -8,7 +8,7 @@ from scrapy.utils.project import get_project_settings
 # scrapy ssg_prods_urls_errs_retry
 class SsgProdsUrlsErrsRetryCmd(ScrapyCommand):
     def run(self, args, opts):
-        err_file = 'ssg_prods_urls_errs.txt'
+        err_file = 'ssg_prods_ids_errs.txt'
         if not os.path.exists(err_file):
             print("Error file not found:", err_file)
             return

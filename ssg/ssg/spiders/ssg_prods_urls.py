@@ -36,7 +36,7 @@ class SsgProdsUrls(scrapy.Spider):
     def __init__(self, start_urls: list[str] = [], retry: bool = False, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.start_urls = start_urls if retry else None
-        self.output_file = "ssg_prods_urls.txt"
+        self.output_file = "ssg_prods_ids.txt"
 
         self.prods_ids = {}
         if retry: # 重试模式
