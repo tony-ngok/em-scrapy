@@ -177,13 +177,13 @@ class SsgProds(scrapy.Spider):
         return int(recensions["reviewCount"]), round(float(recensions["ratingValue"]), 2)
 
     def get_deliv_fee(self, response: HtmlResponse):
-        deliv_fee = response.css('dl.cdtl_delivery_fee em.ssg_price').get()
+        deliv_fee = response.css('dl.cdtl_delivery_fee em.ssg_price::text').get()
         if not deliv_fee:
             return 0.00
         return round(float(deliv_fee.replace(",", ""))/self.krw_rate, 2)
 
     def get_ship_days(self, response: HtmlResponse, toyear: int, tomonth: int, today: int):
-        deliv_days_info = response.css('li[name="delivery_info"] p.info_detail_txt').get()
+        deliv_days_info = response.css('li[name="delivery_info"] p.info_detail_txt::text').get()
         if not deliv_days_info:
             return None
         if '내일' in deliv_days_info:
@@ -200,10 +200,10 @@ class SsgProds(scrapy.Spider):
 
     def parse(self, response: HtmlResponse, i: int):
         url = response.request.url.split('&')[0]
-        print(f"\n{i:_}/{len(self.start_urls):_}".replace("_", "."), response.request.url)
+        print(f"\n{i:_}/{len(self.start_urls):_}".replace("_", "."), url)
 
         now = datetime.now()
-        product_id = response.request.url.split("itemId=")[1]
+        product_id = url.split("itemId=")[1]
 
         prod_json = response.css('script[type="application/ld+json"]::text').get()
         if not prod_json:
