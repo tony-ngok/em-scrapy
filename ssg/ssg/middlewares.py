@@ -120,6 +120,7 @@ class SsgCatsErrsMiddleware:
         max_tries = crawler.settings.getint("CAT_MAX_TRIES", 10)
         s = cls(max_tries)
         crawler.signals.connect(s.spider_opened, signal=signals.spider_opened)
+        crawler.signals.connect(s.spider_closed, signal=signals.spider_closed)
         return s
 
     def process_exception(self, request: Request, exception: Exception, spider):
@@ -186,6 +187,7 @@ class SsgProdsIdsErrsMiddleware:
         max_tries = crawler.settings.getint("PROD_URL_MAX_TRIES", 50)
         s = cls(max_tries)
         crawler.signals.connect(s.spider_opened, signal=signals.spider_opened)
+        crawler.signals.connect(s.spider_closed, signal=signals.spider_closed)
         return s
 
     def get_cat_no(self, url: str):
