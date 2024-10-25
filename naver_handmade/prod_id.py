@@ -86,7 +86,7 @@ class NaverHandmadeProdId:
                 j += 1
                 if j > 10:
                     raise Exception(f"Status {resp.status_code}")
-                self.pause(120)
+                self.pause(randint(90, 120))
                 resp = requests.get(api, headers=self.HEADERS, timeout=300, allow_redirects=False)
 
             result = resp.json()
@@ -108,7 +108,7 @@ class NaverHandmadeProdId:
             self.prods_ids[f"c{cat}"] = False
             self.errs += 1
             self.count()
-            self.pause(120)
+            self.pause(randint(90, 120))
 
     def fin(self):
         with open('naver_handmade_prods_ids.txt', 'w', encoding='utf-8') as f_prods_ids, open('naver_handmade_prod_ids_errs.txt', 'w', encoding='utf-8') as f_errs:

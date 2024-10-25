@@ -114,7 +114,7 @@ class NaverCosmeticProdId:
                 j += 1
                 if j > 10:
                     raise Exception(f"Status {resp.status_code}")
-                self.pause(120)
+                self.pause(randint(90, 120))
                 resp = requests.get(graph_url, headers=self.HEADERS, timeout=300, allow_redirects=False)
 
             if self.mode == 'cosmetic':
@@ -146,7 +146,7 @@ class NaverCosmeticProdId:
 
             self.errs += 1
             self.count()
-            self.pause(120)
+            self.pause(randint(90, 120))
 
     def fin(self):
         with open(f'naver_{self.mode}_prods_ids.txt', 'w', encoding='utf-8') as f_prods_ids, open(f'naver_{self.mode}_prod_ids_errs.txt', 'w', encoding='utf-8') as f_errs:

@@ -58,7 +58,7 @@ def get_descr(prod_id: str):
             if j > 10:
                 print("Redescription fail")
                 return "descr_fail"
-            pause(120)
+            pause(randint(90, 120))
             descr_resp = requests.get(desc_url, headers=HEADERS, timeout=60, allow_redirects=False)
     if descr_resp.status_code == 204:
         print("No div descriptions")
@@ -101,7 +101,7 @@ if __name__ == '__main__':
                     got_descr = get_descr(prod_id)
                     if got_descr == 'descr_fail':
                         f_new.write(line) # 如果重抓描述失败，把原来的失败记录写回去
-                        pause(120)
+                        pause(randint(90, 120))
                     else:
                         data['description'] = (got_descr if got_descr else None)
                         json.dump(data, f_new, ensure_ascii=False)

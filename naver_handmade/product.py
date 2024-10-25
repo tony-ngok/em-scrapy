@@ -383,7 +383,7 @@ class NaverHandmadeProduct:
                     j += 1
                     if j > 5:
                         raise Exception(f'{url} -> {resp.url} (status {resp.status})')
-                    await self.pause(300)
+                    await self.pause(randint(180, 300))
                     resp = await self.page.goto(url)
 
             await self.get_basic_json()
@@ -444,7 +444,7 @@ class NaverHandmadeProduct:
             print("ERROR:", str(e))
             self.errs += 1
             self.count()
-            await self.pause(285)
+            await self.pause(randint(165, 285))
             return prod_id
 
     async def write_files(self):

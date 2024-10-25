@@ -117,7 +117,7 @@ class NaverCosmeticProduct:
                 j += 1
                 if j > 10:
                     raise Exception(f'Status {descr_resp.status_code}')
-                self.pause(120)
+                self.pause(randint(90, 120))
                 descr_resp = requests.get(desc_url, headers=self.HEADERS, timeout=60, allow_redirects=False)
         if descr_resp.status_code == 204:
             print("No div descriptions")
@@ -346,7 +346,7 @@ class NaverCosmeticProduct:
                     j += 1
                     if j > 10:
                         raise Exception(f'Status {resp.status_code}')
-                    self.pause(120)
+                    self.pause(randint(90, 120))
                     resp = requests.get(url, headers=self.HEADERS, timeout=300, allow_redirects=False)
 
             self.prod_json = resp.json()
@@ -414,7 +414,7 @@ class NaverCosmeticProduct:
             print("ERROR:", str(e))
             self.errs += 1
             self.count()
-            self.pause(120)
+            self.pause(randint(90, 120))
 
             return prod_id
 
