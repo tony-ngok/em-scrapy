@@ -95,7 +95,7 @@ if __name__ == '__main__':
             for i, line in enumerate(f_orig, start=1):
                 if line.endswith('descr_fail\n'):
                     print("\nFor redescription", f"({i:_})".replace("_", "."))
-                    data = json.loads(line[:-12])
+                    data = json.loads(line[:-11])
                     prod_id = data['product_id']
 
                     got_descr = get_descr(prod_id)
