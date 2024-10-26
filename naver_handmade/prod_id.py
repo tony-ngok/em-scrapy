@@ -68,6 +68,7 @@ class NaverHandmadeProdId:
         for s in range(secs, 0, -1):
             print(f"PAUSE: {s:03d}", end='\r')
             time.sleep(1)
+        print()
 
     def scrape(self):
         for i, cat in enumerate(self.todos, start=1):

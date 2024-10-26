@@ -101,6 +101,7 @@ class NaverCosmeticProduct:
         for s in range(secs, 0, -1):
             print(f"PAUSE: {s:03d}", end='\r')
             time.sleep(1)
+        print()
 
     def get_div_descr(self, prod_id: str):
         desc_url = f'https://shopping.naver.com/product-detail/v1/products/{prod_id}/contents/pc/PC'
@@ -209,6 +210,12 @@ class NaverCosmeticProduct:
         weight_match = re.findall(r'(\d+(?:\.\d+)?)\s*(?:g|ml)', txt)
         if weight_match:
             return round(float(weight_match[0])/453.59237, 2)
+
+    def get_brand(self):
+        if self.mode == 'cosmetic':
+            return self.prod_json['brandStoreName'] if self.prod_json.get('brandStoreName') else None
+        elif self.mode == 'logistics':
+            return self.prod_json["naverShoppingSearchInfo"]["brandName"] if self.prod_json.get("naverShoppingSearchInfo", {}).get("brandName") else None
 
     def get_cats(self):
         cats_txt = self.prod_json.get('category', {}).get('wholeCategoryName', '')
@@ -384,7 +391,7 @@ class NaverCosmeticProduct:
                 "summary": None,
                 "sku": prod_id,
                 "upc": prod_id,
-                "brand": (self.prod_json['brandStoreName'] if self.prod_json.get('brandStoreName') else None),
+                "brand": self.get_brand(),
                 "specifications": specifications,
                 "categories": self.get_cats(),
                 "images": images,

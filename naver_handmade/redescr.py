@@ -40,6 +40,7 @@ def pause(secs: int):
     for s in range(secs, 0, -1):
         print(f"PAUSE: {s:03d}", end='\r')
         time.sleep(1)
+    print()
 
 
 def get_descr(prod_id: str):

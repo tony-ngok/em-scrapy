@@ -1,4 +1,4 @@
-# 从已经抓下来的参数补齐重量字段
+# 从已经抓下来的参数补齐重量/品牌字段
 
 import json
 import os
@@ -13,7 +13,7 @@ def parse_weight(txt: str):
 
 
 if __name__ == '__main__':
-    if (len(sys.argv) >= 2) or (sys.argv[1] == 'cosmetic') or (sys.argv[1] == 'logistics'):
+    if (len(sys.argv) >= 3) and ((sys.argv[1] == 'cosmetic') or (sys.argv[1] == 'logistics')):
         try:
             with open(f'naver_{sys.argv[1]}_prods.txt', 'r', encoding='utf-8') as f_orig, open('prods_temp', 'w', encoding='utf-8') as f_new:
                 for i, line in enumerate(f_orig, start=1):
@@ -22,10 +22,15 @@ if __name__ == '__main__':
                     specs = data['specifications']
 
                     for spec in specs:
-                        if ('용량' in spec['name']) or ('중량' in spec['name']):
+                        if (sys.argv[2] == 'reweight') and (('용량' in spec['name']) or ('중량' in spec['name'])):
                             print(f"Reweight ({spec['name']})")
                             data['weight'] = parse_weight(spec['value'])
                             print(f"Weight: {data['weight']}".replace(".", ","))
+                            break
+                        elif (sys.argv[2] == 'rebrand') and ('브랜드' in spec['name']):
+                            print(f"Rebrand ({spec['name']})")
+                            data['brand'] = spec['value']
+                            print(f"Brand: {data['brand']}")
                             break
 
                     json.dump(data, f_new, ensure_ascii=False)

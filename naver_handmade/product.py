@@ -98,6 +98,7 @@ class NaverHandmadeProduct:
         for s in range(secs, 0, -1):
             print(f"PAUSE: {s:03d}", end='\r')
             await asyncio.sleep(1)
+        print()
 
     async def start(self):
         self.browser = await launch(headless=False)
@@ -165,6 +166,7 @@ class NaverHandmadeProduct:
                 for s in range(120, 0, -1):
                     print(f"PAUSE: {s:03d}", end='\r')
                     time.sleep(1)
+                print()
                 descr_resp = requests.get(desc_url, headers=self.HEADERS, timeout=60, allow_redirects=False)
         if descr_resp.status_code == 204:
             print("No div descriptions")

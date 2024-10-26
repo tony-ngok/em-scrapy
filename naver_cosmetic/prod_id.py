@@ -89,6 +89,7 @@ class NaverCosmeticProdId:
         for s in range(secs, 0, -1):
             print(f"PAUSE: {s:03d}", end='\r')
             time.sleep(1)
+        print()
 
     def get_graphql(self, cat_no: str, page: int = 1, page_size: int = 1000):
         if self.mode == 'cosmetic':
