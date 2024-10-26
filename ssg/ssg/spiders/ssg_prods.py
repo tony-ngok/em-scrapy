@@ -67,7 +67,7 @@ class SsgProds(scrapy.Spider):
         else:
             print("Retry mode")
 
-        self.krw_rate = 1379.40808
+        self.krw_rate = 1387.537057
         rate_req = requests.get('https://open.er-api.com/v6/latest/USD')
         if rate_req.ok:
             self.krw_rate = rate_req.json()['rates']['KRW']

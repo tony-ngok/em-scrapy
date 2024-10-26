@@ -86,7 +86,7 @@ class NaverHandmadeProduct:
             self.krw_rate = rate_resp.json()['rates']['KRW']
         except:
             print("Fail to get USD/KRW rate")
-            self.krw_rate = 1368.537958
+            self.krw_rate = 1387.537057
         finally:
             print(f"USD/KRW rate: {self.krw_rate:_}".replace(".", ",").replace("_", "."))
 
