@@ -110,6 +110,8 @@ if __name__ == '__main__':
                         time.sleep(randint(1000, 3000)/1000.0)
                 else:
                     f_new.write(line) # 把原来就没有失败的数据写回去
+                if i % 50 == 0:
+                    pause(10)
 
         os.remove("naver_handmade_prods.txt")
         os.rename('prods_temp', "naver_handmade_prods.txt")
