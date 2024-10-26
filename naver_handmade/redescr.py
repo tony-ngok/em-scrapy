@@ -93,7 +93,7 @@ if __name__ == '__main__':
     try:
         with open('naver_handmade_prods.txt', 'r', encoding='utf-8') as f_orig, open('prods_temp', 'w', encoding='utf-8') as f_new:
             for i, line in enumerate(f_orig, start=1):
-                if line.endswith('descr_fail'):
+                if line.endswith('descr_fail\n'):
                     print("\nFor redescription", f"({i:_})".replace("_", "."))
                     data = json.loads(line[:-12])
                     prod_id = data['product_id']
