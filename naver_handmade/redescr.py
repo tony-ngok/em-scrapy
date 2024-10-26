@@ -93,8 +93,10 @@ def get_descr(prod_id: str):
 if __name__ == '__main__':
     try:
         with open('naver_handmade_prods.txt', 'r', encoding='utf-8') as f_orig, open('prods_temp', 'w', encoding='utf-8') as f_new:
+            started = False
             for i, line in enumerate(f_orig, start=1):
                 if line.endswith('descr_fail\n'):
+                    started = True
                     print("\nFor redescription", f"({i:_})".replace("_", "."))
                     data = json.loads(line[:-11])
                     prod_id = data['product_id']
@@ -107,10 +109,10 @@ if __name__ == '__main__':
                         data['description'] = (got_descr if got_descr else None)
                         json.dump(data, f_new, ensure_ascii=False)
                         f_new.write(',\n')
-                        time.sleep(randint(1000, 3000)/1000.0)
+                        time.sleep(randint(2000, 4000)/1000.0)
                 else:
                     f_new.write(line) # 把原来就没有失败的数据写回去
-                if i % 50 == 0:
+                if started and (i % 100 == 0):
                     pause(10)
 
         os.remove("naver_handmade_prods.txt")

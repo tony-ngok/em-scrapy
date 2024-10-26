@@ -363,7 +363,7 @@ class NaverCosmeticProduct:
                 url_root = 'https://shopping.naver.com/logistics/products/'
 
             existence = self.get_exist()
-            time.sleep(randint(1000, 3000)/1000.0)
+            time.sleep(randint(2000, 4000)/1000.0)
             description = self.get_div_descr(prod_id)+self.get_table_descr()
             specifications, weight = self.get_specs()
             price_krw = self.prod_json.get('discountedSalePrice', self.prod_json.get('salePrice', 0))
@@ -409,7 +409,7 @@ class NaverCosmeticProduct:
             print(product)
             self.dones += 1
             self.count()
-            time.sleep(randint(1000, 3000)/1000.0)
+            time.sleep(randint(2000, 4000)/1000.0)
             return product
         except Exception as e:
             print("ERROR:", str(e))
