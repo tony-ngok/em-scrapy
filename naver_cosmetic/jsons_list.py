@@ -3,7 +3,7 @@ import sys
 
 
 if __name__ == '__main__':
-    if (len(sys.argv) >= 2) or (sys.argv[1] == 'cosmetic') or (sys.argv[1] == 'logistics'):
+    if (len(sys.argv) >= 2) and ((sys.argv[1] == 'cosmetic') or (sys.argv[1] == 'logistics')):
         try:
             with open(f"naver_{sys.argv[1]}_prods.txt", "r", encoding='utf-8') as f:
                 with open('json_tmp', "w", encoding='utf-8') as f_temp:
