@@ -72,7 +72,6 @@ def get_descr(prod_id: str):
         if sel.root.tag == 'span':
             span_txt = " ".join(sel.css('::text').get('').replace("\n", "").strip().split())
             if span_txt:
-                print(span_txt)
                 descr += f'<p>{span_txt}</p>'
         else:
             img_url = sel.css('::attr(data-src)').get()
