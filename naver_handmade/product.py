@@ -392,6 +392,11 @@ class NaverHandmadeProduct:
             await self.get_basic_json()
             await self.get_var_json()
 
+            title = self.basic_json['name']
+            if not title:
+                print("No title")
+                return
+
             images = self.get_images()
             if not images:
                 print("No images")
@@ -410,7 +415,7 @@ class NaverHandmadeProduct:
                 "source": "Naver",
                 "product_id": prod_id,
                 "existence": existence,
-                "title": self.basic_json['name'],
+                "title": title,
                 "title_en": None,
                 "description": (description if description else None),
                 "description_en": None,

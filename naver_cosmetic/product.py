@@ -358,6 +358,10 @@ class NaverCosmeticProduct:
                     resp = requests.get(url, headers=self.HEADERS, timeout=300, allow_redirects=False)
 
             self.prod_json = resp.json()
+            title = self.prod_json['name']
+            if not title:
+                print("No title")
+                return
 
             images = self.get_images()
             if not images:
@@ -384,7 +388,7 @@ class NaverCosmeticProduct:
                 "source": "Naver",
                 "product_id": prod_id,
                 "existence": existence,
-                "title": self.prod_json['name'],
+                "title": title,
                 "title_en": None,
                 "description": (description if description else None),
                 "description_en": None,
