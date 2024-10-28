@@ -23,7 +23,7 @@ def main():
     new_data = "ssg_products_temp"
 
     if os.path.exists(old_data):
-        with open('ssg_product.txts', 'r', encoding='utf-8') as f0, open(new_data, 'w', encoding='utf-8') as f1:
+        with open(old_data, 'r', encoding='utf-8') as f0, open(new_data, 'w', encoding='utf-8') as f1:
             for i, ol in enumerate(f0, start=1):
                 print(f"\nRespec {i:_}")
 
