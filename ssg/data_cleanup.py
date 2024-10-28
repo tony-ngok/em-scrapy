@@ -22,7 +22,8 @@ def main():
                 descr_temp = dat["description_en"]
                 specs = dat['specifications']
 
-
+        os.remove(old_data)
+        os.rename(new_data, old_data)
     else:
         print("Old data file not found:", old_data)
 

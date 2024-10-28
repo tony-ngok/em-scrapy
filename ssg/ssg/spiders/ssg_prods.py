@@ -106,11 +106,11 @@ class SsgProds(scrapy.Spider):
         thx = response.css(selectors_th)
         tdx = response.css(selectors_td)
 
+        weight_added = False
         for th, td in zip(thx, tdx):
             th_txt = th.css("::text").get("").strip()
             td_txt = td.css("::text").get("").strip()
 
-            weight_added = False
             if th_txt and td_txt:
                 if ('전화번호' in th_txt) or ('보증' in th_txt) or ('A/S' in th_txt) or ('반품' in th_txt) or ('인증' in th_txt):
                     continue
@@ -119,12 +119,13 @@ class SsgProds(scrapy.Spider):
                 if ('용량' in th_txt) and weight_added:
                     continue
 
-                specs.append({
-                    "name": th_txt,
-                    "value": td_txt
-                })
-                if ('용량' in th_txt) or ('중량' in th_txt): # 重量参数不重复
-                    weight_added = True
+                else:
+                    specs.append({
+                        "name": th_txt,
+                        "value": td_txt
+                    })
+                    if ('용량' in th_txt) or ('중량' in th_txt): # 重量参数不重复
+                        weight_added = True
 
         return (specs if specs else None), (f'<table class="ssg-descr">{table_descr}</table>' if table_descr else "")
 

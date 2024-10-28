@@ -403,6 +403,7 @@ class NaverHandmadeProduct:
                 return
 
             existence = self.get_exist()
+            await asyncio.sleep(randint(2000, 4000)/1000.0)
             description = self.get_div_descr(prod_id)+self.get_table_descr()
             price_krw = self.basic_json.get('offers', {}).get('price', 0)
             options, variants = self.get_opts_vars(price_krw)
