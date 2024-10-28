@@ -87,7 +87,15 @@ class SsgProds(scrapy.Spider):
         sold_out = response.css("a.cdtl_btn_soldout, a.cdtl_btn_temp")
         return (('instock' in stock_txt) and (not sold_out))
 
-    def get_specs_etc(self, response: HtmlResponse):
+    def get_existence_special(self, scr_txt: str):
+        sold_out = re.findall(r"soldOut\s*:\s*'(Y|N)'", scr_txt)[0]
+        if sold_out == 'Y':
+            return False
+
+        sold_out_pass = re.findall(r"soldOutPass\s*:\s*'(Y|N)'", scr_txt)[0]
+        return (sold_out_pass == 'N')
+
+    def get_specs_etc(self, response: HtmlResponse, selectors_th: str, selectors_td: str):
         """
         先提取参数，重量这些的稍后分别处理
         """
@@ -95,8 +103,8 @@ class SsgProds(scrapy.Spider):
         specs = []
         table_descr = ""
 
-        thx = response.css('div[id="item_size"] > div.cdtl_option_info th, div[id="item_size"] > div.cdtl_sec th')
-        tdx = response.css('div[id="item_size"] > div.cdtl_option_info td, div[id="item_size"] > div.cdtl_sec td')
+        thx = response.css(selectors_th)
+        tdx = response.css(selectors_td)
 
         for th, td in zip(thx, tdx):
             th_txt = th.css("::text").get("").strip()
@@ -125,7 +133,16 @@ class SsgProds(scrapy.Spider):
         cats_sels = response.css('div.lo_depth_01 > a::text')[1:].getall()
         for c in cats_sels:
             if c and c.strip() and (c.strip() not in cats_dict):
-                cats_dict[c] = True
+                cats_dict[c.strip()] = True
+
+        return " > ".join(cats_dict.keys()) if cats_dict else None
+
+    def get_categories_special(self, scr_txt: str):
+        cats_dict = {}
+        cat_list = re.findall(r"stdCtg[L|M|S|D]clsNm\s*:\s*'(.*)'", scr_txt)
+        for c in cat_list:
+            if c and c.strip() and (c.strip() not in cats_dict):
+                cats_dict[c.strip()] = True
 
         return " > ".join(cats_dict.keys()) if cats_dict else None
 
@@ -203,31 +220,76 @@ class SsgProds(scrapy.Spider):
 
     def parse(self, response: HtmlResponse, i: int):
         url = response.url.split('&')[0]
+        if ('판매가 종료된' in response.text) or ('존재하지 않습니다' in response.text) or ('행사 기간이 아닙니다' in response.text):
+            print(f"{i:_}/{len(self.start_urls):_}".replace("_", "."), "Item not found (ignored)")
+            return
+        if ('checkAdult.ssg' in url) or ('login.ssg' in url):
+            print(f"{i:_}/{len(self.start_urls):_}".replace("_", "."), "Adult item (ignored)")
+            return
+        if ('dealItemView' in url):
+            print(f"{i:_}/{len(self.start_urls):_}".replace("_", "."), "Promotion set (ignored)")
+            return
+
         print(f"{i:_}/{len(self.start_urls):_}".replace("_", "."), url)
+
+        special = False # 有些商品是百货店特别商品
+        if '/special/' in url:
+            special = True
 
         now = datetime.now()
         product_id = url.split("itemId=")[1]
 
-        prod_json = response.css('script[type="application/ld+json"]::text').get()
-        if not prod_json:
-            print(f"{i:_}/{len(self.start_urls):_}".replace("_", "."), "No product JSON")
-            return
-        prod_json = json.loads(prod_json)
+        if special:
+            data_obj = None
+            for scr in response.css('script[type="text/javaScript"]'):
+                scr_txt = scr.css("::text").get("").strip()
+                if 'var resultItemObj' in scr_txt:
+                    data_obj = scr
+            if not data_obj:
+                print(f"{i:_}/{len(self.start_urls):_}".replace("_", "."), "No product object")
+                return
 
-        images, videos = self.get_media(prod_json.get("image", []), response)
-        if not (images or videos):
-            print(f"{i:_}/{len(self.start_urls):_}".replace("_", "."), "No media")
-            return
+            im_list = response.css('ul.cdtl_pager_lst img::attr(src)').getall()
+            if not im_list:
+                print(f"{i:_}/{len(self.start_urls):_}".replace("_", "."), "No media")
+                return
+            images = ";".join([img.replace('_140', '') for img in im_list])
 
-        existence = self.get_existence(prod_json["offers"]["availability"].lower(), response)
-        title = prod_json["name"]
-        specifications, description = self.get_specs_etc(response)
-        brand = prod_json["brand"]["name"]
-        categories = self.get_categories(response)
-        price = round(float(prod_json["offers"]["price"])/self.krw_rate, 2)
-        reviews, rating = self.get_recensions(prod_json.get("aggregateRating", {}))
-        shipping_fee = self.get_deliv_fee(response)
-        shipping_days = self.get_ship_days(response, now.year, now.month, now.day)
+            existence = self.get_existence_special(scr_txt)
+            title = re.findall(r"itemNm\s*:\s*'(.*)'", scr_txt)[0].strip()
+            specifications, description = self.get_specs_etc(response, 'div#item_detail_contents th', 'div#item_detail_contents td')
+            brand = re.findall(r"brandNm\s*:\s*'(.*)'", scr_txt)[0] if re.findall(r"brandNm\s*:\s*'(.*)'", scr_txt) else None
+            categories = self.get_categories_special(scr_txt)
+            videos = None
+
+            price_krw = float(re.findall(r"bestAmt\s*:\s*parseInt\('(\d+)'", scr_txt)[0])
+            price = round(price_krw/self.krw_rate, 2)
+
+            reviews = int(response.css('input#commentTotalCnt::attr(value)').get('0'))
+            rating = round(float(response.css('span.cdtl_star_score > span.cdtl_txt::text').get('0')), 2)
+            shipping_fee = round(3000/self.krw_rate, 2) if price_krw < 30000 else 0.00
+            shipping_days = None
+        else:
+            prod_json = response.css('script[type="application/ld+json"]::text').get()
+            if not prod_json:
+                print(f"{i:_}/{len(self.start_urls):_}".replace("_", "."), "No product object")
+                return
+            prod_json = json.loads(prod_json)
+
+            images, videos = self.get_media(prod_json.get("image", []), response)
+            if not (images or videos):
+                print(f"{i:_}/{len(self.start_urls):_}".replace("_", "."), "No media")
+                return
+
+            existence = self.get_existence(prod_json["offers"]["availability"].lower(), response)
+            title = prod_json["name"]
+            specifications, description = self.get_specs_etc(response, 'div#item_size > div.cdtl_option_info th, div#item_size > div.cdtl_sec th', 'div#item_size > div.cdtl_option_info td, div#item_size > div.cdtl_sec td')
+            brand = prod_json["brand"]["name"]
+            categories = self.get_categories(response)
+            price = round(float(prod_json["offers"]["price"])/self.krw_rate, 2)
+            reviews, rating = self.get_recensions(prod_json.get("aggregateRating", {}))
+            shipping_fee = self.get_deliv_fee(response)
+            shipping_days = self.get_ship_days(response, now.year, now.month, now.day)
 
         opts_list = response.css('dl.cdtl_opt_group > dt::text').getall()
         options = [{
@@ -287,7 +349,7 @@ class SsgProds(scrapy.Spider):
             divx = response.css('body > div')
             for div in divx:
                 if div.css('*'):
-                    item['description_en'] += " ".join(div.get().split())
+                    item['description_en'] += " ".join(div.get().split()) # 暂时存放iframe描述
 
         self.write_item(i, item)
 
