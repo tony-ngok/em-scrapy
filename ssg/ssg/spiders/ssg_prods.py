@@ -270,7 +270,7 @@ class SsgProds(scrapy.Spider):
             price_krw = float(re.findall(r"bestAmt\s*:\s*parseInt\('(\d+)'", scr_txt)[0])
             price = round(price_krw/self.krw_rate, 2)
 
-            reviews, rating = self.get_recensions(response)
+            reviews, rating = self.get_recensions_special(response)
             shipping_fee = round(3000/self.krw_rate, 2) if price_krw < 30000 else 0.00
             shipping_days = None
         else:
