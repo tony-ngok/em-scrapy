@@ -17,6 +17,8 @@ def filter_specs(specs: list[dict]):
         if ('용량' in th_txt) or ('중량' in th_txt): # 重量参数不重复
             weight_added = True
 
+    return cleaned_specs
+
 
 def main():
     old_data = "ssg_products.txt"
