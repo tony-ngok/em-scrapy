@@ -11,7 +11,7 @@ def weigh(i: int, dat_line: str):
     print(f"\nWeigh {i:_}".replace("_", "."))
 
     dat = json.loads(dat_line[:-2])
-    descr_temp = dat["description_en"]
+    # descr_temp = dat["description_en"]
     specs = dat['specifications']
 
     dat['weight'] = None
@@ -31,10 +31,10 @@ def weigh(i: int, dat_line: str):
 def parse_weight(txt: str):
     weight_match = re.findall(r'(\d+(?:\.\d+)?)\s*(g|ml|kg|l)', txt)
     if weight_match:
-        if weight_match[1] in {'g', 'ml'}:
-            return round(float(weight_match[0])/453.59237, 2)
-        elif weight_match[1] in {'kg', 'l'}:
-            return round(float(weight_match[0])*2.20462, 2)
+        if weight_match[0][1] in {'g', 'ml'}:
+            return round(float(weight_match[0][0])/453.59237, 2)
+        elif weight_match[0][1] in {'kg', 'l'}:
+            return round(float(weight_match[0][0])*2.20462, 2)
 
 
 def main():
