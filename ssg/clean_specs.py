@@ -14,7 +14,7 @@ def filter_specs(specs: list[dict]):
             continue
 
         cleaned_specs.append(spec)
-        if ('용량' in th_txt) or ('중량' in th_txt): # 重量参数不重复
+        if ('용량' in th_txt) or ('중량' in th_txt) or ('무게' in th_txt): # 重量参数不重复
             weight_added = True
 
     return cleaned_specs

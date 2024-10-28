@@ -102,6 +102,7 @@ class SsgProds(scrapy.Spider):
 
         specs = []
         table_descr = ""
+        weight = None
 
         thx = response.css(selectors_th)
         tdx = response.css(selectors_td)
@@ -114,20 +115,29 @@ class SsgProds(scrapy.Spider):
             if th_txt and td_txt:
                 if ('전화번호' in th_txt) or ('보증' in th_txt) or ('A/S' in th_txt) or ('반품' in th_txt) or ('인증' in th_txt):
                     continue
-                if ('성분' in th_txt) or ('주의사항' in th_txt) or ('방법' in th_txt) or ('기한' in th_txt):
+                if ('성분' in th_txt) or ('주의사항' in th_txt) or ('방법' in th_txt) or ('기한' in th_txt): # 值较长的参数（成分、注意事项、使用方法等）看作描述
                     table_descr += f'<tr><th>{th_txt}</th><td>{td_txt}</td></tr>'
+                    continue
                 if ('용량' in th_txt) and weight_added:
                     continue
 
-                else:
-                    specs.append({
-                        "name": th_txt,
-                        "value": td_txt
-                    })
-                    if ('용량' in th_txt) or ('중량' in th_txt): # 重量参数不重复
-                        weight_added = True
+                specs.append({
+                    "name": th_txt,
+                    "value": td_txt
+                })
+                if ('용량' in th_txt) or ('중량' in th_txt) or ('무게' in th_txt): # 重量参数不重复
+                    weight = self.parse_weight(td_txt.lower())
+                    weight_added = True
 
-        return (specs if specs else None), (f'<table class="ssg-descr">{table_descr}</table>' if table_descr else "")
+        return (specs if specs else None), (f'<table class="ssg-descr">{table_descr}</table>' if table_descr else ""), weight
+
+    def parse_weight(self, txt: str):
+        weight_match = re.findall(r'(\d+(?:\.\d+)?)\s*(g|ml|kg|l)', txt)
+        if weight_match:
+            if weight_match[1] in {'g', 'ml'}:
+                return round(float(weight_match[0])/453.59237, 2)
+            elif weight_match[1] in {'kg', 'l'}:
+                return round(float(weight_match[0])*2.20462, 2)
 
     def get_categories(self, response: HtmlResponse):
         cats_dict = {}
@@ -263,7 +273,7 @@ class SsgProds(scrapy.Spider):
 
             existence = self.get_existence_special(scr_txt)
             title = re.findall(r"itemNm\s*:\s*'(.*)'", scr_txt)[0].strip()
-            specifications, description = self.get_specs_etc(response, 'div#item_detail_contents th', 'div#item_detail_contents td')
+            specifications, description, weight = self.get_specs_etc(response, 'div#item_detail_contents th', 'div#item_detail_contents td')
             brand = re.findall(r"brandNm\s*:\s*'(.*)'", scr_txt)[0] if re.findall(r"brandNm\s*:\s*'(.*)'", scr_txt) else None
             categories = self.get_categories_special(scr_txt)
             videos = None
@@ -288,7 +298,7 @@ class SsgProds(scrapy.Spider):
 
             existence = self.get_existence(prod_json["offers"]["availability"].lower(), response)
             title = prod_json["name"]
-            specifications, description = self.get_specs_etc(response, 'div#item_size > div.cdtl_option_info th, div#item_size > div.cdtl_sec th', 'div#item_size > div.cdtl_option_info td, div#item_size > div.cdtl_sec td')
+            specifications, description, weight = self.get_specs_etc(response, 'div#item_size > div.cdtl_option_info th, div#item_size > div.cdtl_sec th', 'div#item_size > div.cdtl_option_info td, div#item_size > div.cdtl_sec td')
             brand = prod_json["brand"]["name"]
             categories = self.get_categories(response)
             price = round(float(prod_json["offers"]["price"])/self.krw_rate, 2)
@@ -332,7 +342,11 @@ class SsgProds(scrapy.Spider):
             "sold_count": None,
             "shipping_fee": shipping_fee,
             "shipping_days_min": shipping_days,
-            "shipping_days_max": shipping_days
+            "shipping_days_max": shipping_days,
+            "weight": weight,
+            "length": None,
+            "width": None,
+            "height": None
         }
 
         iframe_url = response.css('iframe#_ifr_html::attr(src)').get()
