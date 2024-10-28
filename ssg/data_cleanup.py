@@ -16,7 +16,7 @@ def main():
     if os.path.exists(old_data):
         with open(old_data, 'r', encoding='utf-8') as f_old, open(new_data, 'w', encoding='utf-8') as f_new:
             for i, ol in enumerate(f_old, start=1):
-                print(f"\nCleanup {i:_}")
+                print(f"\nCleanup {i:_}".replace("_", "."))
 
                 dat = json.loads(ol[:-2])
                 descr_temp = dat["description_en"]
