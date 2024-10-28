@@ -1,4 +1,3 @@
-import concurrent.futures
 import json
 import os
 import re
@@ -8,9 +7,8 @@ DESCR_IMG_FILTERS = ['배너', '%EB%B0%B0%EB%84%88', '/common/', '/top_banner', 
 DESCR_TXT_FILTERS = ['ssg.com', '저작권', 'copyright']
 
 
-def cleanup(a: tuple[int, str]):
-    i, dat_line = a
-    print(f"\nCleanup {i:_}".replace("_", "."))
+def weigh(i: int, dat_line: str):
+    print(f"\nWeigh {i:_}".replace("_", "."))
 
     dat = json.loads(dat_line[:-2])
     descr_temp = dat["description_en"]
@@ -45,11 +43,10 @@ def main():
 
     if os.path.exists(old_data):
         with open(old_data, 'r', encoding='utf-8') as f_old, open(new_data, 'w', encoding='utf-8') as f_new:
-            with concurrent.futures.ProcessPoolExecutor() as executor:
-                results = executor.map(cleanup, enumerate(f_old, start=1))
-                for result in results:
-                    json.dump(result, f_new, ensure_ascii=False)
-                    f_new.write(",\n")
+            for i, line in enumerate(f_old, start=1):
+                result = weigh(i, line)
+                json.dump(result, f_new, ensure_ascii=False)
+                f_new.write(",\n")
 
         os.remove(old_data)
         os.rename(new_data, old_data)
