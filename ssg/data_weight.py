@@ -24,6 +24,7 @@ def weigh(i: int, dat_line: str):
             th_txt = spec['name']
             if ('용량' in th_txt) or ('중량' in th_txt) or ('무게' in th_txt):
                 dat['weight'] = parse_weight(spec['value'].lower())
+                print(dat['weight'])
     
     return dat
 
