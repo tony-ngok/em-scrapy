@@ -193,6 +193,11 @@ class SsgProds(scrapy.Spider):
             return None, None
         return int(recensions["reviewCount"]), round(float(recensions["ratingValue"]), 2)
 
+    def get_recensions_special(self, response: HtmlResponse):
+        reviews_sel = response.css('input#commentTotalCnt::attr(value)').get()
+        rating_sel = response.css('span.cdtl_star_score > span.cdtl_txt::text').get()
+        return (int(reviews_sel) if reviews_sel else None), (round(float(rating_sel.strip()), 2) if rating_sel else None)
+
     def get_deliv_fee(self, response: HtmlResponse):
         deliv_fee = response.css('dl.cdtl_delivery_fee em.ssg_price::text').get()
         if not deliv_fee:
@@ -265,8 +270,7 @@ class SsgProds(scrapy.Spider):
             price_krw = float(re.findall(r"bestAmt\s*:\s*parseInt\('(\d+)'", scr_txt)[0])
             price = round(price_krw/self.krw_rate, 2)
 
-            reviews = int(response.css('input#commentTotalCnt::attr(value)').get('0'))
-            rating = round(float(response.css('span.cdtl_star_score > span.cdtl_txt::text').get('0')), 2)
+            reviews, rating = self.get_recensions(response)
             shipping_fee = round(3000/self.krw_rate, 2) if price_krw < 30000 else 0.00
             shipping_days = None
         else:
