@@ -31,8 +31,9 @@ def main():
 
                 dat = json.loads(ol[:-2])
                 old_specs = dat['specifications']
-                dat['specifications'] = filter_specs(old_specs)
-                print(dat['specifications'])
+                if old_specs:
+                    dat['specifications'] = filter_specs(old_specs)
+                    print(dat['specifications'])
 
                 json.dump(dat, f1, ensure_ascii=False)
                 f1.write(",\n")
