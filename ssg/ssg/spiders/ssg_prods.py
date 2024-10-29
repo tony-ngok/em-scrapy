@@ -116,10 +116,10 @@ class SsgProds(scrapy.Spider):
             elif child.name: # HTML要素
                 if child.name == 'div':
                     descr += self.get_descr(child)
-                elif child.name == 'p' or child.name == 'p':
+                elif (child.name == 'p') or (child.name == 'table') or (child.name == 'thead') or (child.name == 'tbody') or (child.name == 'tfoot') or (child.name == 'tr') or (child.name == 'th') or (child.name == 'td'):
                     p_descr = self.get_descr(child)
                     if p_descr:
-                        descr += f'<p>{p_descr}</p>'
+                        descr += f'<{child.name}>{p_descr}</{child.name}>'
                 elif child.name not in {'script', 'button', 'a', 'input', 'form', 'link'}:
                     child_str = str(child).strip()
                     if child_str:
@@ -142,7 +142,6 @@ class SsgProds(scrapy.Spider):
                     if not txt_filt:
                         descr += child_strip
 
-        descr = re.sub(r'<a.*</a>', '', descr) # EM描述中不让包含<a>标签
         descr = " ".join(descr.split())
         return descr
 
