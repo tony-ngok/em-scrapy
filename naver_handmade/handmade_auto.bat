@@ -14,7 +14,7 @@ if %ERRORLEVEL% neq 0 (
     goto prod_id_review
 )
 echo Program prod_id.py success
-goto end
+goto product
 
 @REM 重试抓取商品号
 :prod_id_review
@@ -25,8 +25,9 @@ if %ERRORLEVEL% neq 0 (
     goto prod_id_review
 )
 echo Program prod_id.py success
-goto end
+goto product
 
+@REM 抓取商品资料
 :product
 echo Start program product.py...
 python product.py
@@ -38,6 +39,7 @@ if %ERRORLEVEL% neq 0 (
 echo Program product.py success
 goto end
 
+@REM 重试抓取商品资料
 :product_review
 python product.py --review
 echo Exit code: %ERRORLEVEL%
