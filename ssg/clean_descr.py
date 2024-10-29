@@ -25,7 +25,7 @@ def get_descr(txt: str):
 
     # 遍历所有子要素（包括纯文字）
     for child in soup.div.children:
-        if child.name and (child.name not in {'script', 'button', 'a', 'input', 'form'}): # HTML要素
+        if child.name and (child.name not in {'script', 'button', 'a', 'input', 'form', 'link'}): # HTML要素
             child_str = str(child).strip()
             if child_str:
                 filt = False
@@ -80,6 +80,7 @@ def main():
                             descr += get_descr(div_str)
 
                 dat['description'] = descr+desc_table if descr or desc_table else None
+                print(dat['description'])
                 dat['description_en'] = None
 
                 json.dump(dat, f_new, ensure_ascii=False)

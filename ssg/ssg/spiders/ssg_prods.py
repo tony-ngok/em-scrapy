@@ -110,7 +110,7 @@ class SsgProds(scrapy.Spider):
 
         # 遍历所有子要素（包括纯文字）
         for child in soup.div.children:
-            if child.name and (child.name not in {'script', 'button', 'a', 'input', 'form'}): # HTML要素
+            if child.name and (child.name not in {'script', 'button', 'a', 'input', 'form', 'link'}): # HTML要素
                 child_str = str(child).strip()
                 if child_str:
                     filt = False
