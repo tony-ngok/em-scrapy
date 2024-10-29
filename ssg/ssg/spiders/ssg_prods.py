@@ -113,7 +113,7 @@ class SsgProds(scrapy.Spider):
             if child.name: # HTML要素
                 if child.name == 'div':
                     descr += self.get_descr(child)
-                elif (child.name == 'p'):
+                elif child.name == 'p':
                     p_descr = self.get_descr(child)
                     if p_descr:
                         descr += f'<p>{p_descr}</p>'
