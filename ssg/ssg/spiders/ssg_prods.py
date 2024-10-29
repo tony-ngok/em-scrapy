@@ -407,18 +407,12 @@ class SsgProds(scrapy.Spider):
             descr_table = item["description"]
             descr = ""
 
-            div1 = response.css('div.se-contents')
-            if div1 and div1[0].css('*'):
-                div_str = " ".join(div1[0].get().split())
-                if div_str:
-                    descr += self.get_descr(div_str)
-            else:
-                div2 = response.css('div#descContents')
-                if div2 and div2[0].css('*'):
-                    div_str = " ".join(div2[0].get().split())
-                    if div_str:
-                        descr += self.get_descr(div_str)
+            divx = response.css('body > div')
+            for div in divx:
+                if div.css('*'):
+                    descr += " ".join(div.get().split())
 
+            descr = f'<div class="ssg-descr">{descr}</div>' if descr else ""
             item['description'] = descr+descr_table if descr or descr_table else None
 
         self.write_item(i, item)

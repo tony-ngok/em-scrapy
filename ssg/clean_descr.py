@@ -14,27 +14,31 @@ DESCR_IMG_FILTERS = ['%EB%B0%B0%EB%84%88', '/common/', '/top_banner', '/promotio
 DESCR_TXT_FILTERS = ['ssg.com', '저작권', 'copyright']
 
 
-def get_descr(txt: str):
+def get_descr(soup: str | BeautifulSoup):
     """
     使用BeautifulSoup整理描述
     """
 
     descr = ""
-    soup = BeautifulSoup(txt, 'html.parser')
+    if isinstance(soup, str):
+        soup = BeautifulSoup(soup, 'html.parser')
 
     # 遍历所有子要素（包括纯文字）
     for child in soup.div.children:
-        if child.name and (child.name not in {'script', 'button', 'a', 'input', 'form', 'link'}): # HTML要素
-            child_str = str(child).strip()
-            if child_str:
-                filt = False
-                if '<img' in child_str:
-                    for f in DESCR_IMG_FILTERS:
-                        if f in child_str.lower(): # 过滤掉无用资料的图片
-                            filt = True
-                            break
-                if not filt:
-                    descr += child_str
+        if child.name: # HTML要素
+            if child.name == 'div':
+                descr += get_descr(child)
+            elif child.name not in {'script', 'button', 'a', 'input', 'form', 'link'}:
+                child_str = str(child).strip()
+                if child_str:
+                    filt = False
+                    if '<img' in child_str:
+                        for f in DESCR_IMG_FILTERS:
+                            if f in child_str.lower(): # 过滤掉无用资料的图片
+                                filt = True
+                                break
+                    if not filt:
+                        descr += child_str
         elif isinstance(child, str): # 纯文字
             child_strip = child.strip()
             if child_strip:
@@ -47,7 +51,7 @@ def get_descr(txt: str):
                     descr += child_strip
 
     descr = " ".join(descr.split())
-    return f'<div class="ssg-descr">{descr}</div>' if descr else ""
+    return descr
 
 def main():
     old_data = "ssg_products.txt"
@@ -66,18 +70,12 @@ def main():
                 descr = ""
 
                 response = HtmlResponse('', body=dat['description_en'], encoding='utf-8')
-                div1 = response.css('div.se-contents')
-                if div1 and div1[0].css('*'):
-                    div_str = " ".join(div1[0].get().split())
-                    if div_str:
-                        descr += get_descr(div_str)
-                else:
-                    div2 = response.css('div#descContents')
-                    if div2 and div2[0].css('*'):
-                        div_str = " ".join(div2[0].get().split())
-                        if div_str:
-                            descr += get_descr(div_str)
+                divx = response.css('body > div')
+                for div in divx:
+                    if div.css('*'):
+                        descr += " ".join(div.get().split())
 
+                descr = f'<div class="ssg-descr">{descr}</div>' if descr else ""
                 dat['description'] = descr+desc_table if descr or desc_table else None
                 print(dat['description'])
                 dat['description_en'] = None
