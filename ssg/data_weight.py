@@ -3,15 +3,10 @@ import os
 import re
 
 
-DESCR_IMG_FILTERS = ['배너', '%EB%B0%B0%EB%84%88', '/common/', '/top_banner', '/promotion', '/brand', '/return', '/notice', '/ulfine']
-DESCR_TXT_FILTERS = ['ssg.com', '저작권', 'copyright']
-
-
 def weigh(i: int, dat_line: str):
     print(f"\nWeigh {i:_}".replace("_", "."))
 
     dat = json.loads(dat_line[:-2])
-    # descr_temp = dat["description_en"]
     specs = dat['specifications']
 
     dat['weight'] = None

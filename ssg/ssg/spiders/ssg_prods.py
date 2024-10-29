@@ -4,8 +4,10 @@ import re
 from datetime import date, datetime
 
 import requests
+from bs4 import BeautifulSoup
 import scrapy
 from scrapy.http import HtmlResponse
+
 
 # scrapy crawl ssg_prod
 class SsgProds(scrapy.Spider):
@@ -19,10 +21,13 @@ class SsgProds(scrapy.Spider):
         }
     }
 
-    DESCR_IMG_FILTERS = [
-        '배너', '%EB%B0%B0%EB%84%88', '/common/', '/top_banner', '/promotion',
-        '/brand', '/return', '/notice', '/ulfine'
-        ]
+    DESCR_IMG_FILTERS = ['%EB%B0%B0%EB%84%88', '/common/', '/top_banner', '/promotion',
+                     '/brand', '/return', '/notice', '/ulfine', '/product/000000/', '/note',
+                     '/delivery', '%EB%B0%B0%EC%86%A1', '%EB%B0%98%ED%92%88',
+                     '%EC%95%88%EB%82%B4', '%EA%B5%90%ED%99%98', '/front',
+                     '%ED%83%9D%EB%B0%B0', '%EC%BF%A0%ED%8F%B0', '/shipping',
+                     '%EA%B3%B5%EC%A7%80', '/gift', '%EA%B8%B0%ED%94%84%ED%8A%B8',
+                     '%EC%A0%80%EC%9E%91%EA%B6%8C', '/copyright']
     DESCR_TXT_FILTERS = ['ssg.com', '저작권', 'copyright']
 
     HEADERS = {
@@ -67,7 +72,7 @@ class SsgProds(scrapy.Spider):
         else:
             print("Retry mode")
 
-        self.krw_rate = 1387.386094
+        self.krw_rate = 1383.172366
         rate_req = requests.get('https://open.er-api.com/v6/latest/USD')
         if rate_req.ok:
             self.krw_rate = rate_req.json()['rates']['KRW']
@@ -94,6 +99,42 @@ class SsgProds(scrapy.Spider):
 
         sold_out_pass = re.findall(r"soldOutPass\s*:\s*'(Y|N)'", scr_txt)[0]
         return (sold_out_pass == 'N')
+
+    def get_descr(self, txt: str):
+        """
+        使用BeautifulSoup整理描述
+        """
+
+        descr = ""
+        
+        soup = BeautifulSoup(txt, 'html.parser')
+
+        # 遍历所有子要素（包括纯文字）
+        for child in soup.div.children:
+            if child.name and (child.name not in {'script', 'button', 'a', 'input', 'form'}): # HTML要素
+                child_str = str(child).strip()
+                if child_str:
+                    filt = False
+                    if '<img' in child_str:
+                        for f in self.DESCR_IMG_FILTERS:
+                            if f in child_str.lower(): # 过滤掉无用资料的图片
+                                filt = True
+                                break
+                    if not filt:
+                        descr += child_str
+            elif isinstance(child, str): # 纯文字
+                child_strip = child.strip()
+                if child_strip:
+                    txt_filt = False
+                    for tf in self.DESCR_TXT_FILTERS: # 过滤掉版权信息等
+                        if tf in child_strip.lower():
+                            txt_filt = True
+                            break
+                    if not txt_filt:
+                        descr += child_strip
+
+        descr = " ".join(descr.split())
+        return f'<div class="ssg-descr">{descr}</div>' if descr else ""
 
     def get_specs_etc(self, response: HtmlResponse, selectors_th: str, selectors_td: str):
         """
@@ -165,13 +206,13 @@ class SsgProds(scrapy.Spider):
 
         return images, videos
 
-    def get_vars_infos(self, resp_txt: str, opts_list: list[str], prod_id: str):
+    def get_vars_infos(self, resp_txt: str, opts_list: list[str], prod_id: str, exist: bool):
         """
         获得商品存货数量，以及所有变种资料
         """
 
         qty_match = re.findall(r"usablInvQty:'(\d+)'", resp_txt)
-        available_qty = int(qty_match[0])
+        available_qty = int(qty_match[0]) if exist else 0
 
         variants = []
         if opts_list:
@@ -311,7 +352,7 @@ class SsgProds(scrapy.Spider):
             "id": None,
             "name": opt
         } for opt in opts_list] if opts_list else None
-        available_qty, variants = self.get_vars_infos(response.text, opts_list, product_id)
+        available_qty, variants = self.get_vars_infos(response.text, opts_list, product_id, existence)
 
         item = {
             "date": now.strftime('%Y-%m-%dT%H:%M:%S'),
@@ -321,8 +362,8 @@ class SsgProds(scrapy.Spider):
             "existence": existence,
             "title": title,
             "title_en": None,
-            "description": description, # 暂时先只存放表格描述
-            "description_en": "", # 存放iframe描述的临时空间
+            "description": description,
+            "description_en": None,
             "summary": None,
             "sku": product_id,
             "upc": None,
@@ -365,10 +406,16 @@ class SsgProds(scrapy.Spider):
         """
 
         if response.status != 404:
+            descr_table = item["description"]
+            descr = ""
+
             divx = response.css('body > div')
             for div in divx:
                 if div.css('*'):
-                    item['description_en'] += " ".join(div.get().split()) # 暂时存放iframe描述
+                    div_str = " ".join(div.get().split())
+                    descr += self.get_descr(div_str)
+
+            item['description'] = descr+descr_table if descr or descr_table else None
 
         self.write_item(i, item)
 

@@ -86,7 +86,7 @@ class NaverHandmadeProduct:
             self.krw_rate = rate_resp.json()['rates']['KRW']
         except:
             print("Fail to get USD/KRW rate")
-            self.krw_rate = 1387.386094
+            self.krw_rate = 1383.172366
         finally:
             print(f"USD/KRW rate: {self.krw_rate:_}".replace(".", ",").replace("_", "."))
 
@@ -163,10 +163,13 @@ class NaverHandmadeProduct:
                 j += 1
                 if j > 10:
                     raise Exception(f'Status {descr_resp.status_code}')
-                for s in range(120, 0, -1):
+
+                secs = randint(90, 120)
+                for s in range(secs, 0, -1):
                     print(f"PAUSE: {s:03d}", end='\r')
                     time.sleep(1)
                 print()
+
                 descr_resp = requests.get(desc_url, headers=self.HEADERS, timeout=60, allow_redirects=False)
         if descr_resp.status_code == 204:
             print("No div descriptions")
