@@ -109,7 +109,7 @@ class SsgProds(scrapy.Spider):
             soup = BeautifulSoup(soup, 'html.parser')
 
         # 遍历所有子要素（包括纯文字）
-        for child in soup.div.children:
+        for child in soup.children:
             if child.name: # HTML要素
                 if child.name == 'div':
                     descr += self.get_descr(child)
