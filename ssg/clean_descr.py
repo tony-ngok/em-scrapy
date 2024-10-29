@@ -2,6 +2,7 @@ import json
 import os
 
 from bs4 import BeautifulSoup
+from scrapy.http import HtmlResponse
 
 
 DESCR_IMG_FILTERS = ['%EB%B0%B0%EB%84%88', '/common/', '/top_banner', '/promotion',
@@ -14,13 +15,12 @@ DESCR_IMG_FILTERS = ['%EB%B0%B0%EB%84%88', '/common/', '/top_banner', '/promotio
 DESCR_TXT_FILTERS = ['ssg.com', '저작권', 'copyright']
 
 
-def parse_descr(txt: str):
+def get_descr(txt: str):
     """
     使用BeautifulSoup整理描述
     """
 
     descr = ""
-    
     soup = BeautifulSoup(txt, 'html.parser')
 
     # 遍历所有子要素（包括纯文字）
@@ -64,9 +64,22 @@ def main():
                     dat['available_qty'] = 0
 
                 desc_table = dat['description']
-                desc_temp = dat['description_en']
-                desc_div = parse_descr(desc_temp) if desc_temp else ""
-                dat['description'] = desc_div+desc_table if desc_div or desc_table else None
+                descr = ""
+
+                response = HtmlResponse('', body=dat['description_en'], encoding='utf-8')
+                div1 = response.css('body > div.se-contents')
+                if div1 and div1[0].css('*'):
+                    div_str = " ".join(div1[0].get().split())
+                    if div_str:
+                        descr += get_descr(div_str)
+                else:
+                    div2 = response.css('body > div#descContents')
+                    if div2 and div2[0].css('*'):
+                        div_str = " ".join(div2[0].get().split())
+                        if div_str:
+                            descr += get_descr(div_str)
+
+                dat['description'] = descr+desc_table if descr or desc_table else None
                 dat['description_en'] = None
 
                 json.dump(dat, f_new, ensure_ascii=False)
