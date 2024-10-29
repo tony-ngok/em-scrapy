@@ -69,7 +69,7 @@ def main():
                 dat['description'] = desc_div+desc_table if desc_div or desc_table else None
                 dat['description_en'] = None
 
-                json.dump(dat, f_new)
+                json.dump(dat, f_new, ensure_ascii=False)
                 f_new.write(",\n")
 
         os.remove(old_data)
