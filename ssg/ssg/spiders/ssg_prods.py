@@ -99,27 +99,31 @@ class SsgProds(scrapy.Spider):
         sold_out_pass = re.findall(r"soldOutPass\s*:\s*'(Y|N)'", scr_txt)[0]
         return (sold_out_pass == 'N')
 
-    def get_descr(self, txt: str):
+    def get_descr(self, soup: str | BeautifulSoup):
         """
         使用BeautifulSoup整理描述
         """
 
         descr = ""
-        soup = BeautifulSoup(txt, 'html.parser')
+        if isinstance(soup, str):
+            soup = BeautifulSoup(soup, 'html.parser')
 
         # 遍历所有子要素（包括纯文字）
         for child in soup.div.children:
-            if child.name and (child.name not in {'script', 'button', 'a', 'input', 'form', 'link'}): # HTML要素
-                child_str = str(child).strip()
-                if child_str:
-                    filt = False
-                    if '<img' in child_str:
-                        for f in self.DESCR_IMG_FILTERS:
-                            if f in child_str.lower(): # 过滤掉无用资料的图片
-                                filt = True
-                                break
-                    if not filt:
-                        descr += child_str
+            if child.name: # HTML要素
+                if child.name == 'div':
+                    descr += self.get_descr(child)
+                elif child.name not in {'script', 'button', 'a', 'input', 'form', 'link'}:
+                    child_str = str(child).strip()
+                    if child_str:
+                        filt = False
+                        if '<img' in child_str:
+                            for f in self.DESCR_IMG_FILTERS:
+                                if f in child_str.lower(): # 过滤掉无用资料的图片
+                                    filt = True
+                                    break
+                        if not filt:
+                            descr += child_str
             elif isinstance(child, str): # 纯文字
                 child_strip = child.strip()
                 if child_strip:
@@ -132,7 +136,7 @@ class SsgProds(scrapy.Spider):
                         descr += child_strip
 
         descr = " ".join(descr.split())
-        return f'<div class="ssg-descr">{descr}</div>' if descr else ""
+        return descr
 
     def get_specs_etc(self, response: HtmlResponse, selectors_th: str, selectors_td: str):
         """
