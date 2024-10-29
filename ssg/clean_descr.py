@@ -26,8 +26,12 @@ def get_descr(soup: str | BeautifulSoup):
     # 遍历所有子要素（包括纯文字）
     for child in soup.children:
         if child.name: # HTML要素
-            if child.name == 'div':
+            if (child.name == 'div'):
                 descr += get_descr(child)
+            elif (child.name == 'p'):
+                p_descr = get_descr(child)
+                if p_descr:
+                    descr += f'<p>{p_descr}</p>'
             elif child.name not in {'script', 'button', 'a', 'input', 'form', 'link'}:
                 child_str = str(child).strip()
                 if child_str:
