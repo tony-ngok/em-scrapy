@@ -8,10 +8,9 @@ from scrapy.http import HtmlResponse
 DESCR_IMG_FILTERS = ['%EB%B0%B0%EB%84%88', '/common/', '/top_banner', '/promotion',
                      '/brand', '/return', '/notice', '/ulfine', '/product/000000/', '/note',
                      '/delivery', '%EB%B0%B0%EC%86%A1', '%EB%B0%98%ED%92%88',
-                     '%EC%95%88%EB%82%B4', '%EA%B5%90%ED%99%98', '/front',
-                     '%ED%83%9D%EB%B0%B0', '%EC%BF%A0%ED%8F%B0', '/shipping',
-                     '%EA%B3%B5%EC%A7%80', '/gift', '%EA%B8%B0%ED%94%84%ED%8A%B8',
-                     '%EC%A0%80%EC%9E%91%EA%B6%8C', '/copyright']
+                     '%EC%95%88%EB%82%B4', '%EA%B5%90%ED%99%98', '%ED%83%9D%EB%B0%B0',
+                     '%EC%BF%A0%ED%8F%B0', '/shipping', '%EA%B3%B5%EC%A7%80', '/gift',
+                     '%EA%B8%B0%ED%94%84%ED%8A%B8', '%EC%A0%80%EC%9E%91%EA%B6%8C', '/copyright']
 DESCR_TXT_FILTERS = ['ssg.com', '저작권', 'copyright']
 
 
