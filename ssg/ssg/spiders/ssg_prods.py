@@ -5,6 +5,7 @@ from datetime import date, datetime
 
 import requests
 from bs4 import BeautifulSoup
+from bs4.element import Comment
 import scrapy
 from scrapy.http import HtmlResponse
 
@@ -110,10 +111,12 @@ class SsgProds(scrapy.Spider):
 
         # 遍历所有子要素（包括纯文字）
         for child in soup.children:
-            if child.name: # HTML要素
+            if isinstance(child, Comment):
+                continue
+            elif child.name: # HTML要素
                 if child.name == 'div':
                     descr += self.get_descr(child)
-                elif child.name == 'p':
+                elif child.name == 'p' or child.name == 'p':
                     p_descr = self.get_descr(child)
                     if p_descr:
                         descr += f'<p>{p_descr}</p>'
@@ -139,6 +142,7 @@ class SsgProds(scrapy.Spider):
                     if not txt_filt:
                         descr += child_strip
 
+        descr = re.sub(r'<a.*</a>', '', descr) # EM描述中不让包含<a>标签
         descr = " ".join(descr.split())
         return descr
 

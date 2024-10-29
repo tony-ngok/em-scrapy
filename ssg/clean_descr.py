@@ -1,7 +1,9 @@
 import json
 import os
+import re
 
 from bs4 import BeautifulSoup
+from bs4.element import Comment
 from scrapy.http import HtmlResponse
 
 
@@ -25,6 +27,8 @@ def get_descr(soup: str | BeautifulSoup):
 
     # 遍历所有子要素（包括纯文字）
     for child in soup.children:
+        if isinstance(child, Comment):
+            continue
         if child.name: # HTML要素
             if (child.name == 'div'):
                 descr += get_descr(child)
@@ -54,6 +58,7 @@ def get_descr(soup: str | BeautifulSoup):
                 if not txt_filt:
                     descr += child_strip
 
+    descr = re.sub(r'<a.*</a>', '', descr) # EM描述中不让包含<a>标签
     descr = " ".join(descr.split())
     return descr
 
