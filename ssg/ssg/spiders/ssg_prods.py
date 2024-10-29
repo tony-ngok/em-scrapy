@@ -413,7 +413,8 @@ class SsgProds(scrapy.Spider):
             for div in divx:
                 if div.css('*'):
                     div_str = " ".join(div.get().split())
-                    descr += self.get_descr(div_str)
+                    if div_str:
+                        descr += self.get_descr(div_str)
 
             item['description'] = descr+descr_table if descr or descr_table else None
 
