@@ -73,7 +73,8 @@ def main():
                 divx = response.css('body > div')
                 for div in divx:
                     if div.css('*'):
-                        descr += " ".join(div.get().split())
+                        descr_raw = " ".join(div.get().split())
+                        descr += get_descr(descr_raw)
 
                 descr = f'<div class="ssg-descr">{descr}</div>' if descr else ""
                 dat['description'] = descr+desc_table if descr or desc_table else None
