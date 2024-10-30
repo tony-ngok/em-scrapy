@@ -76,6 +76,4 @@ echo Program ssg_prod success
 goto end
 
 :end
-echo Pack up JSON...
-python jsons_list.py
 echo END
