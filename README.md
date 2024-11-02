@@ -14,3 +14,6 @@ EveryMarket业务：Scrapy抓取商品
 ## 任务管理看板（如Trello）使用注意事项
 1. 每天结束前在工作管理看板中写这一天做了什么
 2. 若有问题，尝试自己解决的同时，在看板内反馈，以便商量完成时间
+
+## MongoDB连结
+mongodb://mongouser:XSzY1nHbxi@34.172.204.102:27017
