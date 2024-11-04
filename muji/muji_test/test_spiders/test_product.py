@@ -164,7 +164,7 @@ class TestProduct(unittest.TestCase):
                 },
                 {
                     "name": "部材ごとの素材",
-                    "value": "本体：ガラス"
+                    "value": "本体、主要部品共にＰＰ"
                 },
                 {
                     "name": "消費電力",
@@ -193,7 +193,7 @@ class TestProduct(unittest.TestCase):
             ],
             "categories": "家具・収納・家電 > 家電・照明器具・時計 > 生活家電・AV家電",
             "images": "https://www.muji.com/public/media/img/item/4550344554586_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_01_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_02_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_03_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_04_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_05_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_06_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_07_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_08_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_09_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_10_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_11_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_12_org.jpg",
-            "price": 7.81,
+            "price": 45.89,
             "available_qty": None,
             "reviews": 65,
             "rating": 4.50,
@@ -220,10 +220,10 @@ class TestProduct(unittest.TestCase):
         target_product = {
             "url": url,
             "product_id": "44295236",
-            "existence": True,
+            "existence": False,
             "title": "フレグランスミスト　くつろぎブレンド",
-            "sku": "4550344554586",
-            "upc": "4550344554586",
+            "sku": "4550344295236",
+            "upc": "4550344295236",
             "brand": "無印良品",
             "specifications": [
                 {
@@ -264,7 +264,7 @@ class TestProduct(unittest.TestCase):
                 }
             ],
             "categories": "生活雑貨 > アロマ・ルームフレグランス > フレグランス",
-            "images": "https://www.muji.com/public/media/img/item/4550344554586_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_01_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_02_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_03_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_04_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_05_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_06_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_07_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_08_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_09_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_10_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_11_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_12_org.jpg",
+            "images": "https://www.muji.com/public/media/img/item/4550344295236_org.jpg;https://www.muji.com/public/media/img/item/4550344295236_01_org.jpg;https://www.muji.com/public/media/img/item/4550344295236_02_org.jpg;https://www.muji.com/public/media/img/item/4550344295236_03_org.jpg",
             "price": 11.09,
             "available_qty": 0,
             "reviews": 83,
