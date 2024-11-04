@@ -1,3 +1,8 @@
+import os
+import sys
+here = os.path.dirname(__file__)
+sys.path.append(os.path.join(here, '..'))
+
 from datetime import datetime
 from json import loads
 from re import findall
