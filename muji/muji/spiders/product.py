@@ -59,10 +59,14 @@ class MujiProduct(scrapy.Spider):
         add_descr = []
         weight_str = ""
 
-        to_add_to_descr = ['使用', '方法', '取扱', '注意', '事項', '成分'] # 参数名含有这些字的，要加入表格描述
+        # 参数名含有这些字的，要加入表格描述
+        to_add_to_descr = ['使用方法', '取扱', '注意', '事項', '成分']
 
         # 参数名为这些字的，参数值为重复的描述内容（使用方法、使用上注意事项），因而跳过
-        to_filter = {'お取扱い上のご注意', 'お取扱い上のご注意２', 'お取扱い上のご注意３', 'お取扱い上のご注意４', 'お取扱い上のご注意５'} 
+        speck_to_filter = {'お取扱い上のご注意', 'お取扱い上のご注意２', 'お取扱い上のご注意３', 'お取扱い上のご注意４', 'お取扱い上のご注意５'}
+
+        # 要过滤掉的参数值
+        specv_to_filter = {'ー', '取扱説明書に従って正しくお使いください'}
 
         specs_kmatch = findall(r'{\\\"className\\\":\\\"HeaderCell_cellValue__4rOy0\\\",[^$]*\\\"children\\\":\\\"([^$]*)\\\"}', txt)
         specs_vmatch = findall(r'{\\\"className\\\":\\\"Cell_cellValue__B2F5r\\\",[^$]*\\\"children\\\":\\\"([^$]*)\\\"}', txt)
@@ -71,7 +75,7 @@ class MujiProduct(scrapy.Spider):
                 speck = speck.strip()
                 specv = specv.strip()
 
-                if not ((speck in speck_set) or (specv == 'ー') or (speck in to_filter)):
+                if not ((speck in speck_set) or (speck in speck_to_filter) or (specv in specv_to_filter)):
                     speck_set.add(speck)
 
                     add_to_descr = False
