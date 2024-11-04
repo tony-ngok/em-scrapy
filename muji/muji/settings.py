@@ -92,25 +92,11 @@ REQUEST_FINGERPRINTER_IMPLEMENTATION = "2.7"
 TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 FEED_EXPORT_ENCODING = "utf-8"
 
-FEED_EXPORTERS = {
-    'csv': 'muji.exporters.CsvCustomSeperator'
-}
-
-LOG_FILE = 'scrapy.log'
+LOG_FILE = 'muji.log'
 LOG_LEVEL = 'DEBUG'
 
-DOWNLOAD_HANDLERS = {
-    "http": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
-    "https": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
-}
-
-PLAYWRIGHT_BROWSER_TYPE = 'chromium'  # or 'firefox' or 'webkit'
-PLAYWRIGHT_LAUNCH_OPTIONS = {
-    # "headless": True,
-    "headless": False,
-    'args': [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-features=site-per-process', 
-    ],
-}
+HAS_RECENSIONS = True
+HAS_SHIP_FEE = True
+DAYS_BEF = 1
+HAS_RECENSIONS = True
+HAS_SHIP_FEE = True

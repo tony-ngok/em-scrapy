@@ -1,40 +1,38 @@
-from json import dumps, load
+from json import dumps
 from re import findall
 
 import scrapy
 from scrapy.http import HtmlResponse
 
+from muji.muji_categories import categories
 
-# scrapy crawl muji_prod_url -O muji_prod_urls.json
+
+# scrapy crawl muji_prod_url
 class MujiProductUrl(scrapy.Spider):
     name = "muji_prod_url"
     allowed_domains = ["www.muji.com"]
-    start_urls = []
+    start_urls = categories
     prod_ids = set()
+    pid_output = "prod_ids.txt"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        with open('muji_categories.json', 'r') as f:
-            categories = load(f)
-        self.start_urls = [c['cat_url'] for c in categories]
-        print(f'Total {len(self.start_urls):_} categories'.replace("_", "."))
+        self.retry = False
 
     def get_headers(self, referer: str):
         return {
             "Accept": "*/*",
-            # "Accept-Encoding": "gzip, deflate, br, zstd", # 若发现请求回答内容奇怪，试着不用这个请求头
             "Accept-Language": "pt-PT,pt;q=0.8,en-GB;q=0.5,en;q=0.3",
             "Content-Type": "application/json",
             "Referer": referer,
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0"
         }
-    
+
     def get_cat_no(self, url: str):
         """
         从URL中提取出分类号
         """
-        
+
         cat_match = findall(r'/cmdty/section/(S[0-9]+)', url)
         if cat_match:
             return cat_match[0]
@@ -61,13 +59,12 @@ class MujiProductUrl(scrapy.Spider):
         }
 
         return dumps(payload)
-    
+
     def start_requests(self):
-        # self.start_urls = ['https://www.muji.com/jp/ja/store/cmdty/section/S1070204?web_store=web_section_lv3_search_by_category'] # test
         for i, cu in enumerate(self.start_urls, start=1):
             print(f"{i:_}".replace('_', '.'), cu)
             cat_no = self.get_cat_no(cu)
-            
+
             yield scrapy.Request('https://www.muji.com/jp/ja/ec-bff/graphql', headers=self.get_headers(cu),
                                  meta={
                                          'cat_url': cu,
@@ -99,9 +96,7 @@ class MujiProductUrl(scrapy.Spider):
             prod_id = prod['janCode']
             if prod_id not in self.prod_ids:
                 self.prod_ids.add(prod_id)
-                yield {
-                    "prod_url": 'https://www.muji.com/jp/ja'+prod['link']
-                }
+                self.write_pid(prod_id)
 
         # 翻页
         if has_more:
@@ -115,6 +110,9 @@ class MujiProductUrl(scrapy.Spider):
                                  method='POST',
                                  callback=self.parse)
 
-    def closed(self, reason):
-        # print(self.prod_ids)
-        print(f"{len(self.prod_ids):_} unique products".replace('_', '.'))
+    def write_pid(self, pid: str):
+        mod = 'a' if self.retry else 'w'
+        with open(self.pid_output, mod, encoding='utf-8') as f:
+            f.write(pid+'\n')
+        if not self.retry:
+            self.retry = True
