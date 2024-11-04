@@ -104,8 +104,9 @@ class MujiProduct(scrapy.Spider):
 
     def start_requests(self):
         for i, pu in enumerate(self.start_urls, start=1):
-            print(f"{i:_}".replace('_', '.'), pu)
-            yield scrapy.Request(pu, headers=self.headers, meta={ 'url': pu }, callback=self.parse)
+            url = 'https://www.muji.com/jp/ja/store/cmdty/detail/'+pu
+            print(f"{i:_}".replace('_', '.'), 'https://www.muji.com/jp/ja/store/cmdty/detail/'+pu)
+            yield scrapy.Request(url, headers=self.headers, meta={ 'url': url }, callback=self.parse)
 
     def parse(self, response: HtmlResponse):
         prod_cont = ""
@@ -127,10 +128,12 @@ class MujiProduct(scrapy.Spider):
             prod_cont = loads(prod_cont)
             prod_json = prod_cont['hasVariant'][0] # 商品无实际变种
         except:
+            print("No product JSON")
             return
 
         images = ";".join(prod_json.get('image', []))
         if not images:
+            print("No images")
             return
 
         prod_id = prod_json['mpn']
