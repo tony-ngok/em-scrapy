@@ -124,11 +124,11 @@ class MujiProduct(scrapy.Spider):
         for i, pu in enumerate(self.start_urls, start=1):
             url = 'https://www.muji.com/jp/ja/store/cmdty/detail/'+pu
             print(f"{i:_}".replace('_', '.'), 'https://www.muji.com/jp/ja/store/cmdty/detail/'+pu)
-            yield scrapy.Request(url, headers=self.headers, meta={ 'url': url }, callback=self.parse)
+            yield scrapy.Request(url, headers=self.headers, callback=self.parse)
 
     def parse(self, response: HtmlResponse):
         if response.status == 404:
-            print(response.meta['url'], "Product not found")
+            print(response.url, "Product not found")
             return
 
         prod_cont = ""
@@ -176,7 +176,7 @@ class MujiProduct(scrapy.Spider):
             categories = " > ".join(cat_list)
 
         price_jpy = float(prod_json['offers']['price'])
-        price = round(price_jpy*self.JPY_TO_USD, 2)
+        price = round(price_jpy*self.jpy_rate, 2)
 
         reviews = None
         rating = None
@@ -189,7 +189,7 @@ class MujiProduct(scrapy.Spider):
 
         yield {
             "date": datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
-            "url": response.meta['url'],
+            "url": response.url,
             "source": "MUJI",
             "product_id": prod_id,
             "existence": existence,
