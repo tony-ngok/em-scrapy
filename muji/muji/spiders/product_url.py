@@ -4,7 +4,7 @@ from re import findall
 import scrapy
 from scrapy.http import HtmlResponse
 
-from muji.muji_categories import categories
+from muji_categories import categories
 
 
 # scrapy crawl muji_prod_url

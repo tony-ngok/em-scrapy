@@ -1,3 +1,6 @@
+import sys
+sys.path.append('..')
+
 from datetime import datetime
 from json import loads
 from re import findall

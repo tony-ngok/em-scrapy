@@ -17,7 +17,7 @@ class MongoPipeLine1:
     """
 
     file_root = "products{}.txt" # 临时存取抓到的批量数据
-    
+
     def __init__(self, uri: str, db_name: str, coll_name: str, batch_size: int, max_tries: int, days_bef: int, has_vars: bool, has_recensions: bool, has_ship_fee: bool):
         self.uri = uri
         self.db_name = db_name
@@ -35,6 +35,7 @@ class MongoPipeLine1:
 
     @classmethod
     def from_crawler(cls, crawler: Crawler):
+        print("debug")
         spider = cls(
             uri=crawler.settings.get("MONGO_URI"),
             db_name=crawler.settings.get("MONGO_DB_NAME"),
@@ -46,6 +47,7 @@ class MongoPipeLine1:
             has_recensions=crawler.settings.getbool("HAS_RECENSIONS", False),
             has_ship_fee=crawler.settings.getbool("HAS_SHIP_FEE", False)
         )
+
         return spider
 
     def open_spider(self, spider: Spider):
@@ -68,22 +70,22 @@ class MongoPipeLine1:
 
         dat = ItemAdapter(item).asdict()
         self.records += 1
-        
+
         # 连续写1000条记录到文件
-        batchdatei = self.file_root.format(self.batch_no)
-        with open(batchdatei, 'a', encoding='utf-8') as f:
+        batchfile = self.file_root.format(self.batch_no)
+        with open(batchfile, 'a', encoding='utf-8') as f:
             json.dump(dat, f, ensure_ascii=False)
             f.write("\n")
-        
+
         if self.records % self.batch_size == 0:
             self.batch_no += 1
             print("Stage", self.batch_no)
 
-            uos = get_uos(batchdatei)
+            uos = get_uos(batchfile)
             if bulk_write(uos, self.coll, self.max_tries):
                 spider.logger.info(f"Batch {self.batch_no} done")
                 print("Stage", self.batch_no, "done")
-                os.remove(batchdatei)
+                os.remove(batchfile)
             else:
                 print("bulk_write fail")
             self.switch = True
@@ -92,15 +94,15 @@ class MongoPipeLine1:
 
     def close_spider(self, spider: Spider):
         if not self.switch:
-            batchdatei = self.file_root.format(self.batch_no)
+            batchfile = self.file_root.format(self.batch_no)
             self.batch_no += 1
             print("Stage", self.batch_no)
 
-            uos = get_uos(batchdatei)
+            uos = get_uos(batchfile)
             if bulk_write(uos, self.coll, self.max_tries):
                 spider.logger.info(f"Batch {self.batch_no} done")
                 print("Stage", self.batch_no, "done")
-                os.remove(batchdatei)
+                os.remove(batchfile)
             else:
                 spider.logger.error(f"Batch {self.batch_no} fail")
                 print("Bulk write fail")
