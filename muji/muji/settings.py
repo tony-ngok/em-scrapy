@@ -95,6 +95,12 @@ FEED_EXPORT_ENCODING = "utf-8"
 LOG_FILE = 'muji.log'
 LOG_LEVEL = 'DEBUG'
 
+HTTPERROR_ALLOWED_CODES = [400, 404]
+
+# https://docs.scrapy.org/en/2.11/topics/downloader-middleware.html?highlight=retry
+RETRY_HTTP_CODES = [401, 403, 408, 429, 500, 502, 503, 504, 522, 524]
+RETRY_TIMES = 10000
+
 HAS_RECENSIONS = True
 HAS_SHIP_FEE = True
 DAYS_BEF = 1

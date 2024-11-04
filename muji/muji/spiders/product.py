@@ -55,25 +55,39 @@ class MujiProduct(scrapy.Spider):
         """
 
         specs = []
+        speck_set = set()
         add_descr = []
         weight_str = ""
+
+        to_add_to_descr = ['使用', '方法', '取扱', '注意', '事項', '成分'] # 参数名含有这些字的，要加入表格描述
+
+        # 参数名为这些字的，参数值为重复的描述内容（使用方法、使用上注意事项），因而跳过
+        to_filter = {'お取扱い上のご注意', 'お取扱い上のご注意２', 'お取扱い上のご注意３', 'お取扱い上のご注意４', 'お取扱い上のご注意５'} 
 
         specs_kmatch = findall(r'{\\\"className\\\":\\\"HeaderCell_cellValue__4rOy0\\\",[^$]*\\\"children\\\":\\\"([^$]*)\\\"}', txt)
         specs_vmatch = findall(r'{\\\"className\\\":\\\"Cell_cellValue__B2F5r\\\",[^$]*\\\"children\\\":\\\"([^$]*)\\\"}', txt)
         if specs_kmatch and specs_vmatch:
             for speck, specv in zip(specs_kmatch, specs_vmatch):
-                if specv == 'ー':
-                    continue
-                if ('使用' in speck) or ('方法' in speck) or ('取扱' in speck) or ('注意' in speck) or ('事項' in speck):
-                    add_descr.append((speck, specv))
-                else:
-                    specs.append({
-                        "name": speck,
-                        "value": specv
-                    })
+                speck = speck.strip()
+                specv = specv.strip()
 
-                    if '重量' in speck:
-                        weight_str = specv
+                if not ((speck in speck_set) or (specv == 'ー') or (speck in to_filter)):
+                    speck_set.add(speck)
+
+                    add_to_descr = False
+                    for tatd in to_add_to_descr:
+                        if tatd in speck:
+                            add_descr.append((speck, specv))
+                            add_to_descr = True
+                            break
+                    if not add_to_descr:
+                        specs.append({
+                            "name": speck,
+                            "value": specv
+                        })
+
+                        if '重量' in speck:
+                            weight_str = specv
 
         return (specs if specs else None), add_descr, weight_str
 
@@ -109,6 +123,10 @@ class MujiProduct(scrapy.Spider):
             yield scrapy.Request(url, headers=self.headers, meta={ 'url': url }, callback=self.parse)
 
     def parse(self, response: HtmlResponse):
+        if response.status == 404:
+            print(response.meta['url'], "Product not found")
+            return
+
         prod_cont = ""
         prod_specs = ""
 
