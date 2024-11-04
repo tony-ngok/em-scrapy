@@ -159,7 +159,14 @@ class MujiProduct(scrapy.Spider):
             return
 
         prod_id = prod_json['mpn']
-        existence = 'instock' in prod_json['offers']['availability'].lower()
+
+        existence = True
+        unavail = {'outofstock', 'soldout'}
+        for u in unavail:
+            if u in prod_json['offers']['availability'].lower():
+                existence = False
+                break
+
         title = prod_json['name']
 
         descr1 = " ".join(response.css('div.ItemDescriptionChildren_tab__pc__JAWSY > p.ItemDescription_description__e_erj').get("").strip().split())
