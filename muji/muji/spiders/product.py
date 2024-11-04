@@ -176,7 +176,7 @@ class MujiProduct(scrapy.Spider):
             categories = " > ".join(cat_list)
 
         price_jpy = float(prod_json['offers']['price'])
-        price = round(price_jpy*self.jpy_rate, 2)
+        price = round(price_jpy/self.jpy_rate, 2)
 
         reviews = None
         rating = None
@@ -184,7 +184,7 @@ class MujiProduct(scrapy.Spider):
             reviews = prod_json['aggregateRating'].get('reviewCount')
             rating = prod_json['aggregateRating'].get('ratingValue')
 
-        ship_fee = round(500*self.jpy_rate, 2) if price_jpy < 5000 else 0.00
+        ship_fee = round(500/self.jpy_rate, 2) if price_jpy < 5000 else 0.00
         weight = self.get_weight(weight_str.lower()) if weight_str else None
 
         yield {
