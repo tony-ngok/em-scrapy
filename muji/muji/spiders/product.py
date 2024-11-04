@@ -60,7 +60,7 @@ class MujiProduct(scrapy.Spider):
         weight_str = ""
 
         to_add_to_descr = ['使用', '方法', '取扱', '注意', '事項', '成分'] # 参数名含有这些字的，要加入表格描述
-        
+
         # 参数名为这些字的，参数值为重复的描述内容（使用方法、使用上注意事项），因而跳过
         to_filter = {'お取扱い上のご注意', 'お取扱い上のご注意２', 'お取扱い上のご注意３', 'お取扱い上のご注意４', 'お取扱い上のご注意５'} 
 
@@ -123,6 +123,10 @@ class MujiProduct(scrapy.Spider):
             yield scrapy.Request(url, headers=self.headers, meta={ 'url': url }, callback=self.parse)
 
     def parse(self, response: HtmlResponse):
+        if response.status == 404:
+            print(response.meta['url'], "Product not found")
+            return
+
         prod_cont = ""
         prod_specs = ""
 
