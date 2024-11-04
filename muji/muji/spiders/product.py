@@ -31,11 +31,11 @@ class MujiProduct(scrapy.Spider):
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0"
         }
 
-        with open('prod_ids.txt', 'r', encoding='utf-8') as f:
-            for line in f:
-                if line.strip():
-                    self.start_urls.append(line.strip())
-        print(f'Total {len(self.start_urls):_} products'.replace("_", "."))
+        # with open('prod_ids.txt', 'r', encoding='utf-8') as f:
+        #     for line in f:
+        #         if line.strip():
+        #             self.start_urls.append(line.strip())
+        # print(f'Total {len(self.start_urls):_} products'.replace("_", "."))
 
         self.jpy_rate = 152.327692
         # try:

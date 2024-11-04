@@ -3,9 +3,10 @@ import unittest
 from scrapy.utils.test import get_crawler
 from scrapy.http import HtmlResponse
 
-from muji.muji.spiders.product import MujiProduct
+from muji.spiders.product import MujiProduct
 
 
+# python -m muji_test.test_spiders.test_product
 class TestProduct(unittest.TestCase):
     def setUp(self):
         self.crawler = get_crawler(MujiProduct)
@@ -15,7 +16,7 @@ class TestProduct(unittest.TestCase):
         url = "https://www.muji.com/jp/ja/store/cmdty/detail/4550002868284"
         with open("muji_test/pages/アロマストーン _ 無印良品.html", "rb") as file:
             body = file.read()
-        
+
         response = HtmlResponse(
             url=url,
             body=body,
@@ -71,7 +72,7 @@ class TestProduct(unittest.TestCase):
         url = "https://www.muji.com/jp/ja/store/cmdty/detail/4550344594056"
         with open("muji_test/pages/インテリアフレグランスオイル _ 無印良品.html", "rb") as file:
             body = file.read()
-        
+
         response = HtmlResponse(
             url=url,
             body=body,
@@ -122,12 +123,12 @@ class TestProduct(unittest.TestCase):
 
         for key in target_product:
             self.assertEqual(product[key], target_product[key])
-    
+
     def test_available_product_3(self):
         url = "https://www.muji.com/jp/ja/store/cmdty/detail/4550344554586"
         with open("muji_test/pages/超音波うるおいアロマディフューザー _ 無印良品.html", "rb") as file:
             body = file.read()
-        
+
         response = HtmlResponse(
             url=url,
             body=body,
@@ -203,3 +204,78 @@ class TestProduct(unittest.TestCase):
         for key in target_product:
             self.assertEqual(product[key], target_product[key])
 
+    def test_unavailable_product(self):
+        url = "https://www.muji.com/jp/ja/store/cmdty/detail/4550344295236"
+        with open("muji_test/pages/フレグランスミスト　くつろぎブレンド _ 無印良品.html", "rb") as file:
+            body = file.read()
+
+        response = HtmlResponse(
+            url=url,
+            body=body,
+        )
+        result = list(self.spider.parse(response))
+        self.assertEqual(len(result), 1)
+        product = result[0]
+
+        target_product = {
+            "url": url,
+            "product_id": "44295236",
+            "existence": True,
+            "title": "フレグランスミスト　くつろぎブレンド",
+            "sku": "4550344554586",
+            "upc": "4550344554586",
+            "brand": "無印良品",
+            "specifications": [
+                {
+                    "name": "原産国・地域",
+                    "value": "日本"
+                },
+                {
+                    "name": "仕様・混率",
+                    "value": "フレグランスミスト　くつろぎブレンド"
+                },
+                {
+                    "name": "外寸",
+                    "value": "W3.2cmxD3.2cmxH12.9cm(ケース入）"
+                },
+                {
+                    "name": "容量",
+                    "value": "28mL"
+                },
+                {
+                    "name": "部材ごとの素材",
+                    "value": "箱：紙　ポンプ：PP、PE　キャップ：PP"
+                },
+                {
+                    "name": "アルコール使用",
+                    "value": "使用"
+                },
+                {
+                    "name": "スプレーｏｒポンプヘッド",
+                    "value": "スプレーヘッド"
+                },
+                {
+                    "name": "光毒性の有無",
+                    "value": "無"
+                },
+                {
+                    "name": "重量（梱包材含む）",
+                    "value": "約90g"
+                }
+            ],
+            "categories": "生活雑貨 > アロマ・ルームフレグランス > フレグランス",
+            "images": "https://www.muji.com/public/media/img/item/4550344554586_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_01_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_02_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_03_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_04_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_05_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_06_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_07_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_08_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_09_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_10_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_11_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_12_org.jpg",
+            "price": 11.09,
+            "available_qty": 0,
+            "reviews": 83,
+            "rating": 4.70,
+            "shipping_fee": 3.28,
+            "weight": 0.20
+        }
+
+        for key in target_product:
+            self.assertEqual(product[key], target_product[key])
+
+
+if __name__ == '__main__':
+    unittest.main()
