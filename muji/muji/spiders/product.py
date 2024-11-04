@@ -1,7 +1,7 @@
 import os
 import sys
 here = os.path.dirname(__file__)
-sys.path.append(os.path.join(here, '..'))
+sys.path.append('..')
 
 from datetime import datetime
 from json import loads
