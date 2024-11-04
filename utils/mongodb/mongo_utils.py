@@ -23,7 +23,7 @@ def gen_uo(dat: dict, has_vars: bool = False, has_recensions: bool = False, has_
     dat.pop('existence')
     dat.pop('price')
     dat.pop('available_qty')
-    
+
     if has_vars:
         updates["variants"] = dat["variants"]
         dat.pop('variants')
