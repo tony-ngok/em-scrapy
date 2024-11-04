@@ -35,6 +35,7 @@ class MongoPipeLine1:
 
     @classmethod
     def from_crawler(cls, crawler: Crawler):
+        print("debug")
         spider = cls(
             uri=crawler.settings.get("MONGO_URI"),
             db_name=crawler.settings.get("MONGO_DB_NAME"),
@@ -46,6 +47,7 @@ class MongoPipeLine1:
             has_recensions=crawler.settings.getbool("HAS_RECENSIONS", False),
             has_ship_fee=crawler.settings.getbool("HAS_SHIP_FEE", False)
         )
+
         return spider
 
     def open_spider(self, spider: Spider):
@@ -90,7 +92,7 @@ class MongoPipeLine1:
 
         return item
 
-    def close_spider(self, spider: Spider):
+    def close_spider(self, spider: Spider, reason):
         if not self.switch:
             batchdatei = self.file_root.format(self.batch_no)
             self.batch_no += 1
