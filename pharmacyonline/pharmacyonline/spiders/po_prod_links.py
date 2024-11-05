@@ -45,6 +45,7 @@ class PoProdLinks(scrapy.Spider):
         cat_name_match = re.findall(r'\"categoryName\"\s*:\s*\"([^\"]+)\"', cat_str_sel)
         if cat_name_match:
             cat_name = cat_name_match[0]
+            print(cat_name)
             payload = self.gen_payload(cat_name)
             yield scrapy.Request('https://aucs33.ksearchnet.com/cs/v2/search',
                                  headers=self.HEADERS,
