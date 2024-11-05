@@ -51,6 +51,7 @@ class PoProdLinks(scrapy.Spider):
                                  headers=self.HEADERS,
                                  body=json.dumps(payload),
                                  callback=self.parse,
+                                 method='POST',
                                  cb_kwargs={ "i": i, "cat_name": cat_name })
 
     def gen_payload(self, cat_name: str, p: int = 0):
