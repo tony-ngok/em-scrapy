@@ -9,7 +9,7 @@ class POCategories(scrapy.Spider):
     """
     首页子分类内容为传统HTML，因此可直接用Scrapy抓取
     """
-    
+
     name = "po_cats"
     allowed_domains = ['www.pharmacyonline.com.au']
     start_urls = ['https://www.pharmacyonline.com.au/']
@@ -24,7 +24,7 @@ class POCategories(scrapy.Spider):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.retry = False
-    
+
     def start_requests(self):
         for url in self.start_urls:
             yield scrapy.Request(url, headers=self.HEADERS, callback=self.parse)
