@@ -5,7 +5,7 @@ import scrapy
 from scrapy.http import HtmlResponse
 
 
-# scrapy crawl aop_prod_url -O aop_prod_urls.json
+# scrapy crawl aop_prod_url
 class AopProductUrl(scrapy.Spider):
     name = "aop_prod_url"
     allowed_domains = ["australianorganicproducts.com.au"]
@@ -16,7 +16,6 @@ class AopProductUrl(scrapy.Spider):
         super().__init__(*args, **kwargs)
         self.headers = {
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8",
-            # "Accept-Encoding": "gzip, deflate, br, zstd", # 若发现请求回答内容奇怪，试着不用这个请求头
             "Accept-Language": "es-ES,es;q=0.8,en-GB;q=0.5,en;q=0.3",
             "Referer": "https://australianorganicproducts.com.au/",
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0"
@@ -28,7 +27,6 @@ class AopProductUrl(scrapy.Spider):
         print(f'Total {len(self.start_urls):_} categories'.replace("_", "."))
 
     def start_requests(self):
-        # self.start_urls = ['https://australianorganicproducts.com.au/collections/gift-ideas'] # test
         for i, cu in enumerate(self.start_urls, start=1):
             print(f"{i:_}".replace('_', '.'), cu)
             yield scrapy.Request(cu, headers=self.headers,
@@ -79,5 +77,4 @@ class AopProductUrl(scrapy.Spider):
                                  callback=self.parse)
 
     def closed(self, reason):
-        # print(self.prod_strs)
         print(f"{len(self.prod_strs):_} unique products".replace('_', '.'))
