@@ -140,13 +140,13 @@ class POProductSpider(scrapy.Spider):
         """
 
         if response.status == 404:
-            print("Product not found")
+            print("Product not found:", response.url)
             return
 
         # 没有图的商品卖不出去，只能扔掉
         images, videos = self.get_media(response)
         if not (images or videos):
-            print("No media")
+            print("No media:", response.url)
             return
         if not videos:
             videos = None
