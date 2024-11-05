@@ -177,7 +177,7 @@ class POProductSpider(scrapy.Spider):
 
         yield {
             "date": datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
-            "url": response.meta['url'],
+            "url": response.url,
             "source": "Pharmacy Online",
             "product_id": prod_id,
             "existence": existence,
