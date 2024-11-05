@@ -43,7 +43,6 @@ class PoProdLinks(scrapy.Spider):
 
         cat_str_sel = response.css('script#klevu_page_meta::text').get('')
         cat_name_match = re.findall(r'\"categoryName\"\s*:\s*\"([^\"]+)\"', cat_str_sel)
-        print(cat_name_match)
         if cat_name_match:
             cat_name = cat_name_match[0]
             payload = self.gen_payload(cat_name)
@@ -107,6 +106,7 @@ class PoProdLinks(scrapy.Spider):
                                         headers=self.HEADERS,
                                         body=json.dumps(payload),
                                         callback=self.parse,
+                                        method='POST',
                                         cb_kwargs={ "i": i, "cat_name": cat_name, "p": p+1 })
 
     def write_url(self, prod_url: str, weight_g: int = 0):
