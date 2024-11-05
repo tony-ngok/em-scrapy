@@ -28,8 +28,6 @@ class PoProdLinks(scrapy.Spider):
                 if line.strip():
                     self.start_urls.append(line.strip())
 
-
-
     def start_requests(self):
         for i, todo in enumerate(self.start_urls):
             yield scrapy.Request('https://www.pharmacyonline.com.au/'+todo, headers=self.HEADERS,
