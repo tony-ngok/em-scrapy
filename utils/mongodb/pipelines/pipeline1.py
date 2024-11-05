@@ -35,7 +35,6 @@ class MongoPipeLine1:
 
     @classmethod
     def from_crawler(cls, crawler: Crawler):
-        print("debug")
         spider = cls(
             uri=crawler.settings.get("MONGO_URI"),
             db_name=crawler.settings.get("MONGO_DB_NAME"),
