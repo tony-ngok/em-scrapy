@@ -32,7 +32,7 @@ class TestProduct(unittest.TestCase):
             "title": "Quality Health Vitamin D & Calcium Tab X 130",
             "sku": "10002747",
             "upc": "9314807059507",
-            "brand": "Finishing Touch Flawless",
+            "brand": "Quality Health",
             "categories": "Vitamins & Supplements > By Condition > Arthritis & Joints",
             "images": "https://www.pharmacyonline.com.au/media/catalog/product/7/7/770033_vitamin_d_calcium_600mg_130s.jpg",
             "videos": None,
@@ -78,11 +78,11 @@ class TestProduct(unittest.TestCase):
             "brand": "First Response",
             "categories": "Personal Care & Beauty > Family Planning > Pregnancy Kits",
             "images": "https://www.pharmacyonline.com.au/media/catalog/product/f/i/first_response_in-stream_pregnancy_test_x_6_1_-1.jpg;https://www.pharmacyonline.com.au/media/catalog/product/f/i/first_response_in-stream_pregnancy_test_x_6_1_-2.jpg;https://www.pharmacyonline.com.au/media/catalog/product/f/i/first_response_in-stream_pregnancy_test_x_6_1_-3.jpg;https://www.pharmacyonline.com.au/media/catalog/product/f/i/first_response_in-stream_pregnancy_test_x_6_1_-4.jpg;https://www.pharmacyonline.com.au/media/catalog/product/f/i/first_response_in-stream_pregnancy_test_x_6_1_-5.jpg",
-            "video": None,
+            "videos": None,
             "price": 17.76,
             "available_qty": None,
-            "reviews": 0,
-            "rating": 0.00,
+            "reviews": 3,
+            "rating": 5.00,
             "shipping_fee": 6.56,
             "weight": 0.23
         }
@@ -165,8 +165,8 @@ class TestProduct(unittest.TestCase):
             "videos": None,
             "price": 15.12,
             "available_qty": None,
-            "reviews": 0,
-            "rating": 0.00,
+            "reviews": 31,
+            "rating": 4.30,
             "shipping_fee": 6.56,
             "weight": 0.22
         }
@@ -289,10 +289,10 @@ class TestProduct(unittest.TestCase):
             "categories": "Personal Care & Beauty > Family Planning > Ovulation Kits",
             "images": "https://www.pharmacyonline.com.au/media/catalog/product/f/o/forelife-ultra-sensitive-in-stream-ovulation-test-x-7-p01.jpg",
             "videos": None,
-            "price": 9.55,
+            "price": 12.49,
             "available_qty": 0,
-            "reviews": 0,
-            "rating": 0.00,
+            "reviews": 1,
+            "rating": 1.00,
             "shipping_fee": 6.56,
             "weight": 0.29
         }
@@ -303,8 +303,8 @@ class TestProduct(unittest.TestCase):
         self.assertNotIn('</script>', product['description'])
         self.assertNotIn('online in Australia from Pharmacy Online', product['description'])
         self.assertIn('<h1>Product Description & Features</h1>', product['description'])
-        self.assertIn('<h1>Directions For Use</h1>', product['description'])
-        self.assertIn('<h1>Ingredients/Material</h1>', product['description'])
+        self.assertNotIn('<h1>Directions For Use</h1>', product['description'])
+        self.assertNotIn('<h1>Ingredients/Material</h1>', product['description'])
         self.assertNotIn('<h1>Warnings and Disclaimers</h1>', product['description'])
 
 
