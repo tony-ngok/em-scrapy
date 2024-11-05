@@ -5,7 +5,6 @@ sys.path.append('..')
 from datetime import datetime
 from html import unescape
 from json import loads
-from re import findall
 
 # import requests
 from bs4 import BeautifulSoup, Tag
@@ -109,7 +108,7 @@ class POProductSpider(scrapy.Spider):
         media_list = None
         for scr in response.css('script[type="text/x-magento-init"]::text').getall():
             if 'mage/gallery/gallery' in scr:
-                media_list = loads(scr)['mage/gallery/gallery'].get('data', [])
+                media_list = loads(scr)['[data-gallery-role=gallery-placeholder]']['mage/gallery/gallery'].get('data', [])
             if media_list:
                 for med in media_list:
                     if (med['type'] == 'image') and ('thumb_prescription_pharmacy' not in med['full']):
