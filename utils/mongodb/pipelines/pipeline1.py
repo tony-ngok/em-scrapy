@@ -8,7 +8,7 @@ from pymongo.errors import ConnectionFailure, NetworkTimeout
 from scrapy import Spider
 from scrapy.crawler import Crawler
 
-from utils.mongodb.mongo_utils import bulk_write, get_uos, update_sold_out
+from mongodb.mongo_utils import bulk_write, get_uos, update_sold_out
 
 
 class MongoPipeLine1:

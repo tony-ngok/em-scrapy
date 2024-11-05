@@ -1,4 +1,4 @@
-# Scrapy settings for emscraper project
+# Scrapy settings for pharmacyonline project
 #
 # For simplicity, this file contains only settings considered important or
 # commonly used. You can find more settings consulting the documentation:
@@ -7,17 +7,17 @@
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
-BOT_NAME = "emscraper"
+BOT_NAME = "pharmacyonline"
 
-SPIDER_MODULES = ["emscraper.spiders"]
-NEWSPIDER_MODULE = "emscraper.spiders"
+SPIDER_MODULES = ["pharmacyonline.spiders"]
+NEWSPIDER_MODULE = "pharmacyonline.spiders"
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = "emscraper (+http://www.yourdomain.com)"
+#USER_AGENT = "pharmacyonline (+http://www.yourdomain.com)"
 
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = True
+ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
@@ -45,13 +45,13 @@ ROBOTSTXT_OBEY = True
 # Enable or disable spider middlewares
 # See https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 #SPIDER_MIDDLEWARES = {
-#    "emscraper.middlewares.EmscraperSpiderMiddleware": 543,
+#    "pharmacyonline.middlewares.POSpiderMiddleware": 543,
 #}
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #DOWNLOADER_MIDDLEWARES = {
-#    "emscraper.middlewares.EmscraperDownloaderMiddleware": 543,
+#    "pharmacyonline.middlewares.PODownloaderMiddleware": 543,
 #}
 
 # Enable or disable extensions
@@ -63,7 +63,7 @@ ROBOTSTXT_OBEY = True
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 #ITEM_PIPELINES = {
-#    "emscraper.pipelines.EmscraperPipeline": 300,
+#    "pharmacyonline.pipelines.POPipeline": 300,
 #}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -92,10 +92,19 @@ REQUEST_FINGERPRINTER_IMPLEMENTATION = "2.7"
 TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 FEED_EXPORT_ENCODING = "utf-8"
 
-# https://stackoverflow.com/questions/51376353/how-to-change-csv-exporter-separator-in-scrapy-to-semicolon
-FEED_EXPORTERS = {
-    'csv': 'emscraper.exporters.CsvCustomSeperator'
-}
+LOG_FILE = 'pharmacyonline.log'
+LOG_LEVEL = 'INFO'
 
-LOG_FILE = 'scrapy.log'
-LOG_LEVEL = 'DEBUG'
+HTTPERROR_ALLOWED_CODES = [400, 404]
+
+# https://docs.scrapy.org/en/2.11/topics/downloader-middleware.html?highlight=retry
+RETRY_HTTP_CODES = [401, 403, 408, 429, 500, 502, 503, 504, 522, 524]
+RETRY_TIMES = 10000
+
+MONGO_URI = "mongodb://mongouser:XSzY1nHbxi@34.172.204.102:27017"
+MONGO_DB_NAME = "pharmacyonline"
+DAYS_BEF = 1
+
+HAS_VARS = True
+HAS_RECENSIONS = True
+HAS_SHIP_FEE = True

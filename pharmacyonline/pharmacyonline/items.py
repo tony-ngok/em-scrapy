@@ -6,7 +6,7 @@
 import scrapy
 
 
-class EmscraperItem(scrapy.Item):
+class POItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
     pass
