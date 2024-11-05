@@ -158,7 +158,7 @@ class POProductSpider(scrapy.Spider):
         if brand_sel:
             brand = brand_sel.get().strip()
 
-        categories = " > ".join(cats.split(","))
+        categories = " > ".join(cats.split(";"))
 
         price_aud = float(response.css('meta[property="product:price:amount"]::attr(content)').get().strip())
         price = round(price_aud/self.aud_rate, 2)
