@@ -8,8 +8,7 @@ import scrapy
 from scrapy.http import HtmlResponse
 
 
-# scrapy crawl aop_product -o aop_products.json # 增添数据（不复写）
-# scrapy crawl aop_product -O aop_products.json # 复写整个数据
+# scrapy crawl aop_product
 class AopProduct(scrapy.Spider):
     name = "aop_product"
     allowed_domains = ["australianorganicproducts.com.au"]
@@ -24,13 +23,17 @@ class AopProduct(scrapy.Spider):
     SHIP_FEE = 9.95*AUD_TO_USD
     FREE_SHIP_PRICE = 129.00*AUD_TO_USD
 
+    custom_settings = {
+        "ITEM_PIPELINES": {
+            "utils.mongodb.pipelines.pipeline1.MongoPipeLine1": 400,
+        }
+    }
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.headers = {
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8",
-            # "Accept-Encoding": "gzip, deflate, br, zstd", # 若发现请求回答内容奇怪，试着不用这个请求头
             "Accept-Language": "es-ES,es;q=0.8,en-GB;q=0.5,en;q=0.3",
-            # "Cookie": "localization=US; cart_currency=USD", # 这个似乎没什么用？
             "Referer": "https://www.google.es",
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0"
         }
@@ -92,14 +95,6 @@ class AopProduct(scrapy.Spider):
         return dims_out
 
     def start_requests(self):
-        # self.start_urls = [
-        #     "https://australianorganicproducts.com.au/collections/gluten-free/products/biotta-organic-beetroot-juice-500ml",
-        #     "https://australianorganicproducts.com.au/collections/floss/products/noosa-basics-dental-floss-with-activated-charcoal-bamboo-fibre-35m",
-        #     "https://australianorganicproducts.com.au/collections/gift-ideas/products/tisserand-essential-oil-orange-round-9ml",
-        #     "https://australianorganicproducts.com.au/collections/organic-natural-chocolate-online/products/vego-whole-hazelnut-chocolate-bar-150g",
-        #     "https://australianorganicproducts.com.au/collections/baby-oral-care/products/brauer-baby-child-teething"
-        # ] # test
-
         for i, pu in enumerate(self.start_urls, start=1):
             print(f"{i:_}".replace('_', '.'), pu)
             yield scrapy.Request(pu, headers=self.headers, meta={ 'url': pu }, callback=self.parse)

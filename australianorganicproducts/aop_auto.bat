@@ -7,7 +7,7 @@ pip install -U bs4
 pip install -U pymongo
 git pull
 
-del pharmacyonline.log
-scrapy crawl po_cats
-scrapy crawl po_prod_links
-scrapy crawl po_product
+del aop.log
+scrapy crawl aop_category
+scrapy crawl aop_prod_url
+scrapy crawl aop_product
