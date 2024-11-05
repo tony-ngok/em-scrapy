@@ -34,16 +34,6 @@ class POCategories(scrapy.Spider):
         if cat_match:
             return cat_match[0]
 
-    def valid_cat_name(self, cat_name: str):
-        if not cat_name:
-            return False
-
-        cat_filters = ['family planning', 'sexual', 'ovulation', 'pregnancy', 'sperm', 'gender']
-        for filt in cat_filters:
-            if filt in cat_name:
-                return False
-        return True
-
     def parse(self, response: HtmlResponse):
         lv2x = response.css('li[data-title="Shop by category"] li.-level2')
         for lv2 in lv2x:
@@ -54,7 +44,7 @@ class POCategories(scrapy.Spider):
                     lv3_cat_name = lv3.css('a::attr(title)').get('').strip().lower() # 分类名
                     lv3_classes = lv3.css('::attr(class)').get('') # 判断下面是否有子分类
 
-                    if self.valid_cat_name(lv3_cat_name) and ('-parent' not in lv3_classes):
+                    if lv3_cat_name and (not (('sexual' in lv3_cat_name) or ('-parent' in lv3_classes))):
                         cat_no = self.get_cat_name(lv3.css('a::attr(href)').get(''))
                         if cat_no:
                             self.write_cat(cat_no)
