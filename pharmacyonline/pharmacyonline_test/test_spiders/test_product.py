@@ -21,7 +21,7 @@ class TestProduct(unittest.TestCase):
             url=url,
             body=body,
         )
-        result = list(self.spider.parse(response, 280.0))
+        result = list(self.spider.parse(response, "Vitamins & Supplements;By Condition;Arthritis & Joints", 280.0))
         self.assertEqual(len(result), 1)
         product = result[0]
 
@@ -33,7 +33,7 @@ class TestProduct(unittest.TestCase):
             "sku": "10002747",
             "upc": "9314807059507",
             "brand": "Finishing Touch Flawless",
-            "categories": "Vitamins & Supplements > Vitamins > Bone & Joints Health > By Condition > Arthritis & Joints",
+            "categories": "Vitamins & Supplements > By Condition > Arthritis & Joints",
             "images": "https://www.pharmacyonline.com.au/media/catalog/product/7/7/770033_vitamin_d_calcium_600mg_130s.jpg",
             "videos": None,
             "price": 6.56,
@@ -64,7 +64,7 @@ class TestProduct(unittest.TestCase):
             url=url,
             body=body,
         )
-        result = list(self.spider.parse(response, 106.0))
+        result = list(self.spider.parse(response, "Personal Care & Beauty;Family Planning;Pregnancy Kits", 106.0))
         self.assertEqual(len(result), 1)
         product = result[0]
 
@@ -76,7 +76,7 @@ class TestProduct(unittest.TestCase):
             "sku": "10001565",
             "upc": "19310320002300",
             "brand": "First Response",
-            "categories": "Pregnancy Kits > Personal Care & Beauty > Health & First Aids > Health Aids > Pregnancy Tests > Sexual Health > Pregnancy & Fertility",
+            "categories": "Personal Care & Beauty > Family Planning > Pregnancy Kits",
             "images": "https://www.pharmacyonline.com.au/media/catalog/product/f/i/first_response_in-stream_pregnancy_test_x_6_1_-1.jpg;https://www.pharmacyonline.com.au/media/catalog/product/f/i/first_response_in-stream_pregnancy_test_x_6_1_-2.jpg;https://www.pharmacyonline.com.au/media/catalog/product/f/i/first_response_in-stream_pregnancy_test_x_6_1_-3.jpg;https://www.pharmacyonline.com.au/media/catalog/product/f/i/first_response_in-stream_pregnancy_test_x_6_1_-4.jpg;https://www.pharmacyonline.com.au/media/catalog/product/f/i/first_response_in-stream_pregnancy_test_x_6_1_-5.jpg",
             "video": None,
             "price": 17.76,
@@ -86,161 +86,226 @@ class TestProduct(unittest.TestCase):
             "shipping_fee": 6.56,
             "weight": 0.23
         }
-
         for key in target_product:
             self.assertEqual(product[key], target_product[key])
+
+        self.assertNotIn('</a>', product['description'])
+        self.assertNotIn('</script>', product['description'])
+        self.assertNotIn('online in Australia from Pharmacy Online', product['description'])
+        self.assertIn('<h1>Product Description & Features</h1>', product['description'])
+        self.assertNotIn('<h1>Directions For Use</h1>', product['description'])
+        self.assertNotIn('<h1>Ingredients/Material</h1>', product['description'])
+        self.assertIn('<h1>Warnings and Disclaimers</h1>', product['description'])
 
     def test_available_product_3(self):
-        url = "https://www.muji.com/jp/ja/store/cmdty/detail/4550344554586"
-        with open("pharmacyonline_test/pages/超音波うるおいアロマディフューザー _ 無印良品.html", "rb") as file:
+        url = "https://www.pharmacyonline.com.au/clearblue-rapid-detection-pregnancy-test-1-pack"
+        with open("pharmacyonline_test/pages/Clearblue Rapid Detection Pregnancy Test 1 Pack - Buy Online in Australia - Pharmacy Online.html", "rb") as file:
             body = file.read()
 
         response = HtmlResponse(
             url=url,
             body=body,
         )
-        result = list(self.spider.parse(response))
+        result = list(self.spider.parse(response, "Personal Care & Beauty;Family Planning;Pregnancy Kits", 20.0))
         self.assertEqual(len(result), 1)
         product = result[0]
 
         target_product = {
             "url": url,
-            "product_id": "44554586",
+            "product_id": "387460",
             "existence": True,
-            "title": "超音波うるおいアロマディフューザー",
-            "sku": "4550344554586",
-            "upc": "4550344554586",
-            "brand": "無印良品",
-            "specifications": [
-                {
-                    "name": "原産国・地域",
-                    "value": "中国"
-                },
-                {
-                    "name": "外寸",
-                    "value": "直径16.8cm×高さ12.1cm　　重さ約490g（本体のみ）"
-                },
-                {
-                    "name": "容量",
-                    "value": "タンク容量：約350ml"
-                },
-                {
-                    "name": "型名",
-                    "value": "MJ-UAD1"
-                },
-                {
-                    "name": "部材ごとの素材",
-                    "value": "本体、主要部品共にＰＰ"
-                },
-                {
-                    "name": "消費電力",
-                    "value": "約15W"
-                },
-                {
-                    "name": "連続使用時の稼働時間",
-                    "value": "約3時間（専用USB_ACアダプター使用、満水時）"
-                },
-                {
-                    "name": "主な機能・性能",
-                    "value": "LED照明：2段階　　タイマー機能：60分、120分"
-                },
-                {
-                    "name": "付属物情報",
-                    "value": "AC_アダプター、計量カップ、抗菌カートリッジ"
-                },
-                {
-                    "name": "コード長",
-                    "value": "約1.8m"
-                },
-                {
-                    "name": "重量（梱包材含む）",
-                    "value": "約500g"
-                }
-            ],
-            "categories": "家具・収納・家電 > 家電・照明器具・時計 > 生活家電・AV家電",
-            "images": "https://www.muji.com/public/media/img/item/4550344554586_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_01_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_02_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_03_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_04_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_05_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_06_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_07_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_08_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_09_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_10_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_11_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_12_org.jpg",
-            "price": 45.89,
+            "title": "Clearblue Rapid Detection Pregnancy Test 1 Pack",
+            "sku": "387460",
+            "upc": "4987176009494",
+            "brand": "Clearblue",
+            "categories": "Personal Care & Beauty > Family Planning > Pregnancy Kits",
+            "images": "https://www.pharmacyonline.com.au/media/catalog/product/p/r/proc_4987176009494-0.jpg;https://www.pharmacyonline.com.au/media/catalog/product/p/r/proc_4987176009494-2.jpg;https://www.pharmacyonline.com.au/media/catalog/product/h/q/hqdefault_10_26.jpg",
+            "videos": None,
+            "price": 4.58,
             "available_qty": None,
-            "reviews": 65,
-            "rating": 4.50,
-            "shipping_fee": 0.00,
-            "weight": 1.10
+            "reviews": 0,
+            "rating": 0.00,
+            "shipping_fee": 6.56,
+            "weight": 0.04
         }
-
         for key in target_product:
             self.assertEqual(product[key], target_product[key])
 
-    def test_unavailable_product(self):
-        url = "https://www.muji.com/jp/ja/store/cmdty/detail/4550344295236"
-        with open("pharmacyonline_test/pages/フレグランスミスト　くつろぎブレンド _ 無印良品.html", "rb") as file:
+        self.assertNotIn('</a>', product['description'])
+        self.assertNotIn('</script>', product['description'])
+        self.assertNotIn('online in Australia from Pharmacy Online', product['description'])
+        self.assertIn('<h1>Product Description & Features</h1>', product['description'])
+        self.assertIn('<h1>Directions For Use</h1>', product['description'])
+        self.assertNotIn('<h1>Ingredients/Material</h1>', product['description'])
+        self.assertIn('<h1>Warnings and Disclaimers</h1>', product['description'])
+
+    def test_available_product_4(self):
+        url = "https://www.pharmacyonline.com.au/boost-lab-retinol-night-renewal-serum-30ml"
+        with open("pharmacyonline_test/pages/Boost Lab Retinol Night Renewal Serum 30ml - Buy Online in Australia - Pharmacy Online.html", "rb") as file:
             body = file.read()
 
         response = HtmlResponse(
             url=url,
             body=body,
         )
-        result = list(self.spider.parse(response))
+        result = list(self.spider.parse(response, "Personal Care & Beauty;Skin Care", 100.0))
         self.assertEqual(len(result), 1)
         product = result[0]
 
         target_product = {
             "url": url,
-            "product_id": "44295236",
-            "existence": False,
-            "title": "フレグランスミスト　くつろぎブレンド",
-            "sku": "4550344295236",
-            "upc": "4550344295236",
-            "brand": "無印良品",
-            "specifications": [
-                {
-                    "name": "原産国・地域",
-                    "value": "日本"
-                },
-                {
-                    "name": "仕様・混率",
-                    "value": "フレグランスミスト　くつろぎブレンド"
-                },
-                {
-                    "name": "外寸",
-                    "value": "W3.2cmxD3.2cmxH12.9cm(ケース入）"
-                },
-                {
-                    "name": "容量",
-                    "value": "28mL"
-                },
-                {
-                    "name": "部材ごとの素材",
-                    "value": "箱：紙　ポンプ：PP、PE　キャップ：PP"
-                },
-                {
-                    "name": "アルコール使用",
-                    "value": "使用"
-                },
-                {
-                    "name": "スプレーｏｒポンプヘッド",
-                    "value": "スプレーヘッド"
-                },
-                {
-                    "name": "光毒性の有無",
-                    "value": "無"
-                },
-                {
-                    "name": "重量（梱包材含む）",
-                    "value": "約90g"
-                }
-            ],
-            "categories": "生活雑貨 > アロマ・ルームフレグランス > フレグランス",
-            "images": "https://www.muji.com/public/media/img/item/4550344295236_org.jpg;https://www.muji.com/public/media/img/item/4550344295236_01_org.jpg;https://www.muji.com/public/media/img/item/4550344295236_02_org.jpg;https://www.muji.com/public/media/img/item/4550344295236_03_org.jpg",
-            "price": 11.09,
-            "available_qty": 0,
-            "reviews": 83,
-            "rating": 4.70,
-            "shipping_fee": 3.28,
-            "weight": 0.20
+            "product_id": "10008208",
+            "existence": True,
+            "title": "Boost Lab Retinol Night Renewal Serum 30ml",
+            "sku": "10008208",
+            "upc": "9355910000048",
+            "brand": "Boost Lab",
+            "categories": "Personal Care & Beauty > Skin Care",
+            "images": "https://www.pharmacyonline.com.au/media/catalog/product/b/o/boost_lab_retinol_night_renewal_serum_30ml.jpg;https://www.pharmacyonline.com.au/media/catalog/product/b/o/boost_lab_retinol_night_renewal_serum_30ml-1.jpg",
+            "videos": None,
+            "price": 15.12,
+            "available_qty": None,
+            "reviews": 0,
+            "rating": 0.00,
+            "shipping_fee": 6.56,
+            "weight": 0.22
         }
-
         for key in target_product:
             self.assertEqual(product[key], target_product[key])
+
+        self.assertNotIn('</a>', product['description'])
+        self.assertNotIn('</script>', product['description'])
+        self.assertNotIn('online in Australia from Pharmacy Online', product['description'])
+        self.assertIn('<h1>Product Description & Features</h1>', product['description'])
+        self.assertIn('<h1>Directions For Use</h1>', product['description'])
+        self.assertIn('<h1>Ingredients/Material</h1>', product['description'])
+        self.assertIn('<h1>Warnings and Disclaimers</h1>', product['description'])
+
+    def test_unavailable_product_1(self):
+        url = "https://www.pharmacyonline.com.au/finishing-touch-flawless-legs-white"
+        with open("pharmacyonline_test/pages/Finishing Touch Flawless Legs - Buy Online in Australia - Pharmacy Online.html", "rb") as file:
+            body = file.read()
+
+        response = HtmlResponse(
+            url=url,
+            body=body,
+        )
+        result = list(self.spider.parse(response, 'Personal Care & Beauty;Waxing & Hair Removal', 354.0))
+        self.assertEqual(len(result), 1)
+        product = result[0]
+
+        target_product = {
+            "url": url,
+            "product_id": "10006641",
+            "existence": False,
+            "title": "Finishing Touch Flawless Legs",
+            "sku": "10006641",
+            "upc": "0754502038893",
+            "brand": "Finishing Touch Flawless",
+            "categories": "Personal Care & Beauty > Waxing & Hair Removal",
+            "images": "https://www.pharmacyonline.com.au/media/catalog/product/c/h/chur-754502038893-0.jpg;https://www.pharmacyonline.com.au/media/catalog/product/c/h/chur-754502038893-2.jpg",
+            "videos": "https://youtu.be/B1mVptPut4o",
+            "price": 79.04,
+            "available_qty": 0,
+            "reviews": 0,
+            "rating": 0.00,
+            "shipping_fee": 6.56,
+            "weight": 0.78
+        }
+        for key in target_product:
+            self.assertEqual(product[key], target_product[key])
+
+        self.assertNotIn('</a>', product['description'])
+        self.assertNotIn('</script>', product['description'])
+        self.assertNotIn('online in Australia from Pharmacy Online', product['description'])
+        self.assertIn('<h1>Product Description & Features</h1>', product['description'])
+        self.assertNotIn('<h1>Directions For Use</h1>', product['description'])
+        self.assertNotIn('<h1>Ingredients/Material</h1>', product['description'])
+        self.assertNotIn('<h1>Warnings and Disclaimers</h1>', product['description'])
+
+    def test_unavailable_product_2(self):
+        url = "https://www.pharmacyonline.com.au/neutrogena-oil-free-acne-wash-daily-scrub-125ml"
+        with open("pharmacyonline_test/pages/Neutrogena Oil-Free Acne Wash Daily Scrub 125ml - Buy Online in Australia - Pharmacy Online.html", "rb") as file:
+            body = file.read()
+
+        response = HtmlResponse(
+            url=url,
+            body=body,
+        )
+        result = list(self.spider.parse(response, 'Skin Care;Cleansers & Toners;Foam Cleansers', 155.0))
+        self.assertEqual(len(result), 1)
+        product = result[0]
+
+        target_product = {
+            "url": url,
+            "product_id": "242950",
+            "existence": False,
+            "title": "Neutrogena Oil-Free Acne Wash Daily Scrub 125ml",
+            "sku": "242950",
+            "upc": "062600300973",
+            "brand": "Neutrogena",
+            "categories": "Skin Care > Cleansers & Toners > Foam Cleansers",
+            "images": "https://www.pharmacyonline.com.au/media/catalog/product/6/2/62600300973.jpg;https://www.pharmacyonline.com.au/media/catalog/product/6/2/62600300973-1.jpg",
+            "videos": None,
+            "price": 9.55,
+            "available_qty": 0,
+            "reviews": 79,
+            "rating": 4.10,
+            "shipping_fee": 6.56,
+            "weight": 0.34
+        }
+        for key in target_product:
+            self.assertEqual(product[key], target_product[key])
+
+        self.assertNotIn('</a>', product['description'])
+        self.assertNotIn('</script>', product['description'])
+        self.assertNotIn('online in Australia from Pharmacy Online', product['description'])
+        self.assertIn('<h1>Product Description & Features</h1>', product['description'])
+        self.assertIn('<h1>Directions For Use</h1>', product['description'])
+        self.assertIn('<h1>Ingredients/Material</h1>', product['description'])
+        self.assertNotIn('<h1>Warnings and Disclaimers</h1>', product['description'])
+
+    def test_unavailable_product_3(self):
+        url = "https://www.pharmacyonline.com.au/forelife-ovulation-test-x-7"
+        with open("pharmacyonline_test/pages/Forelife! Ovulation Test X 7 - Buy Online in Australia - Pharmacy Online.html", "rb") as file:
+            body = file.read()
+
+        response = HtmlResponse(
+            url=url,
+            body=body,
+        )
+        result = list(self.spider.parse(response, 'Personal Care & Beauty;Family Planning;Ovulation Kits', 130.0))
+        self.assertEqual(len(result), 1)
+        product = result[0]
+
+        target_product = {
+            "url": url,
+            "product_id": "681504",
+            "existence": False,
+            "title": "Forelife! Ovulation Test X 7",
+            "sku": "681504",
+            "upc": "9324594000255",
+            "brand": "Forelife!",
+            "categories": "Personal Care & Beauty > Family Planning > Ovulation Kits",
+            "images": "https://www.pharmacyonline.com.au/media/catalog/product/f/o/forelife-ultra-sensitive-in-stream-ovulation-test-x-7-p01.jpg",
+            "videos": None,
+            "price": 9.55,
+            "available_qty": 0,
+            "reviews": 0,
+            "rating": 0.00,
+            "shipping_fee": 6.56,
+            "weight": 0.29
+        }
+        for key in target_product:
+            self.assertEqual(product[key], target_product[key])
+
+        self.assertNotIn('</a>', product['description'])
+        self.assertNotIn('</script>', product['description'])
+        self.assertNotIn('online in Australia from Pharmacy Online', product['description'])
+        self.assertIn('<h1>Product Description & Features</h1>', product['description'])
+        self.assertIn('<h1>Directions For Use</h1>', product['description'])
+        self.assertIn('<h1>Ingredients/Material</h1>', product['description'])
+        self.assertNotIn('<h1>Warnings and Disclaimers</h1>', product['description'])
 
 
 if __name__ == '__main__':

@@ -32,11 +32,11 @@ class POProductSpider(scrapy.Spider):
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0"
         }
 
-        with open('po_prod_links.txt', 'r', encoding='utf-8') as f:
-            for line in f:
-                if line.strip():
-                    self.start_urls.append(line.strip())
-        print(f'Total {len(self.start_urls):_} unique products'.replace("_", "."))
+        # with open('po_prod_links.txt', 'r', encoding='utf-8') as f:
+        #     for line in f:
+        #         if line.strip():
+        #             self.start_urls.append(line.strip())
+        # print(f'Total {len(self.start_urls):_} unique products'.replace("_", "."))
 
         self.aud_rate = 1.517678
         # try:
