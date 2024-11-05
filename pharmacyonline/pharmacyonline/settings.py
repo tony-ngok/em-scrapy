@@ -105,6 +105,4 @@ MONGO_URI = "mongodb://mongouser:XSzY1nHbxi@34.172.204.102:27017"
 MONGO_DB_NAME = "pharmacyonline"
 DAYS_BEF = 1
 
-HAS_VARS = True
 HAS_RECENSIONS = True
-HAS_SHIP_FEE = True
