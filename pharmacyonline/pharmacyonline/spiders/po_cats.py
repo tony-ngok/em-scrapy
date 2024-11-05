@@ -17,7 +17,6 @@ class POCategories(scrapy.Spider):
 
     HEADERS = {
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8",
-        "Accept-Encoding": "gzip, deflate, br, zstd", # 若发现请求回答内容奇怪，试着不用这个请求头
         "Accept-Language": "es-ES,es;q=0.8,en-GB;q=0.5,en;q=0.3",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0"
     }
@@ -27,7 +26,8 @@ class POCategories(scrapy.Spider):
         self.retry = False
     
     def start_requests(self):
-        yield scrapy.Request(self.start_urls[0], headers=self.HEADERS, callback=self.parse)
+        for url in self.start_urls:
+            yield scrapy.Request(url, headers=self.HEADERS, callback=self.parse)
 
     def get_cat_name(self, href: str):
         cat_match = re.findall(r'https://www\.pharmacyonline\.com\.au/(.*)', href)

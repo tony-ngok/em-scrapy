@@ -14,7 +14,6 @@ class PoProdLinks:
 
     HEADERS = {
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8",
-        "Accept-Encoding": "gzip, deflate, br, zstd",
         "Accept-Language": "es-ES,es;q=0.8,en-GB;q=0.5,en;q=0.3",
         "Referer": "https://www.pharmacyonline.com.au/",
         "Sec-Fetch-Dest": "document",
