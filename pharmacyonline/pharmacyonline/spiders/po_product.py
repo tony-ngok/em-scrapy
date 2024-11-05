@@ -52,16 +52,17 @@ class POProductSpider(scrapy.Spider):
 
     def start_requests(self):
         for i, todo in enumerate(self.start_urls):
-            todo_split = todo.split(" ")
+            todo_split = todo.split("|")
             url = 'https://www.pharmacyonline.com.au/'+todo_split[0]
+            cats = todo_split[1]
 
-            if len(todo_split) >= 2:
-                weight_g = float(todo_split[1])
+            if len(todo_split) >= 3:
+                weight_g = float(todo_split[2])
             else:
                 weight_g = 0.0
 
             yield scrapy.Request(url, headers=self.headers, callback=self.parse,
-                                 cb_kwargs={ "i": i+1, "weight_g": weight_g })
+                                 cb_kwargs={ "cats": cats, "weight_g": weight_g })
 
     def parse_descr(self, soup):
         descr = ""
@@ -122,7 +123,7 @@ class POProductSpider(scrapy.Spider):
 
         return images, videos
 
-    def parse(self, response: HtmlResponse, i: int, weight_g: float = 0.0):
+    def parse(self, response: HtmlResponse, cats: str, weight_g: float = 0.0):
         """
         从下载下来的HTML中解析数据字段\n
         注意事项：
@@ -158,15 +159,7 @@ class POProductSpider(scrapy.Spider):
         if brand_sel:
             brand = brand_sel.get().strip()
 
-        categories = None
-        for scr_txt in response.css('script::text').getall():
-            if 'ViewContent' in scr_txt:
-                cat_match = findall(r'content_category: \"(.*)\"', scr_txt)
-                if cat_match:
-                    cats_list = [cat for cat in cat_match[0].strip().split(',') if ]
-                    categories = " > ".join(cats_list)
-            if categories is not None:
-                break
+        categories = " > ".join(cats.split(","))
 
         price_aud = float(response.css('meta[property="product:price:amount"]::attr(content)').get().strip())
         price = round(price_aud/self.aud_rate, 2)

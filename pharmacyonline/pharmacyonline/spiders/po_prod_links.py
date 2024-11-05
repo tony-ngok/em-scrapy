@@ -102,7 +102,7 @@ class PoProdLinks(scrapy.Spider):
 
                     prod_url = r['url'].split('/')[-1]
                     prod_g = float(r.get('weight') or 0)
-                    self.write_url(prod_url, prod_g)
+                    self.write_url(prod_url, cat_name, prod_g)
 
             if (p+1)*100 < total:
                 payload = self.gen_payload(cat_name, p+1)
@@ -113,12 +113,12 @@ class PoProdLinks(scrapy.Spider):
                                      method='POST',
                                      cb_kwargs={ "i": i, "cat_name": cat_name, "p": p+1 })
 
-    def write_url(self, prod_url: str, weight_g: float = 0.0):
+    def write_url(self, prod_url: str, cat: str, weight_g: float = 0.0):
         mod = 'a' if self.retry else 'w'
         with open(self.urls_output, mod, encoding='utf-8') as f_urls:
-            f_urls.write(prod_url)
+            f_urls.write(prod_url+"|"+cat)
             if weight_g:
-                f_urls.write(" "+str(weight_g))
+                f_urls.write("|"+str(weight_g))
             f_urls.write('\n')
         if not self.retry:
             self.retry = True
