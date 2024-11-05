@@ -45,7 +45,6 @@ class PoProdLinks(scrapy.Spider):
         cat_name_match = re.findall(r'\"categoryName\"\s*:\s*\"([^\"]+)\"', cat_str_sel)
         if cat_name_match:
             cat_name = cat_name_match[0]
-            print(cat_name)
             payload = self.gen_payload(cat_name)
             yield scrapy.Request('https://aucs33.ksearchnet.com/cs/v2/search',
                                  headers=self.HEADERS,
@@ -98,19 +97,19 @@ class PoProdLinks(scrapy.Spider):
 
             for r in results:
                 prod_url = r['url'].split('/')[-1]
-                prod_g = r.get('weight') or 0
+                prod_g = float(r.get('weight')) or 0.0
                 self.write_url(prod_url, prod_g)
 
             if (p+1)*100 < total:
                 payload = self.gen_payload(cat_name, p+1)
                 yield scrapy.Request('https://aucs33.ksearchnet.com/cs/v2/search',
-                                        headers=self.HEADERS,
-                                        body=json.dumps(payload),
-                                        callback=self.parse,
-                                        method='POST',
-                                        cb_kwargs={ "i": i, "cat_name": cat_name, "p": p+1 })
+                                     headers=self.HEADERS,
+                                     body=json.dumps(payload),
+                                     callback=self.parse,
+                                     method='POST',
+                                     cb_kwargs={ "i": i, "cat_name": cat_name, "p": p+1 })
 
-    def write_url(self, prod_url: str, weight_g: int = 0):
+    def write_url(self, prod_url: str, weight_g: float = 0.0):
         mod = 'a' if self.retry else 'w'
         with open(self.urls_output, mod, encoding='utf-8') as f_urls:
             f_urls.write(prod_url)
