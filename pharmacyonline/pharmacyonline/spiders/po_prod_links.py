@@ -9,7 +9,7 @@ from scrapy.http import HtmlResponse
 # scrapy crawl po_prod_links
 class PoProdLinks(scrapy.Spider):
     name = "po_prod_links"
-    allowed_domains = ['www.pharmacyonline.com.au']
+    allowed_domains = ['www.pharmacyonline.com.au', 'aucs33.ksearchnet.com']
     start_urls = []
     urls_output = "po_prod_links.txt"
 
