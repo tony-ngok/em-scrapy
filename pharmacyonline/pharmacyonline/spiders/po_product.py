@@ -22,6 +22,12 @@ class POProductSpider(scrapy.Spider):
     allowed_domains = ['www.pharmacyonline.com.au']
     start_urls = []
 
+    custom_settings = {
+        "ITEM_PIPELINES": {
+            "utils.mongodb.pipelines.pipeline1.MongoPipeLine1": 400,
+        }
+    }
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.headers = {
