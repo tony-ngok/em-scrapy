@@ -101,7 +101,7 @@ class PoProdLinks(scrapy.Spider):
                     self.ids.add(id)
 
                     prod_url = r['url'].split('/')[-1]
-                    prod_g = float(r.get('weight')) or 0.0
+                    prod_g = float(r.get('weight') or 0)
                     self.write_url(prod_url, prod_g)
 
             if (p+1)*100 < total:
