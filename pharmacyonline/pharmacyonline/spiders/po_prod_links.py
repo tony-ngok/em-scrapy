@@ -42,8 +42,8 @@ class PoProdLinks(scrapy.Spider):
             return
 
         cat_str_sel = response.css('script#klevu_page_meta::text').get('')
-        print(cat_str_sel)
-        cat_name_match = re.findall(r'\"categoryName\"\s*:\s*\"([^\"]*)\"', cat_str_sel)
+        cat_name_match = re.findall(r'\"categoryName\"\s*:\s*\"([^\"]+)\"', cat_str_sel)
+        print(cat_name_match)
         if cat_name_match:
             cat_name = cat_name_match[0]
             payload = self.gen_payload(cat_name)
