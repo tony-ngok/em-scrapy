@@ -3,128 +3,96 @@ import unittest
 from scrapy.utils.test import get_crawler
 from scrapy.http import HtmlResponse
 
-from muji.spiders.product import MujiProduct
+from pharmacyonline.spiders.po_product import POProductSpider
 
 
-# python -m muji_test.test_spiders.test_product
+# python -m pharmacyonline_test.test_spiders.test_product
 class TestProduct(unittest.TestCase):
     def setUp(self):
-        self.crawler = get_crawler(MujiProduct)
+        self.crawler = get_crawler(POProductSpider)
         self.spider = self.crawler._create_spider()
 
     def test_available_product_1(self):
-        url = "https://www.muji.com/jp/ja/store/cmdty/detail/4550002868284"
-        with open("muji_test/pages/アロマストーン _ 無印良品.html", "rb") as file:
+        url = "https://www.pharmacyonline.com.au/quality-health-vitamin-d-calcium-tab-x-130"
+        with open("pharmacyonline_test/pages/Quality Health Vitamin D & Calcium Tab X 130 - Buy Online in Australia - Pharmacy Online.html", "rb") as file:
             body = file.read()
 
         response = HtmlResponse(
             url=url,
             body=body,
         )
-        result = list(self.spider.parse(response))
+        result = list(self.spider.parse(response, 280.0))
         self.assertEqual(len(result), 1)
         product = result[0]
 
         target_product = {
             "url": url,
-            "product_id": "02868284",
+            "product_id": "10002747",
             "existence": True,
-            "title": "アロマストーン",
-            "sku": "4550002868284",
-            "upc": "4550002868284",
-            "brand": "無印良品",
-            "specifications": [
-                {
-                    "name": "原産国・地域",
-                    "value": "日本"
-                },
-                {
-                    "name": "仕様・混率",
-                    "value": "アロマストーン"
-                },
-                {
-                    "name": "外寸",
-                    "value": "ストーン約直径65ｍｍ×30mm　トレー約直径63mm×5mm"
-                },
-                {
-                    "name": "リフィル等パーツ",
-                    "value": "替皿"
-                },
-                {
-                    "name": "重量（梱包材含む）",
-                    "value": "約170g"
-                }
-            ],
-            "categories": "生活雑貨 > アロマ・ルームフレグランス > アロマディフューザー",
-            "images": "https://www.muji.com/public/media/img/item/4550002868284_org.jpg;https://www.muji.com/public/media/img/item/4550002868284_01_org.jpg;https://www.muji.com/public/media/img/item/4550002868284_02_org.jpg",
-            "price": 6.50,
+            "title": "Quality Health Vitamin D & Calcium Tab X 130",
+            "sku": "10002747",
+            "upc": "9314807059507",
+            "brand": "Finishing Touch Flawless",
+            "categories": "Vitamins & Supplements > Vitamins > Bone & Joints Health > By Condition > Arthritis & Joints",
+            "images": "https://www.pharmacyonline.com.au/media/catalog/product/7/7/770033_vitamin_d_calcium_600mg_130s.jpg",
+            "videos": None,
+            "price": 6.56,
             "available_qty": None,
-            "reviews": 438,
-            "rating": 3.80,
-            "shipping_fee": 3.28,
-            "weight": 0.37
+            "reviews": 0,
+            "rating": 0.00,
+            "shipping_fee": 6.56,
+            "weight": 0.62
         }
         for key in target_product:
             self.assertEqual(product[key], target_product[key])
 
+        # 检查描述有效性
+        self.assertNotIn('</a>', product['description'])
+        self.assertNotIn('</script>', product['description'])
+        self.assertNotIn('online in Australia from Pharmacy Online', product['description'])
+        self.assertIn('<h1>Product Description & Features</h1>', product['description'])
+        self.assertIn('<h1>Directions For Use</h1>', product['description'])
+        self.assertIn('<h1>Ingredients/Material</h1>', product['description'])
+        self.assertIn('<h1>Warnings and Disclaimers</h1>', product['description'])
+
     def test_available_product_2(self):
-        url = "https://www.muji.com/jp/ja/store/cmdty/detail/4550344594056"
-        with open("muji_test/pages/インテリアフレグランスオイル _ 無印良品.html", "rb") as file:
+        url = "https://www.pharmacyonline.com.au/first-response-instream-pregnancy-test-x-6-1"
+        with open("pharmacyonline_test/pages/First Response In-Stream Pregnancy Test x 6+1 - Buy Online in Australia - Pharmacy Online.html", "rb") as file:
             body = file.read()
 
         response = HtmlResponse(
             url=url,
             body=body,
         )
-        result = list(self.spider.parse(response))
+        result = list(self.spider.parse(response, 106.0))
         self.assertEqual(len(result), 1)
         product = result[0]
 
         target_product = {
             "url": url,
-            "product_id": "44594056",
+            "product_id": "10001565",
             "existence": True,
-            "title": "インテリアフレグランスオイル",
-            "sku": "4550344594056",
-            "upc": "4550344594056",
-            "brand": "無印良品",
-            "specifications": [
-                {
-                    "name": "原産国・地域",
-                    "value": "日本"
-                },
-                {
-                    "name": "仕様・混率",
-                    "value": "インテリアフレグランスオイル"
-                },
-                {
-                    "name": "容量",
-                    "value": "60mL"
-                },
-                {
-                    "name": "部材ごとの素材",
-                    "value": "本体：ガラス"
-                },
-                {
-                    "name": "重量（梱包材含む）",
-                    "value": "約170g"
-                }
-            ],
-            "categories": "生活雑貨 > アロマ・ルームフレグランス > インテリアフレグランス",
-            "images": "https://www.muji.com/public/media/img/item/4550344594056_org.jpg;https://www.muji.com/public/media/img/item/4550344594056_01_org.jpg;https://www.muji.com/public/media/img/item/4550344594056_02_org.jpg;https://www.muji.com/public/media/img/item/4550344594056_03_org.jpg;https://www.muji.com/public/media/img/item/4550344594056_04_org.jpg",
-            "price": 7.81,
+            "title": "First Response In-Stream Pregnancy Test x 6+1",
+            "sku": "10001565",
+            "upc": "19310320002300",
+            "brand": "First Response",
+            "categories": "Pregnancy Kits > Personal Care & Beauty > Health & First Aids > Health Aids > Pregnancy Tests > Sexual Health > Pregnancy & Fertility",
+            "images": "https://www.pharmacyonline.com.au/media/catalog/product/f/i/first_response_in-stream_pregnancy_test_x_6_1_-1.jpg;https://www.pharmacyonline.com.au/media/catalog/product/f/i/first_response_in-stream_pregnancy_test_x_6_1_-2.jpg;https://www.pharmacyonline.com.au/media/catalog/product/f/i/first_response_in-stream_pregnancy_test_x_6_1_-3.jpg;https://www.pharmacyonline.com.au/media/catalog/product/f/i/first_response_in-stream_pregnancy_test_x_6_1_-4.jpg;https://www.pharmacyonline.com.au/media/catalog/product/f/i/first_response_in-stream_pregnancy_test_x_6_1_-5.jpg",
+            "video": None,
+            "price": 17.76,
             "available_qty": None,
-            "reviews": 234,
-            "rating": 4.60,
-            "shipping_fee": 3.28,
-            "weight": 0.37
+            "reviews": 0,
+            "rating": 0.00,
+            "shipping_fee": 6.56,
+            "weight": 0.23
         }
+
         for key in target_product:
             self.assertEqual(product[key], target_product[key])
 
     def test_available_product_3(self):
         url = "https://www.muji.com/jp/ja/store/cmdty/detail/4550344554586"
-        with open("muji_test/pages/超音波うるおいアロマディフューザー _ 無印良品.html", "rb") as file:
+        with open("pharmacyonline_test/pages/超音波うるおいアロマディフューザー _ 無印良品.html", "rb") as file:
             body = file.read()
 
         response = HtmlResponse(
@@ -198,12 +166,13 @@ class TestProduct(unittest.TestCase):
             "shipping_fee": 0.00,
             "weight": 1.10
         }
+
         for key in target_product:
             self.assertEqual(product[key], target_product[key])
 
     def test_unavailable_product(self):
         url = "https://www.muji.com/jp/ja/store/cmdty/detail/4550344295236"
-        with open("muji_test/pages/フレグランスミスト　くつろぎブレンド _ 無印良品.html", "rb") as file:
+        with open("pharmacyonline_test/pages/フレグランスミスト　くつろぎブレンド _ 無印良品.html", "rb") as file:
             body = file.read()
 
         response = HtmlResponse(
@@ -269,6 +238,7 @@ class TestProduct(unittest.TestCase):
             "shipping_fee": 3.28,
             "weight": 0.20
         }
+
         for key in target_product:
             self.assertEqual(product[key], target_product[key])
 

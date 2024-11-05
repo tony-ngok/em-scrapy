@@ -7,7 +7,7 @@ from html import unescape
 from json import loads
 from re import findall
 
-import requests
+# import requests
 from bs4 import BeautifulSoup, Tag
 import scrapy
 from scrapy.http import HtmlResponse
@@ -39,16 +39,16 @@ class POProductSpider(scrapy.Spider):
         print(f'Total {len(self.start_urls):_} unique products'.replace("_", "."))
 
         self.aud_rate = 1.517678
-        try:
-            resp = requests.get('https://open.er-api.com/v6/latest/USD')
-            if resp.ok:
-                self.aud_rate = resp.json()['rates']['AUD']
-            else:
-                raise Exception(f'Status {resp.status_code}')
-        except Exception as e:
-            print("Fail to get latest USD/AUD rate", str(e))
-        finally:
-            print(f"USD/AUD rate: {self.aud_rate:_}".replace(".", ",").replace("_", "."))
+        # try:
+        #     resp = requests.get('https://open.er-api.com/v6/latest/USD')
+        #     if resp.ok:
+        #         self.aud_rate = resp.json()['rates']['AUD']
+        #     else:
+        #         raise Exception(f'Status {resp.status_code}')
+        # except Exception as e:
+        #     print("Fail to get latest USD/AUD rate", str(e))
+        # finally:
+        #     print(f"USD/AUD rate: {self.aud_rate:_}".replace(".", ",").replace("_", "."))
 
     def start_requests(self):
         for i, todo in enumerate(self.start_urls):
@@ -163,9 +163,7 @@ class POProductSpider(scrapy.Spider):
             if 'ViewContent' in scr_txt:
                 cat_match = findall(r'content_category: \"(.*)\"', scr_txt)
                 if cat_match:
-                    cats_list = cat_match[0].strip().split(',')
-                    if cats_list[-1] == 'New on our site':
-                        cats_list.pop()
+                    cats_list = [cat for cat in cat_match[0].strip().split(',') if ]
                     categories = " > ".join(cats_list)
             if categories is not None:
                 break
