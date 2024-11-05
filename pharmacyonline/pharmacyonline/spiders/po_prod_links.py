@@ -1,7 +1,6 @@
 import json
 import re
 
-from typing import Iterable
 import scrapy
 from scrapy.http import HtmlResponse
 
@@ -12,6 +11,7 @@ class PoProdLinks(scrapy.Spider):
     allowed_domains = ['www.pharmacyonline.com.au', 'aucs33.ksearchnet.com']
     start_urls = []
     urls_output = "po_prod_links.txt"
+    ids = set()
 
     HEADERS = {
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8",
@@ -96,9 +96,13 @@ class PoProdLinks(scrapy.Spider):
             results = resp_info['records']
 
             for r in results:
-                prod_url = r['url'].split('/')[-1]
-                prod_g = float(r.get('weight')) or 0.0
-                self.write_url(prod_url, prod_g)
+                id = r['id']
+                if id not in self.ids:
+                    self.ids.add(id)
+
+                    prod_url = r['url'].split('/')[-1]
+                    prod_g = float(r.get('weight')) or 0.0
+                    self.write_url(prod_url, prod_g)
 
             if (p+1)*100 < total:
                 payload = self.gen_payload(cat_name, p+1)
