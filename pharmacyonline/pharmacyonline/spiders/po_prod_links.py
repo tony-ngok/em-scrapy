@@ -6,6 +6,7 @@ import scrapy
 from scrapy.http import HtmlResponse
 
 
+# scrapy crawl po_prod_links
 class PoProdLinks(scrapy.Spider):
     name = "po_prod_links"
     allowed_domains = ['www.pharmacyonline.com.au']
@@ -41,6 +42,7 @@ class PoProdLinks(scrapy.Spider):
             return
 
         cat_str_sel = response.css('script#klevu_page_meta::text').get('')
+        print(cat_str_sel)
         cat_name_match = re.findall(r'\"categoryName\"\s*:\s*\"([^\"]*)\"', cat_str_sel)
         if cat_name_match:
             cat_name = cat_name_match[0]
