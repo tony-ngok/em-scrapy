@@ -52,7 +52,10 @@ class POProductSpider(scrapy.Spider):
     def start_requests(self):
         for i, todo in enumerate(self.start_urls):
             todo_split = todo.split("|")
+
             url = 'https://www.pharmacyonline.com.au/'+todo_split[0]
+            print(f"{i+1:_}/{len(self.start_urls):_}".replace("_", "."), url)
+
             cats = todo_split[1]
 
             if len(todo_split) >= 3:
@@ -83,22 +86,22 @@ class POProductSpider(scrapy.Spider):
         if feat_sel:
             all_descr += "<h1>Product Description & Features</h1>"
             all_descr += self.parse_descr(BeautifulSoup(feat_sel, 'html.parser'))
-        
+
         dir_sel = response.css('div#directions_for_use').get('')
         if dir_sel:
             all_descr += "<h1>Directions For Use</h1>"
             all_descr += self.parse_descr(BeautifulSoup(dir_sel, 'html.parser'))
-        
+
         ingr_sel = response.css('div#ingredients_material').get('')
         if ingr_sel:
             all_descr += "<h1>Ingredients/Material</h1>"
             all_descr += self.parse_descr(BeautifulSoup(ingr_sel, 'html.parser'))
-        
+
         warn_sel = response.css('div#product_info_warnings').get('')
         if warn_sel:
             all_descr += "<h1>Warnings and Disclaimers</h1>"
             all_descr += self.parse_descr(BeautifulSoup(warn_sel, 'html.parser'))
-        
+
         return all_descr if all_descr else None
 
     def get_media(self, response: HtmlResponse):
@@ -130,6 +133,10 @@ class POProductSpider(scrapy.Spider):
         2. 配送资料统一以国内邮寄为准（不考虑国际邮寄）
         """
 
+        if response.status == 404:
+            print("Product not found")
+            return
+
         # 没有图的商品卖不出去，只能扔掉
         images, videos = self.get_media(response)
         if not (images or videos):
@@ -139,7 +146,7 @@ class POProductSpider(scrapy.Spider):
             videos = None
 
         prod_id = response.css('div[itemprop="sku"]::text').get().strip()
-        
+
         existence = True
         exist_resp = response.css('span.status')
         if not (exist_resp and (exist_resp.css('::text').get('').strip().lower() == 'in stock')):
@@ -152,7 +159,7 @@ class POProductSpider(scrapy.Spider):
         upc_sel = response.css('meta[itemprop="gtin14"]::attr(content)')
         if upc_sel:
             upc = upc_sel.get().strip()
-       
+
         brand = None
         brand_sel = response.css('div.brand::attr(data-brand)')
         if brand_sel:
@@ -167,7 +174,7 @@ class POProductSpider(scrapy.Spider):
         review_sel = response.css('div#bvseo-aggregateRatingSection > span.bvseo-reviewCount::text')
         if review_sel:
             reviews = int(review_sel.get().strip())
-        
+
         rating = 0.0
         rating_sel = response.css('div#bvseo-aggregateRatingSection > span.bvseo-ratingValue::text')
         if rating_sel:
