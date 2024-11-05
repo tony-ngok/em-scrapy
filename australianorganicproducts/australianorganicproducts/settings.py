@@ -92,8 +92,8 @@ REQUEST_FINGERPRINTER_IMPLEMENTATION = "2.7"
 TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 FEED_EXPORT_ENCODING = "utf-8"
 
-LOG_FILE = 'scrapy.log'
-LOG_LEVEL = 'DEBUG'
+LOG_FILE = 'aop.log'
+LOG_LEVEL = 'INFO'
 
 HTTPERROR_ALLOWED_CODES = [400, 404]
 
