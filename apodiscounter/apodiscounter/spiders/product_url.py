@@ -32,8 +32,7 @@ class ProductUrlSpider(scrapy.Spider):
 
     def start_requests(self):
         for url in ProductUrlSpider.start_urls:
-            print(url)
-            yield scrapy.Request(url, headers=self.HEADERS, cookies = self.COOKIES, callback=self.parse, errback=self.errback)
+            yield scrapy.Request(url, headers=self.HEADERS, cookies=self.COOKIES, callback=self.parse, errback=self.errback)
 
     def errback(self, failure):
         self.logger.error(repr(failure))
