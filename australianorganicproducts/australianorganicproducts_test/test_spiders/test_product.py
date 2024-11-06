@@ -24,6 +24,7 @@ class TestProduct(unittest.TestCase):
         result = list(self.spider.parse(response))
         self.assertEqual(len(result), 1)
         product = result[0]
+        print(product["description"])
 
         target_product = {
             "url": url,
@@ -46,8 +47,7 @@ class TestProduct(unittest.TestCase):
         }
         for key in target_product:
             self.assertEqual(product[key], target_product[key])
-        
-        print(product["description"])
+
         self.assertNotIn("Why buy from us?" , product["description"])
         self.assertNotIn("on sale!", product["description"])
         self.assertNotIn("</a>" , product["description"])
@@ -87,6 +87,10 @@ class TestProduct(unittest.TestCase):
         for key in target_product:
             self.assertEqual(product[key], target_product[key])
 
+        self.assertNotIn("Why buy from us?" , product["description"])
+        self.assertNotIn("on sale!", product["description"])
+        self.assertNotIn("</a>" , product["description"])
+
     def test_unavailable_product(self):
         url = "https://australianorganicproducts.com.au/collections/vegan-products/products/clipper-organic-white-tea-26-tbags"
         with open("australianorganicproducts_test/pages/CLIPPER Organic White Tea 20 tbags — Australian Organic Products.html", "rb") as file:
@@ -121,6 +125,10 @@ class TestProduct(unittest.TestCase):
         }
         for key in target_product:
             self.assertEqual(product[key], target_product[key])
+
+        self.assertNotIn("Why buy from us?" , product["description"])
+        self.assertNotIn("on sale!", product["description"])
+        self.assertNotIn("</a>" , product["description"])
 
     def test_one_variant_product(self):
         url = "https://australianorganicproducts.com.au/collections/dairy-free/products/clover-fields-loofah-scrub-soap"
@@ -172,6 +180,10 @@ class TestProduct(unittest.TestCase):
         }
         for key in target_product:
             self.assertEqual(product[key], target_product[key])
+
+        self.assertNotIn("Why buy from us?" , product["description"])
+        self.assertNotIn("on sale!", product["description"])
+        self.assertNotIn("</a>" , product["description"])
 
     def test_multi_variant_product(self):
         url = "https://australianorganicproducts.com.au/collections/pet-care/products/biopet-adult-dog-food-grain-free"
@@ -239,6 +251,10 @@ class TestProduct(unittest.TestCase):
         }
         for key in target_product:
             self.assertEqual(product[key], target_product[key])
+
+        self.assertNotIn("Why buy from us?" , product["description"])
+        self.assertNotIn("on sale!", product["description"])
+        self.assertNotIn("</a>" , product["description"])
 
 
 if __name__ == '__main__':
