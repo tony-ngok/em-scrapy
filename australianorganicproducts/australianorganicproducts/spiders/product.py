@@ -93,7 +93,7 @@ class AopProduct(scrapy.Spider):
         existence = prod_json['available']
         title = prod_json['title']
 
-        descr_txt = response.css('div.product-description > *').get('')
+        descr_txt = response.css('div.product-description').get('')
         description = self.get_description(BeautifulSoup(descr_txt, 'html.parser')) if descr_txt else None
         if description:
             description = f'<div class="aop-descr">{description}</div>'
@@ -125,7 +125,7 @@ class AopProduct(scrapy.Spider):
             categories = " > ".join([c.strip() for c in cat_sel])
 
         price_aud = float(prod_json['price'])/100.0
-        price = round(price_aud*self.aud_rate, 2)
+        price = round(price_aud/self.aud_rate, 2)
 
         reviews = None
         rating = None
@@ -165,7 +165,7 @@ class AopProduct(scrapy.Spider):
             "reviews": reviews,
             "rating": rating,
             "sold_count": None,
-            "shipping_fee": round(9.95*self.aud_rate, 2) if price_aud < 129.00 else 0.00, # https://australianorganicproducts.com.au/pages/delivery-returns
+            "shipping_fee": round(9.95/self.aud_rate, 2) if price_aud < 129.00 else 0.00, # https://australianorganicproducts.com.au/pages/delivery-returns
             "shipping_days_min": None,
             "shipping_days_max": None,
             "weight": weight,
