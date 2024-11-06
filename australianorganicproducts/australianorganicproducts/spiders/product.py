@@ -95,8 +95,6 @@ class AopProduct(scrapy.Spider):
 
         descr_txt = response.css('div.product-description').get('')
         description = self.get_description(BeautifulSoup(descr_txt, 'html.parser')) if descr_txt else None
-        if description:
-            description = f'<div class="aop-descr">{description}</div>'
 
         options = [{
             "id": None,
@@ -127,12 +125,12 @@ class AopProduct(scrapy.Spider):
         price_aud = float(prod_json['price'])/100.0
         price = round(price_aud/self.aud_rate, 2)
 
-        reviews = None
-        rating = None
+        reviews = 0
+        rating = 0.00
         r_sel = response.css('div.product-app div.jdgm-prev-badge')
         if r_sel:
-            reviews = int(r_sel.css('::attr(data-number-of-reviews)').get())
-            rating = round(float(r_sel.css('::attr(data-average-rating)').get()), 1)
+            reviews = int(r_sel.css('::attr(data-number-of-reviews)').get('0'))
+            rating = round(float(r_sel.css('::attr(data-average-rating)').get('0.00')), 2)
 
         weight = None
         if 'weight' in var_list[0]:
