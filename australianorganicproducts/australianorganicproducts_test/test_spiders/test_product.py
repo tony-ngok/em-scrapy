@@ -63,7 +63,6 @@ class TestProduct(unittest.TestCase):
         result = list(self.spider.parse(response))
         self.assertEqual(len(result), 1)
         product = result[0]
-        print(product["description"])
 
         target_product = {
             "url": url,
