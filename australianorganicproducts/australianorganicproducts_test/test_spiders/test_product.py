@@ -39,8 +39,8 @@ class TestProduct(unittest.TestCase):
             "available_qty": 1,
             "options": None,
             "variants": None,
-            "reviews": None,
-            "rating": None,
+            "reviews": 0,
+            "rating": 0.00,
             "shipping_fee": 6.60,
             "weight": 0.26
         }
@@ -79,8 +79,8 @@ class TestProduct(unittest.TestCase):
             "available_qty": 5,
             "options": None,
             "variants": None,
-            "reviews": None,
-            "rating": None,
+            "reviews": 0,
+            "rating": 0.00,
             "shipping_fee": 6.60,
             "weight": 3.53
         }
@@ -118,8 +118,8 @@ class TestProduct(unittest.TestCase):
             "available_qty": 0,
             "options": None,
             "variants": None,
-            "reviews": None,
-            "rating": None,
+            "reviews": 0,
+            "rating": 0.00,
             "shipping_fee": 6.60,
             "weight": 0.18
         }
@@ -173,8 +173,8 @@ class TestProduct(unittest.TestCase):
                 "price": 1.62,
                 "available_qty": 32
             }],
-            "reviews": None,
-            "rating": None,
+            "reviews": 0,
+            "rating": 0.00,
             "shipping_fee": 6.60,
             "weight": 0.26
         }
