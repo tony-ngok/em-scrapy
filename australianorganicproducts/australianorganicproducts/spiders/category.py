@@ -34,7 +34,7 @@ class AopCategory(scrapy.Spider):
         过滤一般分类（分类```href```需以```/collections/```开始）
         """
 
-        filters = {'best-sellers', 'sale', 'bulk-deals', 'clearance', 'new-organic-natural-products', 'back-in-stock'}
+        filters = {'best-sellers', 'sale', 'bulk-deals', 'clearance', 'new-organic-natural-products', 'back-in-stock', 'sexual-health'}
         return cat_str in filters
 
     def parse(self, response: HtmlResponse):
