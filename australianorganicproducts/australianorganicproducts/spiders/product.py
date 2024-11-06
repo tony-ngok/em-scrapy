@@ -55,14 +55,14 @@ class AopProduct(scrapy.Spider):
         for child in soup.children:
             if isinstance(child, str) and child.strip():
                 if ('Why buy from us?' in child) or (child.strip().endswith('on sale!')):
-                    return "DESCR_END"
-                return " ".join(child.strip().split())
+                    descr += "DESCR_END"
+                descr += " ".join(child.strip().split())
             elif isinstance(child, Tag) and (child.name != 'a'):
                 in_txt = self.get_description(child)
-                if in_txt == 'DESCR_END':
+                if 'DESCR_END' in in_txt:
                     break
                 elif in_txt:
-                    return f'<{child.name}>{in_txt}</{child.name}>'
+                    descr += f'<{child.name}>{in_txt}</{child.name}>'
 
         return descr
 
