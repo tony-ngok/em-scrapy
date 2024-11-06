@@ -221,7 +221,7 @@ class TestProduct(unittest.TestCase):
                     "option_values": [{
                         "option_id": None,
                         "option_value_id": None,
-                        "option_name": "Quantity",
+                        "option_name": "Size",
                         "option_value": "3.5kg"
                     }],
                     "images": "https://australianorganicproducts.com.au/cdn/shop/products/BIOpet_Adult_Dog_Food_Grain_Free.jpg",
@@ -235,7 +235,7 @@ class TestProduct(unittest.TestCase):
                     "option_values": [{
                         "option_id": None,
                         "option_value_id": None,
-                        "option_name": "Quantity",
+                        "option_name": "Size",
                         "option_value": "13.5kg"
                     }],
                     "images": None,
