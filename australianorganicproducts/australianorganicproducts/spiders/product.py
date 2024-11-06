@@ -1,7 +1,6 @@
 from html import unescape
-from json import load, loads
+from json import loads
 import re
-from re import findall
 
 from datetime import datetime
 import scrapy
@@ -29,18 +28,20 @@ class AopProduct(scrapy.Spider):
         }
     }
 
+    HEADERS = {
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8",
+        "Accept-Language": "es-ES,es;q=0.8,en-GB;q=0.5,en;q=0.3",
+        "Referer": "https://www.google.es",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0"
+    }
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.headers = {
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8",
-            "Accept-Language": "es-ES,es;q=0.8,en-GB;q=0.5,en;q=0.3",
-            "Referer": "https://www.google.es",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0"
-        }
 
-        with open('aop_prod_urls.json', 'r') as f:
-            produits = load(f)
-        self.start_urls = [p['prod_url'] for p in produits]
+        with open('aop_prod_urls.txt', 'r', encoding='utf-8') as f:
+            for line in f:
+                if line.strip():
+                    self.start_urls.append(line.strip())
         print(f'Total {len(self.start_urls):_} products'.replace("_", "."))
     
     def get_description(self, txt: str) -> str:
@@ -58,46 +59,10 @@ class AopProduct(scrapy.Spider):
         
         return f'<div class="aop-descr">{txt}</div>'
 
-    def get_dims(self, txt: str) -> list:
-        """
-        获取商品长宽高
-        """
-
-        dims = [None, None, None]
-        units = [None, None, None]
-        dims_out = [None, None, None]
-
-        match1 = findall(r'\b(\d*\.?\d+)\s*([CcMm]*)\s*[Xx]\s*(\d*\.?\d+)\s*([CcMm]*)\s*[Xx]\s*(\d*\.?\d+)\s*([CcMm]+)\b', txt) # 长*宽*高
-        match2 = findall(r'\b(\d*\.?\d+)\s*([CcMm]*)\s*[Xx]\s*(\d*\.?\d+)\s*([CcMm]+)\b', txt) # 长*宽
-        match3 = findall(r'\b(\d*\.?\d+)\s*([CcMm]+)\b', txt) # 长
-
-        if match1:
-            units[2] = match1[0][5].lower()
-            units[1] = match1[0][3].lower() if match1[0][3] else units[2]
-            units[0] = match1[0][1].lower() if match1[0][1] else units[1]
-            for i in range(3):
-                dims[i] = float(match1[0][i*2])
-        elif match2:
-            units[1] = match2[0][3].lower()
-            units[0] = match2[0][1].lower() if match2[0][1] else units[1]
-            dims[0] = float(match2[0][0])
-            dims[1] = float(match2[0][2])
-        elif match3:
-            units[0] = match3[0][1].lower()
-            dims[0] = float(match3[0][0])
-
-        for i, (d, u) in enumerate(zip(dims, units)):
-            if u == 'm':
-                dims_out[i] = round(d*self.M_TO_IN, 2)
-            elif u == 'cm':
-                dims_out[i] = round(d*self.CM_TO_IN, 2)
-
-        return dims_out
-
     def start_requests(self):
         for i, pu in enumerate(self.start_urls, start=1):
             print(f"{i:_}".replace('_', '.'), pu)
-            yield scrapy.Request(pu, headers=self.headers, meta={ 'url': pu }, callback=self.parse)
+            yield scrapy.Request(pu, headers=self.HEADERS, meta={ 'url': pu }, callback=self.parse)
 
     def parse(self, response: HtmlResponse):
         try:
@@ -154,8 +119,6 @@ class AopProduct(scrapy.Spider):
         weight = None
         if 'weight' in var_list[0]:
             weight = round(float(var_list[0]['weight'])*self.G_TO_LB, 2)
-        
-        length, width, height = self.get_dims(title)
 
         yield {
             "date": datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
@@ -188,7 +151,7 @@ class AopProduct(scrapy.Spider):
             "shipping_days_min": None,
             "shipping_days_max": None,
             "weight": weight,
-            "length": length,
-            "width": width,
-            "height": height,
+            "length": None,
+            "width": None,
+            "height": None,
         }
