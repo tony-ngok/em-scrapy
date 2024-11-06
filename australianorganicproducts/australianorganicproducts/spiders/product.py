@@ -55,14 +55,14 @@ class AopProduct(scrapy.Spider):
         for child in soup.children:
             if isinstance(child, str) and child.strip():
                 if ('Why buy from us?' in child) or (child.strip().endswith('on sale!')):
-                    return "DESCR_END"
-                return " ".join(child.strip().split())
+                    descr += "DESCR_END"
+                descr += " ".join(child.strip().split())
             elif isinstance(child, Tag) and (child.name != 'a'):
                 in_txt = self.get_description(child)
-                if in_txt == 'DESCR_END':
+                if 'DESCR_END' in in_txt:
                     break
                 elif in_txt:
-                    return f'<{child.name}>{in_txt}</{child.name}>'
+                    descr += f'<{child.name}>{in_txt}</{child.name}>'
 
         return descr
 
@@ -85,7 +85,7 @@ class AopProduct(scrapy.Spider):
             print("Fail to get product JSON")
             return
 
-        images = ";".join('https:'+img for img in prod_json.get('images', []))
+        images = ";".join('https:'+img.split('?')[0] for img in prod_json.get('images', []))
         if not images:
             print("No images")
             return
@@ -114,7 +114,7 @@ class AopProduct(scrapy.Spider):
                 "option_name": opt['name'],
                 "option_value": var[f'option{i}']
             } for i, opt in enumerate(options, start=1) if opt != "Title"],
-            "images": "https:"+var.get('featured_image', {}).get('src') if var.get('featured_image') else None,
+            "images": "https:"+var.get('featured_image', {})['src'].split('?')[0] if var.get('featured_image') else None,
             "price": round(float(var['price'])/100.0, 2),
             "available_qty": var.get('inventory_quantity')
         } for var in var_list if var] if options else None
