@@ -1,3 +1,5 @@
+import re
+
 import scrapy
 from scrapy.http import HtmlResponse
 
@@ -33,18 +35,23 @@ class AopProductUrl(scrapy.Spider):
             yield scrapy.Request(url, headers=self.HEADERS, callback=self.parse,
                                  cb_kwargs={ "i": i })
 
+    def get_cat_name(self, href: str):
+        cn_match = re.findall(r'/collections/([\w-]*)/products/([\w-]*)', href)
+        if cn_match:
+            return cn_match[0]
+
     def parse(self, response: HtmlResponse, i: int, actual_page: int = 1):
         print(f"{i:_}/{len(self.start_urls):_}", response.url)
         url = response.url.split("?")[0]
 
         prod_ax = response.css('h2.productitem--title > a::attr(href)').getall()
         for a in prod_ax:
-            prod_str = a.split('/')[-1]
+            cat_str, prod_str = self.get_cat_name(a)
             if 'gift-card' in prod_str:
                 continue
             if prod_str not in self.prod_strs:
                 self.prod_strs.add(prod_str)
-                self.write_url(prod_str)
+                self.write_url(cat_str, prod_str)
 
         # 翻页
         more = response.css('li.pagination--next')
@@ -54,9 +61,9 @@ class AopProductUrl(scrapy.Spider):
                                  headers=headers, callback=self.parse,
                                  cb_kwargs={ "i": i, "actual_page": actual_page+1 })
 
-    def write_url(self, prod_str: str):
+    def write_url(self, cat_str: str, prod_str: str):
         mod = 'a' if self.retry else 'w'
         with open(self.urls_output, mod, encoding='utf-8') as f_urls:
-            f_urls.write(prod_str+'\n')
+            f_urls.write(cat_str+" "+prod_str+'\n')
         if not self.retry:
             self.retry = True
