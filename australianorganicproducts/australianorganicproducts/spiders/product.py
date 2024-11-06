@@ -68,10 +68,16 @@ class AopProduct(scrapy.Spider):
 
     def start_requests(self):
         for i, pu in enumerate(self.start_urls, start=1):
-            print(f"{i:_}".replace('_', '.'), pu)
-            yield scrapy.Request(pu, headers=self.HEADERS, meta={ 'url': pu }, callback=self.parse)
+            cat, name = pu.split()
+            url = f"https://australianorganicproducts.com.au/collections/{cat}/products/{name}"
+            print(f"{i:_}".replace('_', '.'), url)
+            yield scrapy.Request(url, headers=self.HEADERS, callback=self.parse)
 
     def parse(self, response: HtmlResponse):
+        if response.status == 404:
+            print("Product not found", response.url)
+            return
+
         try:
             prod_scr = response.css('script[data-section-type="static-product"]::text').get()
             prod_json = loads(prod_scr)['product']
@@ -134,7 +140,7 @@ class AopProduct(scrapy.Spider):
 
         yield {
             "date": datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
-            "url": response.meta['url'],
+            "url": response.url,
             "source": "Australian Organic Products",
             "product_id": str(prod_json['id']),
             "existence": existence,
