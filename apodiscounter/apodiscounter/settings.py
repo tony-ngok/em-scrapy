@@ -17,7 +17,7 @@ NEWSPIDER_MODULE = "apodiscounter.spiders"
 #USER_AGENT = "apodiscounter (+http://www.yourdomain.com)"
 
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = True
+ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
@@ -25,14 +25,15 @@ ROBOTSTXT_OBEY = True
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-DOWNLOAD_DELAY = 0.1
-RETRY_TIMES = 300
+DOWNLOAD_DELAY = 0.2
+# RETRY_TIMES = 1000000
 # The download delay setting will honor only one of:
 #CONCURRENT_REQUESTS_PER_DOMAIN = 16
 #CONCURRENT_REQUESTS_PER_IP = 8
 
 # Disable cookies (enabled by default)
-#COOKIES_ENABLED = False
+COOKIES_ENABLED = True
+# COOKIE_DEBUG = True
 
 # Disable Telnet Console (enabled by default)
 #TELNETCONSOLE_ENABLED = False
@@ -69,7 +70,7 @@ RETRY_TIMES = 300
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
-#AUTOTHROTTLE_ENABLED = True
+AUTOTHROTTLE_ENABLED = True
 # The initial download delay
 #AUTOTHROTTLE_START_DELAY = 5
 # The maximum download delay to be set in case of high latencies
@@ -93,34 +94,17 @@ REQUEST_FINGERPRINTER_IMPLEMENTATION = "2.7"
 TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 FEED_EXPORT_ENCODING = "utf-8"
 
-FEED_EXPORTERS = {
-    'csv': 'apodiscounter.exporters.CsvCustomSeperator'
-}
-
-LOG_FILE = 'scrapy.log'
+LOG_FILE = 'apodiscounter.log'
 LOG_LEVEL = 'DEBUG'
 
-# DOWNLOAD_HANDLERS = {
-#     "http": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
-#     "https": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
-# }
+HTTPERROR_ALLOWED_CODES = [400, 404]
 
-# PLAYWRIGHT_BROWSER_TYPE = 'chromium'  # or 'firefox' or 'webkit'
-# PLAYWRIGHT_LAUNCH_OPTIONS = {
-#     # "headless": True,
-#     "headless": False,
-#     'args': [
-#         '--no-sandbox',
-#         '--disable-setuid-sandbox',
-#         '--disable-features=site-per-process', 
-#     ],
-# }
+# https://docs.scrapy.org/en/2.11/topics/downloader-middleware.html?highlight=retry
+RETRY_HTTP_CODES = [401, 403, 408, 429, 500, 502, 503, 504, 522, 524]
 
-# DOWNLOADER_MIDDLEWARES = {
-#     'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware': 110
-# }
+MONGO_URI = "mongodb://mongouser:XSzY1nHbxi@34.172.204.102:27017"
+MONGO_DB_NAME = "apodiscounter"
+DAYS_BEF = 7
 
-DOWNLOADER_MIDDLEWARES = {
-    # The priority of 560 is important, because we want this middleware to kick in just before the scrapy built-in `RetryMiddleware`.
-    'scrapy_cloudflare_middleware.middlewares.CloudFlareMiddleware': 560 # 这个似乎并没什么用
-}
+HAS_RECENSIONS = True
+HAS_SHIP_FEE = True
