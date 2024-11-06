@@ -1,8 +1,8 @@
-from html import unescape
-from json import loads
-import re
-
 from datetime import datetime
+from json import loads
+
+import requests
+from bs4 import BeautifulSoup, Tag
 import scrapy
 from scrapy.http import HtmlResponse
 
@@ -13,14 +13,7 @@ class AopProduct(scrapy.Spider):
     allowed_domains = ["australianorganicproducts.com.au"]
     start_urls = []
 
-    AUD_TO_USD = 0.6670
-    CM_TO_IN = 0.393701
     G_TO_LB = 0.002205
-    M_TO_IN = 39.37008
-
-    # https://australianorganicproducts.com.au/pages/delivery-returns
-    SHIP_FEE = 9.95*AUD_TO_USD
-    FREE_SHIP_PRICE = 129.00*AUD_TO_USD
 
     custom_settings = {
         "ITEM_PIPELINES": {
@@ -44,20 +37,34 @@ class AopProduct(scrapy.Spider):
                     self.start_urls.append(line.strip())
         print(f'Total {len(self.start_urls):_} products'.replace("_", "."))
 
-    def get_description(self, txt: str) -> str:
-        """
-        解析格式为“标题+内容+标题+内容...”的商品描述，并过滤掉促销资讯
-        """
+        self.aud_rate = 1.507897
+        try:
+            resp = requests.get('https://open.er-api.com/v6/latest/USD')
+            if resp.ok:
+                self.aud_rate = resp.json()['rates']['AUD']
+            else:
+                raise Exception(f'Status {resp.status_code}')
+        except Exception as e:
+            print("Fail to get latest USD/AUD rate", str(e))
+        finally:
+            print(f"USD/AUD rate: {self.aud_rate:_}".replace(".", ",").replace("_", "."))
 
-        if txt:
-            txt = unescape(txt).replace('\n', ' ').replace('\r', ' ')
-            txt = ''.join([s.strip() for s in re.split(r'(?=<h[2-4][^>]*>)', txt) if s.strip()
-                            and 'Why buy from us?' not in s
-                            and 'discounted price' not in s
-                            and 'Click here' not in s
-                            and 'Range here' not in s])
+    def get_description(self, soup) -> str:
+        descr = ""
 
-        return f'<div class="aop-descr">{txt}</div>'
+        for child in soup.children:
+            if isinstance(child, str) and child.strip():
+                if ('Why buy from us?' in child) or (child.strip().endswith('on sale!')):
+                    return "DESCR_END"
+                return " ".join(child.strip().split())
+            elif isinstance(child, Tag) and (child.name != 'a'):
+                in_txt = self.get_description(child)
+                if in_txt == 'DESCR_END':
+                    break
+                elif in_txt:
+                    return f'<{child.name}>{in_txt}</{child.name}>'
+
+        return descr
 
     def start_requests(self):
         for i, pu in enumerate(self.start_urls, start=1):
@@ -69,17 +76,21 @@ class AopProduct(scrapy.Spider):
             prod_scr = response.css('script[data-section-type="static-product"]::text').get()
             prod_json = loads(prod_scr)['product']
         except:
+            print("Fail to get product JSON")
             return
 
         images = ";".join('https:'+img for img in prod_json.get('images', []))
         if not images:
+            print("No images")
             return
 
         existence = prod_json['available']
         title = prod_json['title']
 
-        description = self.get_description(prod_json.get('description', ''))
-        # print(description+'\n') 
+        descr_txt = response.css('div.product-description > *').get('')
+        description = self.get_description(BeautifulSoup(descr_txt, 'html.parser')) if descr_txt else None
+        if description:
+            description = f'<div class="aop-descr">{description}</div>'
 
         options = [{
             "id": None,
@@ -89,7 +100,7 @@ class AopProduct(scrapy.Spider):
         var_list = [var for var in prod_json.get('variants', [{}])]
         variants = [{
             "variant_id": str(var['id']),
-            "barcode": var.get('barcode'),
+            "barcode": var.get('barcode') or None,
             "sku": var.get('sku') if var.get('sku') else str(var['id']),
             "option_values": [{
                 "option_id": None,
@@ -107,7 +118,8 @@ class AopProduct(scrapy.Spider):
         if cat_sel:
             categories = " > ".join([c.strip() for c in cat_sel])
 
-        price = round(float(prod_json['price'])/100.0*self.AUD_TO_USD, 2)
+        price_aud = float(prod_json['price'])/100.0
+        price = round(price_aud*self.aud_rate, 2)
 
         reviews = None
         rating = None
@@ -118,7 +130,7 @@ class AopProduct(scrapy.Spider):
 
         weight = None
         if 'weight' in var_list[0]:
-            weight = round(float(var_list[0]['weight'])*self.G_TO_LB, 2)
+            weight = round(float(var_list[0]['weight'])*0.002205, 2)
 
         yield {
             "date": datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
@@ -142,12 +154,12 @@ class AopProduct(scrapy.Spider):
             "available_qty": var_list[0].get('inventory_quantity', (0 if not existence else None)),
             "options": options if options else None,
             "variants": variants if variants else None,
-            "has_only_default_variant": len(variants)<2 if variants else True,
+            "has_only_default_variant": (len(variants) < 2) if variants else True,
             "returnable": False,
             "reviews": reviews,
             "rating": rating,
             "sold_count": None,
-            "shipping_fee": round((self.SHIP_FEE if price < self.FREE_SHIP_PRICE else 0.00), 2),
+            "shipping_fee": round(9.95*self.aud_rate, 2) if price_aud < 129.00 else 0.00, # https://australianorganicproducts.com.au/pages/delivery-returns
             "shipping_days_min": None,
             "shipping_days_max": None,
             "weight": weight,
