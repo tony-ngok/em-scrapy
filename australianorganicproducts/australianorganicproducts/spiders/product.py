@@ -123,19 +123,19 @@ class AopProduct(scrapy.Spider):
         if variants:
             for i, var in enumerate(variants):
                 if isinstance(var['available_qty'], int) and var['available_qty'] < 0:
-                    variants[i]['available_qty'] = -var['available_qty']
+                    variants[i]['available_qty'] = abs(var['available_qty'])
 
         categories = None
         cat_sel = response.css('nav.breadcrumbs-container > a::text')[1:].getall()
         if cat_sel:
-            categories = " > ".join([c.strip() for c in cat_sel])
+            categories = " > ".join([c.strip() for c in cat_sel if c.strip()])
 
         price_aud = float(prod_json['price'])/100.0
         price = round(price_aud/self.aud_rate, 2)
 
         available_qty = var_list[0].get('inventory_quantity', (0 if not existence else None))
         if isinstance(available_qty, int) and available_qty < 0:
-            available_qty = -available_qty
+            available_qty = abs(available_qty)
 
         reviews = 0
         rating = 0.00
