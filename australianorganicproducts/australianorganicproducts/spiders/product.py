@@ -113,7 +113,7 @@ class AopProduct(scrapy.Spider):
                 "option_value": var[f'option{i}']
             } for i, opt in enumerate(options, start=1) if opt != "Title"],
             "images": "https:"+var.get('featured_image', {})['src'].split('?')[0] if var.get('featured_image') else None,
-            "price": round(float(var['price'])/100.0, 2),
+            "price": round(float(var['price'])/(100.0*self.aud_rate), 2),
             "available_qty": var.get('inventory_quantity')
         } for var in var_list if var] if options else None
 
