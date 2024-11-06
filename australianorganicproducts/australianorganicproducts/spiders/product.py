@@ -118,8 +118,12 @@ class AopProduct(scrapy.Spider):
             } for i, opt in enumerate(options, start=1) if opt != "Title"],
             "images": "https:"+var.get('featured_image', {})['src'].split('?')[0] if var.get('featured_image') else None,
             "price": round(float(var['price'])/(100.0*self.aud_rate), 2),
-            "available_qty": var.get('inventory_quantity')
+            "available_qty": var.get('inventory_quantity') 
         } for var in var_list if var] if options else None
+        if variants:
+            for var in variants:
+                if isinstance(var['available_qty'], int) and var['available_qty'] < 0:
+                    var['available_qty'] = -var['available_qty']
 
         categories = None
         cat_sel = response.css('nav.breadcrumbs-container > a::text')[1:].getall()
@@ -128,6 +132,10 @@ class AopProduct(scrapy.Spider):
 
         price_aud = float(prod_json['price'])/100.0
         price = round(price_aud/self.aud_rate, 2)
+
+        available_qty = var_list[0].get('inventory_quantity', (0 if not existence else None))
+        if isinstance(available_qty, int) and available_qty < 0:
+            available_qty = -available_qty
 
         reviews = 0
         rating = 0.00
