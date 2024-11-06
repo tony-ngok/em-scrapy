@@ -24,7 +24,7 @@ class ProductUrlSpider(scrapy.Spider):
     custom_settings = {
         'DOWNLOAD_DELAY': 0.2,
         'DOWNLOADER_MIDDLEWARES': { # 每发送请求后，先经过中间件返回回答，然后将回答通过回调函数处理
-            'apodiscountermiddlewares.ApodiscounterDownloaderMiddleware': 543
+            'apodiscounter.middlewares.ApodiscounterDownloaderMiddleware': 543
         }
     }
 
