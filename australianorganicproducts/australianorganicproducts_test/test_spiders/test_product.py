@@ -24,7 +24,6 @@ class TestProduct(unittest.TestCase):
         result = list(self.spider.parse(response))
         self.assertEqual(len(result), 1)
         product = result[0]
-        print(product["description"])
 
         target_product = {
             "url": url,
@@ -35,7 +34,7 @@ class TestProduct(unittest.TestCase):
             "upc": None,
             "brand": "Clover Fields",
             "categories": "Vegetarian",
-            "images": "https://australianorganicproducts.com.au/cdn/shop/files/Clover_Fields_Australian_Lavender_Soap_100g_media-01_a7d48828-4690-4079-8133-ef75d349789c_1200x1200.jpg",
+            "images": "https://australianorganicproducts.com.au/cdn/shop/files/Clover_Fields_Australian_Lavender_Soap_100g_media-01_a7d48828-4690-4079-8133-ef75d349789c.jpg",
             "price": 1.62,
             "available_qty": 1,
             "options": None,
@@ -64,6 +63,7 @@ class TestProduct(unittest.TestCase):
         result = list(self.spider.parse(response))
         self.assertEqual(len(result), 1)
         product = result[0]
+        print(product["description"])
 
         target_product = {
             "url": url,
@@ -74,7 +74,7 @@ class TestProduct(unittest.TestCase):
             "upc": "042608470199",
             "brand": "Lakewood",
             "categories": "Vegan Products",
-            "images": "https://australianorganicproducts.com.au/cdn/shop/products/Lakewood-Pom-Blend_400x400.jpg",
+            "images": "https://australianorganicproducts.com.au/cdn/shop/products/Lakewood-Pom-Blend.jpg",
             "price": 11.34,
             "available_qty": 5,
             "options": None,
@@ -113,7 +113,7 @@ class TestProduct(unittest.TestCase):
             "upc": "5021991941801",
             "brand": "Clipper",
             "categories": "Vegan Products",
-            "images": "https://australianorganicproducts.com.au/cdn/shop/products/26-White-Tea-NEW_590x_6b9eeda5-4f19-4174-a675-5a4c15b9eb4b_1000x1000.jpg",
+            "images": "https://australianorganicproducts.com.au/cdn/shop/products/26-White-Tea-NEW_590x_6b9eeda5-4f19-4174-a675-5a4c15b9eb4b.jpg",
             "price": 4.77,
             "available_qty": 0,
             "options": None,
@@ -152,7 +152,7 @@ class TestProduct(unittest.TestCase):
             "upc": "3999000000134",
             "brand": "Clover Fields",
             "categories": "Dairy Free",
-            "images": "https://australianorganicproducts.com.au/cdn/shop/products/Clover_Fields_Loofah_Scrub_Soap_100g_media-01_1200x1200.jpg",
+            "images": "https://australianorganicproducts.com.au/cdn/shop/products/Clover_Fields_Loofah_Scrub_Soap_100g_media-01.jpg",
             "price": 1.62,
             "available_qty": 32,
             "options": [{
@@ -207,7 +207,7 @@ class TestProduct(unittest.TestCase):
             "upc": "9328606000912",
             "brand": "Biopet",
             "categories": "Pet Care",
-            "images": "https://australianorganicproducts.com.au/cdn/shop/products/BIOpet_Adult_Dog_Food_Grain_Free_800x800.jpg",
+            "images": "https://australianorganicproducts.com.au/cdn/shop/products/BIOpet_Adult_Dog_Food_Grain_Free.jpg",
             "price": 32.16,
             "available_qty": 96,
             "options": [{
