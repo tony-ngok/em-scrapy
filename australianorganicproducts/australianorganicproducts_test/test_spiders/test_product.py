@@ -151,7 +151,7 @@ class TestProduct(unittest.TestCase):
             "upc": "3999000000134",
             "brand": "Clover Fields",
             "categories": "Dairy Free",
-            "images": "https://australianorganicproducts.com.au/cdn/shop/products/Clover_Fields_Loofah_Scrub_Soap_100g_media-01.jpg",
+            "images": "https://australianorganicproducts.com.au/cdn/shop/products/Clover_Fields_Loofah_Scrub_Soap_100g_media-01.jpg;https://australianorganicproducts.com.au/cdn/shop/products/CloverFieldsSoapGiftBoxEmptyx24Pack_media-01_51addafa-9534-435c-bbf3-ab67f764917b.jpg;https://australianorganicproducts.com.au/cdn/shop/products/Clover_Fields_Loofah_Scrub_Soap_100g_x_36_Display_media-01.jpg",
             "price": 1.62,
             "available_qty": 32,
             "options": [{
