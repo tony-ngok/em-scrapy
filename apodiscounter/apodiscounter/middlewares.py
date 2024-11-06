@@ -89,6 +89,7 @@ class ApodiscounterDownloaderMiddleware:
         # - return a Request object
         # - or raise IgnoreRequest
         if response.status >= 300:
+            print(response.text)
             print("Fehler", response.status, response.url)
         return response
 
