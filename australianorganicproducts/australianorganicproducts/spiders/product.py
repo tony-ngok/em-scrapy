@@ -43,7 +43,7 @@ class AopProduct(scrapy.Spider):
                 if line.strip():
                     self.start_urls.append(line.strip())
         print(f'Total {len(self.start_urls):_} products'.replace("_", "."))
-    
+
     def get_description(self, txt: str) -> str:
         """
         解析格式为“标题+内容+标题+内容...”的商品描述，并过滤掉促销资讯
@@ -56,7 +56,7 @@ class AopProduct(scrapy.Spider):
                             and 'discounted price' not in s
                             and 'Click here' not in s
                             and 'Range here' not in s])
-        
+
         return f'<div class="aop-descr">{txt}</div>'
 
     def start_requests(self):
@@ -85,7 +85,7 @@ class AopProduct(scrapy.Spider):
             "id": None,
             "name": opt
         } for opt in prod_json.get('options', []) if opt != "Title"]    
-        
+
         var_list = [var for var in prod_json.get('variants', [{}])]
         variants = [{
             "variant_id": str(var['id']),

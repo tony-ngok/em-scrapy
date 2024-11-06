@@ -1,5 +1,3 @@
-from re import findall
-
 import scrapy
 from scrapy.http import HtmlResponse
 
@@ -21,6 +19,7 @@ class AopProductUrl(scrapy.Spider):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.retry = False
 
         with open('aop_categories.txt', 'r', encoding='utf-8') as f:
             for line in f:
@@ -30,53 +29,34 @@ class AopProductUrl(scrapy.Spider):
 
     def start_requests(self):
         for i, cu in enumerate(self.start_urls, start=1):
-            print(f"{i:_}".replace('_', '.'), cu)
-            yield scrapy.Request(cu, headers=self.HEADERS,
-                                 meta={
-                                     'cat_url': cu,
-                                     'actual_page': 1,
-                                     'page_count': None
-                                     },
-                                 callback=self.parse)
+            url = "https://australianorganicproducts.com.au/collections/"+cu
+            yield scrapy.Request(url, headers=self.HEADERS, callback=self.parse,
+                                 cb_kwargs={ "i": i })
 
-    def parse(self, response: HtmlResponse):
-        cu = response.meta['cat_url']
-        actual_page = response.meta['actual_page']
-        page_count = response.meta['page_count']
-        
-        # 获取分类最大翻页数
-        if page_count is None:
-            scr_count_text = response.css('script[data-section-type="static-collection-faceted-filters"]::text').get()
-            sp_match = findall(r'"product_count"\s*:\s*(\d+),', scr_count_text)
-            if sp_match:
-                page_count = -(int(sp_match[0]) // -24)
-        if not page_count:
-            return
-        print(cu, f"({actual_page:_}/{page_count:_})".replace("_", "."))
+    def parse(self, response: HtmlResponse, i: int, actual_page: int = 1):
+        print(f"{i:_}/{len(self.start_urls):_}", response.url)
+        url = response.url.split("?")[0]
 
         prod_ax = response.css('h2.productitem--title > a::attr(href)').getall()
         for a in prod_ax:
             prod_str = a.split('/')[-1]
             if 'gift-card' in prod_str:
                 continue
-            
             if prod_str not in self.prod_strs:
                 self.prod_strs.add(prod_str)
-                yield {
-                    "prod_url": 'https://australianorganicproducts.com.au'+a
-                }
+                self.write_url(prod_str)
 
         # 翻页
-        if actual_page < page_count:
-            self.headers['Referer'] = response.url
-            yield scrapy.Request(cu+f'?page={actual_page}&grid_list=grid-view',
-                                 headers=self.headers,
-                                 meta={
-                                     'cat_url': cu,
-                                     'actual_page': actual_page+1,
-                                     'page_count': page_count
-                                     },
-                                 callback=self.parse)
+        more = response.css('li.pagination--next')
+        if more:
+            headers = { **self.HEADERS, 'Referer': response.url }
+            yield scrapy.Request(url+f'?page={actual_page+1}&grid_list=grid-view',
+                                 headers=headers, callback=self.parse,
+                                 cb_kwargs={ "i": i, "actual_page": actual_page+1 })
 
-    def closed(self, reason):
-        print(f"{len(self.prod_strs):_} unique products".replace('_', '.'))
+    def write_url(self, prod_str: str):
+        mod = 'a' if self.retry else 'w'
+        with open(self.urls_output, mod, encoding='utf-8') as f_urls:
+            f_urls.write(prod_str+'\n')
+        if not self.retry:
+            self.retry = True
