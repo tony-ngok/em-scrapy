@@ -66,7 +66,7 @@ class AopProduct(scrapy.Spider):
                 if in_txt == 'DESCR_END':
                     break
                 elif in_txt:
-                    if child.name != 'div':
+                    if child.name == 'div':
                         descr += in_txt
                     else:
                         descr += f'<{child.name}>{in_txt}</{child.name}>'
