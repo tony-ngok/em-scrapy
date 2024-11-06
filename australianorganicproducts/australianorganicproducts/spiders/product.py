@@ -91,7 +91,7 @@ class AopProduct(scrapy.Spider):
 
         images = ";".join('https:'+img.split('?')[0] for img in prod_json.get('images', []))
         if not images:
-            print("No images")
+            print("No images", response.url)
             return
 
         existence = prod_json['available']
@@ -121,9 +121,9 @@ class AopProduct(scrapy.Spider):
             "available_qty": var.get('inventory_quantity') 
         } for var in var_list if var] if options else None
         if variants:
-            for var in variants:
+            for i, var in enumerate(variants):
                 if isinstance(var['available_qty'], int) and var['available_qty'] < 0:
-                    var['available_qty'] = -var['available_qty']
+                    variants[i]['available_qty'] = -var['available_qty']
 
         categories = None
         cat_sel = response.css('nav.breadcrumbs-container > a::text')[1:].getall()
@@ -167,7 +167,7 @@ class AopProduct(scrapy.Spider):
             "images": images,
             "videos": None,
             "price": price,
-            "available_qty": var_list[0].get('inventory_quantity', (0 if not existence else None)),
+            "available_qty": available_qty,
             "options": options if options else None,
             "variants": variants if variants else None,
             "has_only_default_variant": (len(variants) < 2) if variants else True,
