@@ -66,7 +66,10 @@ class AopProduct(scrapy.Spider):
                 if in_txt == 'DESCR_END':
                     break
                 elif in_txt:
-                    descr += f'<{child.name}>{in_txt}</{child.name}>'
+                    if child.name != 'div':
+                        descr += in_txt
+                    else:
+                        descr += f'<{child.name}>{in_txt}</{child.name}>'
 
         return descr
 
@@ -99,6 +102,8 @@ class AopProduct(scrapy.Spider):
 
         descr_txt = response.css('div.product-description').get('')
         description = self.get_description(BeautifulSoup(descr_txt, 'html.parser')) if descr_txt else None
+        if description:
+            description = f'<div class="aop-descr">{description}</div>'
 
         options = [{
             "id": None,
@@ -133,9 +138,12 @@ class AopProduct(scrapy.Spider):
         price_aud = float(prod_json['price'])/100.0
         price = round(price_aud/self.aud_rate, 2)
 
-        available_qty = var_list[0].get('inventory_quantity', (0 if not existence else None))
-        if isinstance(available_qty, int) and available_qty < 0:
-            available_qty = abs(available_qty)
+        if not existence:
+            available_qty = 0
+        else:
+            available_qty = var_list[0].get('inventory_quantity')
+            if isinstance(available_qty, int) and available_qty < 0:
+                available_qty = abs(available_qty)
 
         reviews = 0
         rating = 0.00
