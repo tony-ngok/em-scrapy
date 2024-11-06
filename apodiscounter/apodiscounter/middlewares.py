@@ -4,6 +4,7 @@
 # https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
 from scrapy import signals
+from scrapy.http import Response
 
 # useful for handling different item types with a single interface
 from itemadapter import is_item, ItemAdapter
@@ -80,13 +81,15 @@ class ApodiscounterDownloaderMiddleware:
         #   installed downloader middleware will be called
         return None
 
-    def process_response(self, request, response, spider):
+    def process_response(self, request, response: Response, spider):
         # Called with the response returned from the downloader.
 
         # Must either;
         # - return a Response object
         # - return a Request object
         # - or raise IgnoreRequest
+        if response.status >= 300:
+            print("Fehler", response.status, response.url)
         return response
 
     def process_exception(self, request, exception, spider):
