@@ -1,3 +1,7 @@
+# 使用上级目录中的utils
+import sys
+sys.path.append('..')
+
 from datetime import datetime
 from json import loads
 
@@ -55,14 +59,17 @@ class AopProduct(scrapy.Spider):
         for child in soup.children:
             if isinstance(child, str) and child.strip():
                 if ('Why buy from us?' in child) or (child.strip().endswith('on sale!')):
-                    descr += "DESCR_END"
+                    return "DESCR_END"
                 descr += " ".join(child.strip().split())
             elif isinstance(child, Tag) and (child.name != 'a'):
                 in_txt = self.get_description(child)
-                if 'DESCR_END' in in_txt:
+                if in_txt == 'DESCR_END':
                     break
                 elif in_txt:
-                    descr += f'<{child.name}>{in_txt}</{child.name}>'
+                    if child.name == 'div':
+                        descr += in_txt
+                    else:
+                        descr += f'<{child.name}>{in_txt}</{child.name}>'
 
         return descr
 
@@ -87,7 +94,7 @@ class AopProduct(scrapy.Spider):
 
         images = ";".join('https:'+img.split('?')[0] for img in prod_json.get('images', []))
         if not images:
-            print("No images")
+            print("No images", response.url)
             return
 
         existence = prod_json['available']
@@ -95,6 +102,8 @@ class AopProduct(scrapy.Spider):
 
         descr_txt = response.css('div.product-description').get('')
         description = self.get_description(BeautifulSoup(descr_txt, 'html.parser')) if descr_txt else None
+        if description:
+            description = f'<div class="aop-descr">{description}</div>'
 
         options = [{
             "id": None,
@@ -114,16 +123,27 @@ class AopProduct(scrapy.Spider):
             } for i, opt in enumerate(options, start=1) if opt != "Title"],
             "images": "https:"+var.get('featured_image', {})['src'].split('?')[0] if var.get('featured_image') else None,
             "price": round(float(var['price'])/(100.0*self.aud_rate), 2),
-            "available_qty": var.get('inventory_quantity')
+            "available_qty": var.get('inventory_quantity') 
         } for var in var_list if var] if options else None
+        if variants:
+            for i, var in enumerate(variants):
+                if isinstance(var['available_qty'], int) and var['available_qty'] < 0:
+                    variants[i]['available_qty'] = abs(var['available_qty'])
 
         categories = None
         cat_sel = response.css('nav.breadcrumbs-container > a::text')[1:].getall()
         if cat_sel:
-            categories = " > ".join([c.strip() for c in cat_sel])
+            categories = " > ".join([c.strip() for c in cat_sel if c.strip()])
 
         price_aud = float(prod_json['price'])/100.0
         price = round(price_aud/self.aud_rate, 2)
+
+        if not existence:
+            available_qty = 0
+        else:
+            available_qty = var_list[0].get('inventory_quantity') or None
+            if isinstance(available_qty, int) and available_qty < 0:
+                available_qty = abs(available_qty)
 
         reviews = 0
         rating = 0.00
@@ -155,7 +175,7 @@ class AopProduct(scrapy.Spider):
             "images": images,
             "videos": None,
             "price": price,
-            "available_qty": var_list[0].get('inventory_quantity', (0 if not existence else None)),
+            "available_qty": available_qty,
             "options": options if options else None,
             "variants": variants if variants else None,
             "has_only_default_variant": (len(variants) < 2) if variants else True,
