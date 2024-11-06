@@ -104,7 +104,7 @@ class AopProduct(scrapy.Spider):
         var_list = [var for var in prod_json.get('variants', [{}])]
         variants = [{
             "variant_id": str(var['id']),
-            "barcode": var.get('barcode') or None,
+            "barcode": var['barcode'].replace("'", "") if var.get('barcode') else None,
             "sku": var.get('sku') if var.get('sku') else str(var['id']),
             "option_values": [{
                 "option_id": None,
@@ -148,7 +148,7 @@ class AopProduct(scrapy.Spider):
             "description_en": None,
             "summary": None,
             "sku": var_list[0].get('sku') if var_list[0].get('sku') else str(prod_json['id']),
-            "upc": var_list[0].get('barcode'),
+            "upc": var_list[0]['barcode'].replace("'", "") if var_list[0].get('barcode') else None,
             "brand": prod_json.get('vendor'),
             "specifications": None,
             "categories": categories,
