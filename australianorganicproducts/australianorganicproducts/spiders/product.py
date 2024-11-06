@@ -31,23 +31,23 @@ class AopProduct(scrapy.Spider):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        with open('aop_prod_urls.txt', 'r', encoding='utf-8') as f:
-            for line in f:
-                if line.strip():
-                    self.start_urls.append(line.strip())
-        print(f'Total {len(self.start_urls):_} products'.replace("_", "."))
+        # with open('aop_prod_urls.txt', 'r', encoding='utf-8') as f:
+        #     for line in f:
+        #         if line.strip():
+        #             self.start_urls.append(line.strip())
+        # print(f'Total {len(self.start_urls):_} products'.replace("_", "."))
 
         self.aud_rate = 1.507897
-        try:
-            resp = requests.get('https://open.er-api.com/v6/latest/USD')
-            if resp.ok:
-                self.aud_rate = resp.json()['rates']['AUD']
-            else:
-                raise Exception(f'Status {resp.status_code}')
-        except Exception as e:
-            print("Fail to get latest USD/AUD rate", str(e))
-        finally:
-            print(f"USD/AUD rate: {self.aud_rate:_}".replace(".", ",").replace("_", "."))
+        # try:
+        #     resp = requests.get('https://open.er-api.com/v6/latest/USD')
+        #     if resp.ok:
+        #         self.aud_rate = resp.json()['rates']['AUD']
+        #     else:
+        #         raise Exception(f'Status {resp.status_code}')
+        # except Exception as e:
+        #     print("Fail to get latest USD/AUD rate", str(e))
+        # finally:
+        #     print(f"USD/AUD rate: {self.aud_rate:_}".replace(".", ",").replace("_", "."))
 
     def get_description(self, soup) -> str:
         descr = ""

@@ -46,6 +46,11 @@ class TestProduct(unittest.TestCase):
         }
         for key in target_product:
             self.assertEqual(product[key], target_product[key])
+        
+        print(product["description"])
+        self.assertNotIn("Why buy from us?" , product["description"])
+        self.assertNotIn("on sale!", product["description"])
+        self.assertNotIn("</a>" , product["description"])
 
     def test_available_product_2(self):
         url = "https://australianorganicproducts.com.au/collections/vegan-products/products/lakewood-organic-pomegranate-blend-cold-pressed-946ml"
