@@ -21,6 +21,13 @@ class ProductUrlSpider(scrapy.Spider):
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0"
     }
 
+    custom_settings = {
+        'DOWNLOAD_DELAY': 0.2,
+        'DOWNLOADER_MIDDLEWARES': { # 每发送请求后，先经过中间件返回回答，然后将回答通过回调函数处理
+            'apodiscountermiddlewares.ApodiscounterDownloaderMiddleware': 543
+        }
+    }
+
     def __init__(self, *args, **kwargs):
         super(ProductUrlSpider, self).__init__(*args, **kwargs)
         self.produkte = set()
