@@ -95,7 +95,7 @@ TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 FEED_EXPORT_ENCODING = "utf-8"
 
 LOG_FILE = 'apodiscounter.log'
-LOG_LEVEL = 'INFO'
+LOG_LEVEL = 'DEBUG'
 
 HTTPERROR_ALLOWED_CODES = [400, 404]
 

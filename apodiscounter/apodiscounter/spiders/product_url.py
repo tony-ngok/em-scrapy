@@ -15,10 +15,6 @@ class ProductUrlSpider(scrapy.Spider):
     # 来源：https://apodiscounter.de/sitemapindex.xml
     start_urls = ["https://www.apodiscounter.de/sitemapproducts0.xml.gz", "https://www.apodiscounter.de/sitemapproducts1.xml.gz"]
 
-    COOKIES = {
-        "cf_clearance": "KdF0vW5wk4viGI9MYMXn60_e2E0weSvMYzNXmK88IN0-1730925646-1.2.1.1-3wE2CX2HfHkSHLV2oQgnGhR6LPgQtr1m6p4ac4zlfmFimIfFufcl6CGVxiHTHHz4OXiaM8v818KnolM3bfwrH_MepS6P7mN1_EoYcQp1ECXTuOI3swOje7pA6vDTnGoISlky1GC8451dX.eyFYeCNh2X5zXvdM4vx.ZrK5EY3tiPb5lDAp40g6gz0kBetUHXBqGf9TCsCY6t8Z.Zgm6vpeRjMU7xKL53mvJ3uTZU_a3YZbdfBG9hNBu02V.pAxhHtv69wEmSKZS7TkisULmGmbYSefbMPNNOdV8hZM6Z36JxoQvCm4qegpHMjuFQlkZnv0ax_TO0QSoxNvcKSzDvnK4lK.efA_LBbkLMqKlnrFvWXtzH34h3h58KUzr6yy5liq0BWc4iNR5GvmuYaOZsDhBNWadBhqHAq1ClbPnFGB5Be7pxz1DE_n4A3X1GR0KUx3IMN.uZ6_hY2yIlv3hZSw"
-    }
-
     HEADERS = {
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8",
         "Accept-Language": "de-DE,de;q=0.8,en-GB;q=0.5,en;q=0.3",
@@ -32,7 +28,7 @@ class ProductUrlSpider(scrapy.Spider):
 
     def start_requests(self):
         for url in ProductUrlSpider.start_urls:
-            yield scrapy.Request(url, headers=self.HEADERS, cookies=self.COOKIES, callback=self.parse, errback=self.errback)
+            yield scrapy.Request(url, headers=self.HEADERS, callback=self.parse, errback=self.errback)
 
     def errback(self, failure):
         self.logger.error(repr(failure))
