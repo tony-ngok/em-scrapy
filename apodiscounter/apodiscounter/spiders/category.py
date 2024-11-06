@@ -43,6 +43,8 @@ class CategorySpider(scrapy.Spider):
         loc_values = [loc.text for loc in loc_elements]
 
         for url in loc_values:
-            yield {
-                "cat_url": url
-            }
+            kat = url.split('/')[-1]
+            if 'sex-lifestyle' not in kat:
+                yield {
+                    "cat_url": url
+                }
