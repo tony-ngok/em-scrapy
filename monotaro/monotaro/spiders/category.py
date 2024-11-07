@@ -29,7 +29,7 @@ class MonotaroCategory(scrapy.Spider):
 
     def start_requests(self):
         yield scrapy.Request(self.start_urls[0], headers=self.HEADERS, callback=self.parse_big)
-        yield scrapy.Request(self.start_urls[1], headers=self.HEADERS, callback=self.parse)
+        yield scrapy.Request(self.start_urls[1], headers=self.HEADERS, callback=self.parse, cb_kwargs={ 'from_url': '', 'to_url': self.start_urls[1] })
 
     def parse_big(self, response: HtmlResponse):
         """
@@ -47,7 +47,7 @@ class MonotaroCategory(scrapy.Spider):
                                      cb_kwargs={ 'from_url': response.url, 'to_url': next_url })
 
     def parse(self, response: HtmlResponse, from_url: str, to_url: str):
-        print("Get:", response.url, "from:", from_url, "to:", to_url)
+        print("Get:", response.url, "from:", from_url, "to:", to_url, response.status)
         if response.status == 404:
             print("Category not found", response.url, response.request.url)
             return
