@@ -46,6 +46,7 @@ class MonotaroCategory(scrapy.Spider):
                 yield scrapy.Request(actual_url, headers=headers, callback=self.parse)
 
     def parse(self, response: HtmlResponse):
+        print(response.url, response.request.url)
         if response.status == 404:
             print("Category not found", response.url, response.request.url)
             return
