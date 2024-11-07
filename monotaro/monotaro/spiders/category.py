@@ -19,6 +19,7 @@ class MonotaroCategory(scrapy.Spider):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.cats = set()
         self.retry = False
 
     def get_cat(self, url: str):
@@ -45,10 +46,16 @@ class MonotaroCategory(scrapy.Spider):
                 yield scrapy.Request(actual_url, headers=headers, callback=self.parse)
 
     def parse(self, response: HtmlResponse):
+        if response.status == 404:
+            print("Category not found", response.url)
+            return
+
         navs = response.css('nav.VisualCategoryWrap > a')
         if not navs:
             cat_no = self.get_cat(response.url)
-            self.write_cat(cat_no)
+            if cat_no not in self.cats:
+                self.cats.add(cat_no)
+                self.write_cat(cat_no)
 
         for a_href in navs:
             cat_name = a_href.css('.VisualCategoryButton span.VisualCategoryText__CategoryName::text').get().strip()
