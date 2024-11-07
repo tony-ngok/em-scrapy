@@ -28,8 +28,16 @@ class MonotaroCategory(scrapy.Spider):
             return cat_match[0]
 
     def start_requests(self):
-        yield scrapy.Request(self.start_urls[0], headers=self.HEADERS, callback=self.parse_big)
-        yield scrapy.Request(self.start_urls[1], headers=self.HEADERS, callback=self.parse, cb_kwargs={ 'from_url': '', 'to_url': self.start_urls[1] })
+        yield scrapy.Request(self.start_urls[0], headers=self.HEADERS, callback=self.parse_big,
+        meta={
+            'dont_redirect': True,
+            'handle_httpstatus_list': [301, 302]
+            })
+        yield scrapy.Request(self.start_urls[1], headers=self.HEADERS, callback=self.parse,
+        meta={
+            'dont_redirect': True,
+            'handle_httpstatus_list': [301, 302]
+            })
 
     def parse_big(self, response: HtmlResponse):
         """
