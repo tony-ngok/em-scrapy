@@ -93,7 +93,7 @@ TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 FEED_EXPORT_ENCODING = "utf-8"
 
 LOG_FILE = 'monotaro.log'
-LOG_LEVEL = 'INFO'
+LOG_LEVEL = 'DEBUG'
 
 HTTPERROR_ALLOWED_CODES = [400, 404]
 RETRY_TIMES = 10000
@@ -102,7 +102,7 @@ RETRY_TIMES = 10000
 RETRY_HTTP_CODES = [301, 302, 401, 403, 408, 429, 500, 502, 503, 504, 522, 524]
 
 MONGO_URI = "mongodb://mongouser:XSzY1nHbxi@34.172.204.102:27017"
-MONGO_DB_NAME = "apodiscounter"
+MONGO_DB_NAME = "monotaro"
 DAYS_BEF = 7
 
 HAS_VARS = True
