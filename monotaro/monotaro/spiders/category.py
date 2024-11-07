@@ -47,7 +47,7 @@ class MonotaroCategory(scrapy.Spider):
                                      cb_kwargs={ 'from_url': response.url, 'to_url': next_url })
 
     def parse(self, response: HtmlResponse, from_url: str, to_url: str):
-        print(response.url, from_url, to_url)
+        print("Get:", response.url, "from:", from_url, "to:", to_url)
         if response.status == 404:
             print("Category not found", response.url, response.request.url)
             return
