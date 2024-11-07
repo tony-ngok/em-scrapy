@@ -1,3 +1,7 @@
+# 使用上级目录中的utils
+import sys
+sys.path.append('..')
+
 from html import unescape
 from json import load, loads
 import re

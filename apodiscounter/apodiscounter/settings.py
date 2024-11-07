@@ -111,5 +111,5 @@ HAS_SHIP_FEE = True
 
 DOWNLOADER_MIDDLEWARES = {
     # The priority of 560 is important, because we want this middleware to kick in just before the scrapy built-in `RetryMiddleware`.
-    'scrapy_cloudflare_middleware.middlewares.CloudFlareMiddleware': 560 # 这个似乎并没什么用
+    'scrapy_cloudflare_middleware.middlewares.CloudFlareMiddleware': 560 # 这个似乎并没什么用（更新：2024年11月过后已完全失效）
 }
