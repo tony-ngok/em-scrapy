@@ -25,8 +25,8 @@ ROBOTSTXT_OBEY = False
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-DOWNLOAD_DELAY = 0.2
-# RETRY_TIMES = 1000000
+# DOWNLOAD_DELAY = 0.1
+RETRY_TIMES = 1000000
 # The download delay setting will honor only one of:
 #CONCURRENT_REQUESTS_PER_DOMAIN = 16
 #CONCURRENT_REQUESTS_PER_IP = 8
@@ -108,3 +108,8 @@ DAYS_BEF = 7
 
 HAS_RECENSIONS = True
 HAS_SHIP_FEE = True
+
+DOWNLOADER_MIDDLEWARES = {
+    # The priority of 560 is important, because we want this middleware to kick in just before the scrapy built-in `RetryMiddleware`.
+    'scrapy_cloudflare_middleware.middlewares.CloudFlareMiddleware': 560 # 这个似乎并没什么用
+}
