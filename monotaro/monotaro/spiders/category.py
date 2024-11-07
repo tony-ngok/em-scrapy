@@ -41,13 +41,13 @@ class MonotaroCategory(scrapy.Spider):
             cat_name = a_href.css('.TextLink--ChildrenCategory span.ChildrenCategory__Text::text').get().strip()
             if cat_name != '健康食品・ドリンク':
                 href = a_href.css('::attr(href)').get()
-                actual_url = 'https://www.monotaro.com'+href
-                headers = { **self.HEADERS, 'Referer': actual_url }
-                yield scrapy.Request(actual_url, headers=headers, callback=self.parse,
-                                     cb_kwargs={ 'from_url': response.url })
+                next_url = 'https://www.monotaro.com'+href
+                headers = { **self.HEADERS, 'Referer': next_url }
+                yield scrapy.Request(next_url, headers=headers, callback=self.parse,
+                                     cb_kwargs={ 'from_url': response.url, 'to_url': next_url })
 
-    def parse(self, response: HtmlResponse, from_url: str):
-        print(response.url, from_url)
+    def parse(self, response: HtmlResponse, from_url: str, to_url: str):
+        print(response.url, from_url, to_url)
         if response.status == 404:
             print("Category not found", response.url, response.request.url)
             return
@@ -66,7 +66,7 @@ class MonotaroCategory(scrapy.Spider):
                 next_url = 'https://www.monotaro.com'+href
                 headers = { **self.HEADERS, 'Referer': response.url }
                 yield scrapy.Request(next_url, headers=headers, callback=self.parse,
-                                     cb_kwargs={ 'from_url': response.url })
+                                     cb_kwargs={ 'from_url': response.url, 'to_url': next_url })
 
     def write_cat(self, cat_no: str):
         mod = 'a' if self.retry else 'w'
