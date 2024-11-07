@@ -50,8 +50,10 @@ class MonotaroCategory(scrapy.Spider):
                                      })
 
     def parse(self, response: HtmlResponse):
+        if response.status in range(300, 400):
+            print("Redirect, retry", response.request.url)
         if response.status == 404:
-            print("Category not found", response.url, response.request.url)
+            print("Category not found", response.url)
             return
 
         navs = response.css('nav.VisualCategoryWrap > a')
