@@ -43,10 +43,11 @@ class MonotaroCategory(scrapy.Spider):
                 href = a_href.css('::attr(href)').get()
                 actual_url = 'https://www.monotaro.com'+href
                 headers = { **self.HEADERS, 'Referer': actual_url }
-                yield scrapy.Request(actual_url, headers=headers, callback=self.parse)
+                yield scrapy.Request(actual_url, headers=headers, callback=self.parse,
+                                     cb_kwargs={ 'from_url': response.url })
 
-    def parse(self, response: HtmlResponse):
-        print(response.url, response.request.url)
+    def parse(self, response: HtmlResponse, from_url: str):
+        print(response.url, from_url)
         if response.status == 404:
             print("Category not found", response.url, response.request.url)
             return
@@ -64,7 +65,8 @@ class MonotaroCategory(scrapy.Spider):
                 href = a_href.css('::attr(href)').get('')
                 next_url = 'https://www.monotaro.com'+href
                 headers = { **self.HEADERS, 'Referer': response.url }
-                yield scrapy.Request(next_url, headers=headers, callback=self.parse)
+                yield scrapy.Request(next_url, headers=headers, callback=self.parse,
+                                     cb_kwargs={ 'from_url': response.url })
 
     def write_cat(self, cat_no: str):
         mod = 'a' if self.retry else 'w'
