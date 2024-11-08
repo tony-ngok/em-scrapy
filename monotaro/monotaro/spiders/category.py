@@ -31,12 +31,12 @@ class MonotaroCategory(scrapy.Spider):
         yield scrapy.Request(self.start_urls[0], headers=self.HEADERS, callback=self.parse_big,
         meta={
             'dont_redirect': True,
-            'handle_httpstatus_list': [301, 302]
+            'handle_httpstatus_list': [301, 404]
             })
         yield scrapy.Request(self.start_urls[1], headers=self.HEADERS, callback=self.parse,
         meta={
             'dont_redirect': True,
-            'handle_httpstatus_list': [301, 302]
+            'handle_httpstatus_list': [301, 404]
             })
 
     def parse_big(self, response: HtmlResponse):
@@ -54,12 +54,10 @@ class MonotaroCategory(scrapy.Spider):
                 yield scrapy.Request(next_url, headers=headers, callback=self.parse,
                                      meta={
                                         'dont_redirect': True, # https://stackoverflow.com/questions/15476587/scrapy-how-to-stop-redirect-302
-                                        'handle_httpstatus_list': [301, 302]
+                                        'handle_httpstatus_list': [301, 404]
                                      })
 
     def parse(self, response: HtmlResponse):
-        if response.status in range(300, 400):
-            print("Redirect, retry", response.request.url)
         if response.status == 404:
             print("Category not found", response.url)
             return
@@ -80,7 +78,7 @@ class MonotaroCategory(scrapy.Spider):
                 yield scrapy.Request(next_url, headers=headers, callback=self.parse,
                                      meta={
                                         'dont_redirect': True,
-                                        'handle_httpstatus_list': [301, 302]
+                                        'handle_httpstatus_list': [301, 404]
                                      })
 
     def write_cat(self, cat_no: str):

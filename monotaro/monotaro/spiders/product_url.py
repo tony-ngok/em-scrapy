@@ -44,17 +44,20 @@ class MonotaroProductUrl(scrapy.Spider):
     def start_requests(self):
         for i, cat_no in enumerate(self.start_urls):
             url = self.get_url(cat_no)
-            yield scrapy.Request(url, headers=self.get_headers(cat_no),
+            yield scrapy.Request(url, headers=self.get_headers('https://www.monotaro.com/'),
                                  meta={
                                      'cookiejar': i,
                                      'dont_redirect': True,
-                                     'handle_httpstatus_list': [301, 302, 404]
+                                     'handle_httpstatus_list': [301, 404]
                                      },
                                  callback=self.parse,
                                  cb_kwargs={ "i": i+1, "cat_no": cat_no })
 
     def parse(self, response: HtmlResponse, i: int, cat_no: str, p: int = 1):
         print(f"{i:_}/{len(self.start_urls):_}".replace('_', '.'), response.url)
+        if response.status == 404:
+            print("Empty category", response.url)
+            return
 
         prod_ax = response.css('div.SearchResultProductColumn')
         for a in prod_ax:
@@ -75,7 +78,7 @@ class MonotaroProductUrl(scrapy.Spider):
                                  meta={
                                      'cookiejar': response.meta['cookiejar'],
                                      'dont_redirect': True,
-                                     'handle_httpstatus_list': [301, 302, 404]
+                                     'handle_httpstatus_list': [301, 404]
                                      },
                                  callback=self.parse,
                                  cb_kwargs={ "i": i, "cat_no": cat_no, "p": p+1 })
