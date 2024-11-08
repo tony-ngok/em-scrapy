@@ -39,6 +39,16 @@ class MonotaroProduct(scrapy.Spider):
         print(f'Total {len(self.start_urls):_} products'.replace("_", "."))
 
         self.jpy_rate = 153.237093
+        try:
+            resp = requests.get('https://open.er-api.com/v6/latest/USD')
+            if resp.ok:
+                self.jpy_rate = resp.json()['rates']['JPY']
+            else:
+                raise Exception(f'Status {resp.status_code}')
+        except Exception as e:
+            print("Fail to get latest USD/JPY rate", str(e))
+        finally:
+            print(f"USD/JPY rate: {self.jpy_rate:_}".replace(".", ",").replace("_", "."))
     
     def get_id(self, url: str) -> str:
         """
