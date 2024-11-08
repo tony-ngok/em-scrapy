@@ -7,6 +7,7 @@ from json import load, loads
 from re import findall
 
 import requests
+from bs4 import BeautifulSoup, Tag
 import scrapy
 from scrapy.http import HtmlResponse
 
@@ -54,6 +55,98 @@ class MonotaroProduct(scrapy.Spider):
         if p > 1:
             return f'https://www.monotaro.com/g/{prod_id}/page-{p}/'
         return f'https://www.monotaro.com/g/{prod_id}/'
+
+    def get_basic_descr(self, response):
+        basic_descr = ""
+
+        if isinstance(response, HtmlResponse):
+            response = BeautifulSoup(response.css('p.DescriptionText').get(''), 'html.parser')
+            response = response.p
+            if not response:
+                return ""
+
+        for child in response.children:
+            if isinstance(child, str):
+                basic_descr += " ".join(child.strip().split())
+            elif isinstance(child, Tag):
+                if child.name == 'a':
+                    return ""
+                elif child.name == 'br':
+                    basic_descr += '<br>'
+                else:
+                    basic_descr += self.get_basic_descr(child)
+
+        return basic_descr
+
+    def get_alert_descr(self, response):
+        alert_descr = ""
+
+        if isinstance(response, HtmlResponse):
+            response = BeautifulSoup(response.css('div.product_data_caution').get(''), 'html.parser')
+            response = response.div
+            if not response:
+                return ""
+
+        for child in response.children:
+            if isinstance(child, str):
+                alert_descr += " ".join(child.strip().split())
+            elif isinstance(child, Tag):
+                if child.name == 'a':
+                    return ""
+                elif (child.name == 'div') and ('product_data_caution-title' in child.get('class')):
+                    alert_descr += '<h4>注意</h4>'
+                elif child.name == 'br':
+                    alert_descr += '<br>'
+                else:
+                    alert_descr += self.get_basic_descr(child)
+
+        return alert_descr
+
+    def get_specs_etc(self, response: HtmlResponse):
+        specs = []
+        add_descr = ""
+
+        spans = response.css('span.AttributeLabel__Wrap').getall()
+        for span in spans:
+            if span:
+                span = BeautifulSoup(span, 'html_parser')
+                span = span.span
+
+                spec_name = ''
+                spec_val = ''
+                is_add_descr = False
+
+                for child in span.children:
+                    if isinstance(child, Tag) and (child.name == 'span'):
+                        spec_name = child.text.strip()
+                    elif isinstance(child, Tag) and (child.name == 'div'): # 较长的参数值放入描述中
+                        is_add_descr = True
+                        spec_val = " ".join(child.text.strip().replace("\n", '<br>').split())
+                    elif isinstance(child, str):
+                        if "。" in spec_val:
+                            is_add_descr = True
+                        spec_val = child.text.strip()
+
+                if spec_name and spec_val:
+                    if is_add_descr:
+                        add_descr += f'<tr><th>{spec_name}</th><td>{spec_val}</td></tr>'
+                    else:
+                        specs.append({
+                            "name": spec_name,
+                            "value": spec_val
+                        })
+
+        return (specs if specs else None), add_descr
+
+    def combine_descr(self, basic_descr: str, add_descr: str, alert_descr: str):
+        descr1 = f'<div class="monotaro-descr">{basic_descr}</div>' if basic_descr else ""
+        descr2 = f'<table class="monotaro-descr">{add_descr}</table>' if add_descr else ""
+        descr3 = f'<div class="monotaro-descr">{alert_descr}</div>' if alert_descr else ""
+        return descr1+descr2+descr3 if descr1 or descr2 or descr3 else None
+
+    def get_brand(self, dat: dict):
+        if dat.get('brand'):
+            return dat['brand'].get('name') or None
 
     def get_cats(self, cat_dat: dict):
         cat_list = [item['item']['name'] for item in cat_dat.get('itemListElement', [])[1:]]
@@ -119,9 +212,16 @@ class MonotaroProduct(scrapy.Spider):
             item['url'] = response.url
             item['source'] = 'MonotaRO'
             item['product_id'] = pid
+
+            item['specifications'], add_descr = self.get_specs_etc(response)
+            basic_descr = self.get_basic_descr(response)
+            alert_descr = self.get_alert_descr(response)
+            item['description'] = self.combine_descr(basic_descr, add_descr, alert_descr)
+
             item['description_en'] = None
             item['summary'] = None
             item['upc'] = None
+            item['brand'] = self.get_brand(prod_json)
             item['categories'] = self.get_cats(bc_json)
             item['videos'] = self.get_videos(response)
             item['returnable'] = False
@@ -143,4 +243,5 @@ class MonotaroProduct(scrapy.Spider):
                                  callback=self.parse,
                                  cb_kwargs={ 'i': i+1, "pid": pid, "p": p+1, "item": item })
         else:
+            item['variants'] = item['variants'] if item['variants'] else None
             yield item
