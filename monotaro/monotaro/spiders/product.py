@@ -1,25 +1,21 @@
-from html import unescape
-from json import load, loads
-import re
-from re import findall
+# 使用上级目录中的utils
+import sys
+sys.path.append('..')
 
 from datetime import datetime
+from json import load, loads
+from re import findall
+
+import requests
 import scrapy
 from scrapy.http import HtmlResponse
 
 
-# scrapy crawl monotaro_product -o monotaro_products.json # 增添数据（不复写）
-# scrapy crawl monotaro_product -O monotaro_products.json # 复写整个数据
+# scrapy crawl monotaro_product
 class MonotaroProduct(scrapy.Spider):
     name = "monotaro_product"
     allowed_domains = ["www.monotaro.com"]
     start_urls = []
-
-    JPY_TO_USD = 1.0/143.13
-
-    # https://help.monotaro.com/app/answers/detail/a_id/19
-    FREE_SHIP_PRICE = 3500*JPY_TO_USD
-    SHIP_FEE = 500*JPY_TO_USD
 
     CM_TO_IN = 0.393701
     M_TO_IN = 39.37008
@@ -27,20 +23,32 @@ class MonotaroProduct(scrapy.Spider):
     G_TO_LB = 0.002205
     KG_TO_LB = 2.20462
 
+    HEADERS = {
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8",
+        "Accept-Language": "pt-PT,pt;q=0.8,en-GB;q=0.5,en;q=0.3",
+        "Referer": "https://www.google.pt",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0"
+    }
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.headers = {
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8",
-            # "Accept-Encoding": "gzip, deflate, br, zstd", # 若发现请求回答内容奇怪，试着不用这个请求头
-            "Accept-Language": "pt-PT,pt;q=0.8,en-GB;q=0.5,en;q=0.3",
-            "Referer": "https://www.google.pt",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0"
-        }
 
         with open('monotaro_prod_urls.json', 'r') as f:
             produits = load(f)
         self.start_urls = [p['prod_url'] for p in produits]
         print(f'Total {len(self.start_urls):_} products'.replace("_", "."))
+
+        self.jpy_rate = 153.237093
+        try:
+            resp = requests.get('https://open.er-api.com/v6/latest/USD')
+            if resp.ok:
+                self.jpy_rate = resp.json()['rates']['JPY']
+            else:
+                raise Exception(f'Status {resp.status_code}')
+        except Exception as e:
+            print("Fail to get latest USD/JPY rate", str(e))
+        finally:
+            print(f"USD/JPY rate: {self.jpy_rate:_}".replace(".", ",").replace("_", "."))
     
     def get_id(self, url: str) -> str:
         """
@@ -150,12 +158,6 @@ class MonotaroProduct(scrapy.Spider):
         return dims_out
 
     def start_requests(self):
-        # self.start_urls = [
-        #     "https://www.monotaro.com/g/04191960/",
-        #     "https://www.monotaro.com/g/00317720/",
-        #     "https://www.monotaro.com/g/04563190/"
-        # ] # test
-
         for i, pu in enumerate(self.start_urls, start=1):
             print(f"{i:_}".replace('_', '.'), pu)
             yield scrapy.Request(pu, headers=self.headers, meta={ 'url': pu }, callback=self.parse)

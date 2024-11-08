@@ -92,25 +92,19 @@ REQUEST_FINGERPRINTER_IMPLEMENTATION = "2.7"
 TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 FEED_EXPORT_ENCODING = "utf-8"
 
-FEED_EXPORTERS = {
-    'csv': 'monotaro.exporters.CsvCustomSeperator'
-}
+LOG_FILE = 'monotaro.log'
+LOG_LEVEL = 'INFO'
 
-LOG_FILE = 'scrapy.log'
-LOG_LEVEL = 'DEBUG'
+HTTPERROR_ALLOWED_CODES = [400, 404]
+RETRY_TIMES = 10000
 
-DOWNLOAD_HANDLERS = {
-    "http": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
-    "https": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
-}
+# https://docs.scrapy.org/en/2.11/topics/downloader-middleware.html?highlight=retry
+RETRY_HTTP_CODES = [301, 401, 403, 408, 429, 500, 502, 503, 504, 522, 524]
 
-PLAYWRIGHT_BROWSER_TYPE = 'chromium'  # or 'firefox' or 'webkit'
-PLAYWRIGHT_LAUNCH_OPTIONS = {
-    # "headless": True,
-    "headless": False,
-    'args': [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-features=site-per-process', 
-    ],
-}
+MONGO_URI = "mongodb://mongouser:XSzY1nHbxi@34.172.204.102:27017"
+MONGO_DB_NAME = "monotaro"
+DAYS_BEF = 7
+
+HAS_VARS = True
+HAS_RECENSIONS = True
+HAS_SHIP_FEE = True
