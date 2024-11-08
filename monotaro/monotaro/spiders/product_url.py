@@ -47,7 +47,6 @@ class MonotaroProductUrl(scrapy.Spider):
             yield scrapy.Request(url, headers=self.get_headers('https://www.monotaro.com/'),
                                  meta={
                                      'cookiejar': i,
-                                     'dont_redirect': True,
                                      'handle_httpstatus_list': [301, 404]
                                      },
                                  callback=self.parse,
@@ -77,7 +76,6 @@ class MonotaroProductUrl(scrapy.Spider):
             yield scrapy.Request(next_url, headers=self.get_headers(response.url),
                                  meta={
                                      'cookiejar': response.meta['cookiejar'],
-                                     'dont_redirect': True,
                                      'handle_httpstatus_list': [301, 404]
                                      },
                                  callback=self.parse,
