@@ -53,7 +53,7 @@ class MonotaroCategory(scrapy.Spider):
                 headers = { **self.HEADERS, 'Referer': next_url }
                 yield scrapy.Request(next_url, headers=headers, callback=self.parse,
                                      meta={
-                                        'dont_redirect': True,
+                                        'dont_redirect': True, # https://stackoverflow.com/questions/15476587/scrapy-how-to-stop-redirect-302
                                         'handle_httpstatus_list': [301, 302]
                                      })
 

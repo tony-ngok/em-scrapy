@@ -1,4 +1,4 @@
-from json import load
+import re
 
 import scrapy
 from scrapy.http import HtmlResponse
@@ -9,64 +9,75 @@ class MonotaroProductUrl(scrapy.Spider):
     name = "monotaro_prod_url"
     allowed_domains = ["www.monotaro.com"]
     start_urls = []
+    urls_output = "monotaro_prod_urls.txt"
+
+    # https://docs.scrapy.org/en/2.11/topics/settings.html?highlight=retrymiddleware
+    # https://docs.scrapy.org/en/2.11/topics/downloader-middleware.html#std-reqmeta-dont_redirect
+    handle_httpstatus_list = [301, 302]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.prod_hrefs = set()
+        self.retry = False
+        self.prod_nos = set()
 
-        with open('monotaro_categories.json', 'r') as f:
-            categories = load(f)
-        self.start_urls = [c['cat_url'] for c in categories]
+        with open('monotaro_cats.txt', 'r', encoding='utf-8') as f:
+            for line in f:
+                if line.strip():
+                    self.start_urls.append(line.strip())
         print(f'Total {len(self.start_urls):_} categories'.replace("_", "."))
 
     def get_headers(self, referer: str):
         return {
             "Accept": "*/*",
-            # "Accept-Encoding": "gzip, deflate, br, zstd", # 若发现请求回答内容奇怪，试着不用这个请求头
             "Accept-Language": "pt-PT,pt;q=0.8,en-GB;q=0.5,en;q=0.3",
             "Content-Type": "application/json",
             "Referer": referer,
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0"
         }
-    
-    def start_requests(self):
-        # self.start_urls = ['https://www.monotaro.com/s/c-105779/', 'https://www.monotaro.com/s/c-134918/'] # test
-        for i, cu in enumerate(self.start_urls, start=1):
-            print(f"{i:_}".replace('_', '.'), cu)
-            yield scrapy.Request(cu, headers=self.get_headers(cu),
-                                 meta={
-                                     'cat_url': cu,
-                                     'page': 1
-                                     },
-                                 callback=self.parse)
 
-    def parse(self, response: HtmlResponse):
-        cu = response.meta['cat_url']
-        page = response.meta['page']
+    def get_url(self, cat_no: str, p: int = 1):
+        if p > 1:
+            return f'https://www.monotaro.com/s/c-{cat_no}/page-{p}/?abolition=1'
+        return f'https://www.monotaro.com/s/c-{cat_no}/?abolition=1'
+
+    def get_no(self, href: str):
+        catno_match = re.findall(r'/g/(\d+)', href)
+        if catno_match:
+            return catno_match[0]
+
+    def start_requests(self):
+        for i, cu in enumerate(self.start_urls):
+            url = self.get_url(cu)
+            yield scrapy.Request(url, headers=self.get_headers(cu),
+                                 meta={ 'cookiejar': i },
+                                 callback=self.parse,
+                                 cb_kwargs={ "i": i+1 })
+
+    def parse(self, response: HtmlResponse, i: int, p: int = 1):
+        print(f"{i:_}/{len(self.start_urls):_}".replace('_', '.'), response.url)
 
         prod_ax = response.css('div.SearchResultProductColumn')
         for a in prod_ax:
-            img = a.css('div.SearchResultProductColumn__LeftColumn img::attr(data-rep-img-src)').get()
+            img = a.css('div.SearchResultProductColumn__LeftColumn img::attr(data-rep-img-src)').get('')
             nomore = a.css('div.SearchResultProductColumn__RightColumn span[title="取扱い終了"]')
 
-            if not (('mono_image_na' in img) or nomore): # 没有画像和彻底断货的商品无法卖
+            if img and (not (('mono_image_na' in img) or nomore)): # 没有画像和彻底断货的商品无法卖
                 href = a.css('div.SearchResultProductColumn__LeftColumn > a::attr(href)').get()
-                if href not in self.prod_hrefs:
-                    self.prod_hrefs.add(href)
-                    yield {
-                        "prod_url": 'https://www.monotaro.com'+a.css('::attr(href)').get()
-                    }
-        
+                if href not in self.prod_nos:
+                    cat_no = self.get_no(href)
+                    self.prod_nos.add(cat_no)
+                    self.write_prod(cat_no)
+
         next_a = response.css('a.Button--PaginationNext').get()
         if next_a:
-            page += 1
-            yield scrapy.Request(cu+f'page-{page}/', headers=self.get_headers(response.url),
-                                 meta={
-                                     'cat_url': cu,
-                                     'page': page
-                                     },
-                                 callback=self.parse)
+            next_url = self.get_url(cat_no, p+1)
+            yield scrapy.Request(next_url, headers=self.get_headers(response.url),
+                                 meta={ "cookiejar": response.meta['cookiejar'] },
+                                 callback=self.parse, cb_kwargs={ "i": i, "p": p+1 })
 
-    def closed(self, reason):
-        # print(self.prod_ids)
-        print(f"{len(self.prod_hrefs):_} unique products".replace('_', '.'))
+    def write_prod(self, prod: str):
+        mod = 'a' if self.retry else 'w'
+        with open(self.urls_output, mod, encoding='utf-8') as f_urls:
+            f_urls.write(prod+'\n')
+        if not self.retry:
+            self.retry = True
