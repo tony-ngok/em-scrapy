@@ -38,17 +38,15 @@ class MonotaroCategory(scrapy.Spider):
         进入大分类mall页面抓取
         """
 
-        navs = response.css('li.ChildrenCategory > a')
+        navs = response.css('li.LayerList__Item > a')[1:]
         for a_href in navs:
-            cat_name = a_href.css('.TextLink--ChildrenCategory span.ChildrenCategory__Text::text').get().strip()
-            if cat_name != '健康食品・ドリンク':
-                href = a_href.css('::attr(href)').get()
-                next_url = 'https://www.monotaro.com'+href
-                headers = { **self.HEADERS, 'Referer': next_url }
-                yield scrapy.Request(next_url, headers=headers, callback=self.parse,
-                                     meta={
-                                        'handle_httpstatus_list': [301, 404] # https://stackoverflow.com/questions/15476587/scrapy-how-to-stop-redirect-302
-                                     })
+            href = a_href.css('::attr(href)').get()
+            next_url = 'https://www.monotaro.com'+href
+            headers = { **self.HEADERS, 'Referer': response.url }
+            yield scrapy.Request(next_url, headers=headers, callback=self.parse,
+                                    meta={
+                                    'handle_httpstatus_list': [301, 404] # https://stackoverflow.com/questions/15476587/scrapy-how-to-stop-redirect-302
+                                    })
 
     def parse(self, response: HtmlResponse):
         if response.status == 404:
@@ -64,7 +62,7 @@ class MonotaroCategory(scrapy.Spider):
 
         for a_href in navs:
             cat_name = a_href.css('.VisualCategoryButton span.VisualCategoryText__CategoryName::text').get().strip()
-            if cat_name != 'ホワイトボード':
+            if (cat_name != 'ホワイトボード') and (cat_name != '健康食品・ドリンク'):
                 href = a_href.css('::attr(href)').get('')
                 next_url = 'https://www.monotaro.com'+href
                 headers = { **self.HEADERS, 'Referer': response.url }
