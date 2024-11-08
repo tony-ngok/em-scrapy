@@ -11,10 +11,6 @@ class MonotaroProductUrl(scrapy.Spider):
     start_urls = []
     urls_output = "monotaro_prod_urls.txt"
 
-    # https://docs.scrapy.org/en/2.11/topics/settings.html?highlight=retrymiddleware
-    # https://docs.scrapy.org/en/2.11/topics/downloader-middleware.html#std-reqmeta-dont_redirect
-    handle_httpstatus_list = [301, 302, 404]
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.retry = False
@@ -49,7 +45,11 @@ class MonotaroProductUrl(scrapy.Spider):
         for i, cat_no in enumerate(self.start_urls):
             url = self.get_url(cat_no)
             yield scrapy.Request(url, headers=self.get_headers(cat_no),
-                                 meta={ 'cookiejar': i },
+                                 meta={
+                                     'cookiejar': i,
+                                     'dont_redirect': True,
+                                     'handle_httpstatus_list': [301, 302, 404]
+                                     },
                                  callback=self.parse,
                                  cb_kwargs={ "i": i+1, "cat_no": cat_no })
 
@@ -72,7 +72,11 @@ class MonotaroProductUrl(scrapy.Spider):
         if next_a:
             next_url = self.get_url(cat_no, p+1)
             yield scrapy.Request(next_url, headers=self.get_headers(response.url),
-                                 meta={ 'cookiejar': response.meta['cookiejar'] },
+                                 meta={
+                                     'cookiejar': response.meta['cookiejar'],
+                                     'dont_redirect': True,
+                                     'handle_httpstatus_list': [301, 302, 404]
+                                     },
                                  callback=self.parse,
                                  cb_kwargs={ "i": i, "cat_no": cat_no, "p": p+1 })
 
