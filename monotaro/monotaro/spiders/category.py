@@ -8,7 +8,7 @@ from scrapy.http import HtmlResponse
 class MonotaroCategory(scrapy.Spider):
     name = "monotaro_category"
     allowed_domains = ["www.monotaro.com"]
-    start_urls = ["https://www.monotaro.com/s/c-70553/", "https://www.monotaro.com/s/c-37/"]
+    start_urls = ["https://www.monotaro.com/s/c-70553/?abolition=1", "https://www.monotaro.com/s/c-37/?abolition=1"]
     cats_output = "monotaro_cats.txt"
 
     HEADERS = {
