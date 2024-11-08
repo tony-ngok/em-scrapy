@@ -18,12 +18,6 @@ class MonotaroProduct(scrapy.Spider):
     allowed_domains = ["www.monotaro.com"]
     start_urls = []
 
-    CM_TO_IN = 0.393701
-    M_TO_IN = 39.37008
-    MM_TO_IN = 0.0393701
-    G_TO_LB = 0.002205
-    KG_TO_LB = 2.20462
-
     HEADERS = {
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8",
         "Accept-Language": "pt-PT,pt;q=0.8,en-GB;q=0.5,en;q=0.3",
@@ -105,6 +99,10 @@ class MonotaroProduct(scrapy.Spider):
     def get_specs_etc(self, response: HtmlResponse):
         specs = []
         add_descr = ""
+        weight = None
+        length = None
+        width = None
+        height = None
 
         spans = response.css('span.AttributeLabel__Wrap').getall()
         for span in spans:
@@ -136,7 +134,87 @@ class MonotaroProduct(scrapy.Spider):
                             "value": spec_val
                         })
 
-        return (specs if specs else None), add_descr
+                        if spec_name in {'質量(g)', '重量(g)'}:
+                            weight = round(float(spec_val)*0.002205, 2)
+                        elif spec_name in {'質量(kg)', '重量(kg)'}:
+                            weight = round(float(spec_val)*2.20462, 2)
+                        else:
+                            if spec_name == '寸法(Φ×mm)':
+                                length, width, height = self.parse_dims(spec_val, 'mm', True)
+                            elif spec_name == '寸法(mm)':
+                                length, width, height = self.parse_dims(spec_val, 'mm', spec_val.startswith('Φ'))
+                            elif spec_name == '寸法(Φ×cm)':
+                                length, width, height = self.parse_dims(spec_val, 'cm', True)
+                            elif spec_name == '寸法(cm)':
+                                length, width, height = self.parse_dims(spec_val, 'cm', spec_val.startswith('Φ'))
+                            elif spec_name == '寸法(Φ×m)':
+                                length, width, height = self.parse_dims(spec_val, 'm', True)
+                            elif spec_name == '寸法(m)':
+                                length, width, height = self.parse_dims(spec_val, 'm', spec_val.startswith('Φ'))
+                            else:
+                                if length is None:
+                                    if spec_name == '長さ(m)':
+                                        length = round(float(spec_val)*39.37008, 2)
+                                    elif spec_name == '長さ(cm)':
+                                        length = round(float(spec_val)*0.393701, 2)
+                                    elif spec_name == '長さ(mm)':
+                                        length = round(float(spec_val)*0.0393701, 2)
+                                if width is None:
+                                    if spec_name == '幅(m)':
+                                        width = round(float(spec_val)*39.37008, 2)
+                                    elif spec_name == '幅(cm)':
+                                        width = round(float(spec_val)*0.393701, 2)
+                                    elif spec_name == '幅(mm)':
+                                        width = round(float(spec_val)*0.0393701, 2)
+                                if height is None:
+                                    if spec_name == '高さ(m)':
+                                        height = round(float(spec_val)*39.37008, 2)
+                                    elif spec_name == '高さ(cm)':
+                                        height = round(float(spec_val)*0.393701, 2)
+                                    elif spec_name == '高さ(mm)':
+                                        height = round(float(spec_val)*0.0393701, 2)
+
+        return (specs if specs else None), add_descr, weight, length, width, height
+
+    def parse_dims(self, dims_text: str, unit: str, is_diam: bool = False):
+        """
+        提取商品长、宽、高（寸法）\n
+        支援以下格式：
+        * 长×宽×高
+        * 长×宽
+        * 直径×高\n
+        不支援参数不明的单个数值
+        """
+
+        match1 = findall(r'(\d+(?:\.\d+)?)\s*×\s*(\d+(?:\.\d+)?)\s*×\s*(\d+(?:\.\d+)?)', dims_text)
+        if match1:
+            l, w, h = match1[0]
+            if unit == 'm':
+                return round(float(l)*39.37008, 2), round(float(w)*39.37008, 2), round(float(h)*39.37008, 2)
+            elif unit == 'cm':
+                return round(float(l)*0.393701, 2), round(float(w)*0.393701, 2), round(float(h)*0.393701, 2)
+            elif unit == 'mm':
+                return round(float(l)*0.0393701, 2), round(float(w)*0.0393701, 2), round(float(h)*0.0393701, 2)
+
+        match2 = findall(r'(\d+(?:\.\d+)?)\s*×\s*(\d+(?:\.\d+)?)', dims_text)
+        if match2:
+            d1, d2 = match2[0]
+            if is_diam:
+                if unit == 'm':
+                    return round(float(d1)*39.37008, 2), round(float(d1)*39.37008, 2), round(float(d2)*39.37008, 2)
+                elif unit == 'cm':
+                    return round(float(d1)*0.393701, 2), round(float(d1)*0.393701, 2), round(float(d2)*0.393701, 2)
+                elif unit == 'mm':
+                    return round(float(d1)*0.0393701, 2), round(float(d1)*0.0393701, 2), round(float(d2)*0.0393701, 2)
+            else:
+                if unit == 'm':
+                    return round(float(d1)*39.37008, 2), round(float(d2)*39.37008, 2), None
+                elif unit == 'cm':
+                    return round(float(d1)*0.393701, 2), round(float(d2)*0.393701, 2), None
+                elif unit == 'mm':
+                    return round(float(d1)*0.0393701, 2), round(float(d2)*0.0393701, 2), None
+
+        return None, None, None
 
     def combine_descr(self, basic_descr: str, add_descr: str, alert_descr: str):
         descr1 = f'<div class="monotaro-descr">{basic_descr}</div>' if basic_descr else ""
@@ -213,7 +291,7 @@ class MonotaroProduct(scrapy.Spider):
             item['source'] = 'MonotaRO'
             item['product_id'] = pid
 
-            item['specifications'], add_descr = self.get_specs_etc(response)
+            item['specifications'], add_descr, item['weight'], item['length'], item['width'], item['height'] = self.get_specs_etc(response)
             basic_descr = self.get_basic_descr(response)
             alert_descr = self.get_alert_descr(response)
             item['description'] = self.combine_descr(basic_descr, add_descr, alert_descr)
