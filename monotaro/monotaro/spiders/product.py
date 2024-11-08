@@ -49,208 +49,98 @@ class MonotaroProduct(scrapy.Spider):
             print("Fail to get latest USD/JPY rate", str(e))
         finally:
             print(f"USD/JPY rate: {self.jpy_rate:_}".replace(".", ",").replace("_", "."))
-    
-    def get_id(self, url: str) -> str:
-        """
-        从商品URL中提取商品号
-        """
 
-        id_match = findall(r'/g/(\d+)', url)
-        if id_match:
-            return id_match[0]
+    def get_prod_url(self, prod_id: str, p: int = 1):
+        if p > 1:
+            return f'https://www.monotaro.com/g/{prod_id}/page-{p}/'
+        return f'https://www.monotaro.com/g/{prod_id}/'
 
-    def get_specs(self, txt: str) -> tuple:
-        """
-        解析商品参数；部分参数（如使用注意事项）加入描述中
-        """
+    def get_cats(self, cat_dat: dict):
+        cat_list = [item['item']['name'] for item in cat_dat.get('itemListElement', [])[1:]]
+        if cat_list:
+            return " > ".join(cat_list)
+        return None
 
-        # TODO
-        specs = []
-        speck_set = set()
-        add_descr = []
-        weight_str = ""
-        dims_str = ""
+    def get_images(self, response: HtmlResponse):
+        imgx = response.css('img.ProductImage--Lg::attr(src)').getall()
+        img_list = ['https:'+img for img in imgx if img and 'mono_image_na' not in img]
+        return ";".join(img_list)
 
-        specs_kmatch = findall(r'{\\\"className\\\":\\\"HeaderCell_cellValue__4rOy0\\\",[^$]*\\\"children\\\":\\\"([^$]*)\\\"}', txt)
-        specs_vmatch = findall(r'{\\\"className\\\":\\\"Cell_cellValue__B2F5r\\\",[^$]*\\\"children\\\":\\\"([^$]*)\\\"}', txt)
-        # print(specs_vmatch)
-        if specs_kmatch and specs_vmatch:
-            for speck, specv in zip(specs_kmatch, specs_vmatch):
-                speck = speck.replace(' ', '')
-                if speck not in speck_set:
-                    speck_set.add(speck)
+    def get_videos(self, response: HtmlResponse):
+        vidx = response.css('a.ytp-title-link::attr(href)').getall()
+        vid_list = [vid for vid in vidx if vid]
+        return ";".join(vid_list)
 
-                    if ('使用' in speck) or ('取扱' in speck):
-                        add_descr.append((speck, specv))
-                    else:
-                        specs.append({
-                            "name": speck,
-                            "value": specv
-                        })
-
-                        if '外寸' in speck:
-                            dims_str = specv
-                        if '重量' in speck:
-                            weight_str = specv
-        
-        return ((specs if specs else None), add_descr, weight_str, dims_str)
-
-    def parse_add_descr(self, add_descr: list) -> str:
-        """
-        将商品注意事项整理成表，加到描述中
-        """
-
-        descr = '<table class="monotaro-descr">'
-        for k, v in add_descr:
-            descr += f"<tr><th>{k}</th><td>{v}</td></tr>"
-        descr += '</table>'
-        return descr
-
-    def get_weight(self, txt: str) -> float:
-        """
-        获取商品重量
-        """
-
-        weight = None
-        w_match = findall(r'(\d*\.?\d+)(kg|g)', txt)
-        if w_match:
-            if w_match[0][1] == 'kg':
-                weight = round(float(w_match[0][0])*self.KG_TO_LB, 2)
-            elif w_match[0][1] == 'g':
-                weight = round(float(w_match[0][0])*self.G_TO_LB, 2)
-
-        return weight    
-
-    def get_dims(self, txt: str) -> list:
-        """
-        获取商品长宽高
-        """
-
-        dims = [None, None, None]
-        units = [None, None, None]
-        dims_out = [None, None, None]
-
-        match1 = findall(r'[w]*(\d*\.?\d+)\s*([cm]*)\s*[x|×]\s*[d|l]*(\d*\.?\d+)\s*([cm]*)\s*[x|×]\s*[h]*(\d*\.?\d+)\s*([cm]+)', txt) # 宽*长*高
-        match2 = findall(r'[w]*(\d*\.?\d+)\s*([cm]*)\s*[x|×]\s*[d|l]*(\d*\.?\d+)\s*([cm]+)', txt) # 宽*长
-        match3 = findall(r'[d|l]*(\d*\.?\d+)\s*([cm]+)', txt) # 长
-
-        if match1:
-            units[2] = match1[0][5]
-            units[1] = match1[0][3] if match1[0][3] else units[2]
-            units[0] = match1[0][1] if match1[0][1] else units[1]
-            for i in range(3):
-                dims[i] = float(match1[0][i*2])
-        elif match2:
-            units[1] = match2[0][3]
-            units[0] = match2[0][1] if match2[0][1] else units[1]
-            dims[0] = float(match2[0][0])
-            dims[1] = float(match2[0][2])
-        elif match3:
-            units[1] = match3[0][1]
-            dims[1] = float(match3[0][0])
-
-        for i, (d, u) in enumerate(zip(dims, units)):
-            if u == 'm':
-                dims_out[i] = round(d*self.M_TO_IN, 2)
-            elif u == 'cm':
-                dims_out[i] = round(d*self.CM_TO_IN, 2)
-
-        return dims_out
+    def get_recensions(self, dat: dict):
+        recens = dat.get('aggregateRating')
+        if recens:
+            return recens['ratingCount'], round(float(recens['ratingValue']), 2)
+        return None, None
 
     def start_requests(self):
-        for i, pu in enumerate(self.start_urls, start=1):
-            print(f"{i:_}".replace('_', '.'), pu)
-            yield scrapy.Request(pu, headers=self.headers, meta={ 'url': pu }, callback=self.parse)
+        for i, pid in enumerate(self.start_urls):
+            url = self.get_prod_url(pid)
+            yield scrapy.Request(url, headers=self.HEADERS,
+                                 meta={ 'cookiejar': i },
+                                 callback=self.parse,
+                                 cb_kwargs={ 'i': i+1, "pid": pid })
 
-    def parse(self, response: HtmlResponse):
-        prod_json = ""
-        bc_json = ""
-        
-        for scr in response.css('script[type="application/ld+json"]::text').getall():
-            if '"Product"' in scr:
-                prod_json = scr
-            elif 'BreadCrumbList"' in scr:
-                bc_json = scr
-            if prod_json and bc_json:
-                break
-        
-        try:
-            prod_json = loads(prod_json)
-            bc_json = loads(bc_json)
-        except:
-            return
+    def parse(self, response: HtmlResponse, i: int, pid: str, p: int = 1, item: dict = {}):
+        print(f"{i:_}/{len(self.start_urls):_}", response.url)
 
-        images = ";".join(prod_json.get('image', []))
-        if not images:
-            return
+        if p == 1: # 提取商品资料
+            if response.status == 404:
+                print("Product not found", response.url)
+                return
 
-        url = response.meta['url']
-        prod_id = self.get_id(url)
-        existence = 'instock' in prod_json['offers']['availability'].lower()
-        title = prod_json['name']
+            prod_json = None
+            bc_json = None
+            for scr in response.css('script[type="application/ld+json"]::text').getall():
+                if '"Product"' in scr:
+                    prod_json = loads(scr)
+                elif 'BreadCrumbList"' in scr:
+                    bc_json = loads(scr)
+                if prod_json and bc_json:
+                    break
+            if not (prod_json and bc_json):
+                print("No product info", response.url)
+                return
 
-        description = "<div>"
-        descr = prod_json.get("description", "").replace("\n", "<br>")
-        description += f'<div class="monotaro-descr">{descr}</div>'
-        
-        specifications, add_descr, weight_str, dims_str = self.get_specs("") # TODO
-        if add_descr:
-            description += self.parse_add_descr(add_descr)
+            item['title'] = prod_json.get('name')
+            if not item['title']:
+                print("No name", response.url)
+                return
 
-        description += "</div>"
-        # print(description+'\n')
+            item['images'] = self.get_images(response)
+            if not item['images']:
+                print("No images", response.url)
+                return
 
-        categories = None
-        cat_list = [item['item']['name'] for item in bc_json.get('itemListElement', [{}])[1:]]
-        if cat_list:
-            categories = " > ".join(cat_list)
-        
-        vid_list = response.css('div.MovieContents__Iframe > iframe::attr(src)').getall()
-        videos = ";".join(vid_list) if vid_list else None
+            item['url'] = response.url
+            item['source'] = 'MonotaRO'
+            item['product_id'] = pid
+            item['description_en'] = None
+            item['summary'] = None
+            item['upc'] = None
+            item['categories'] = self.get_cats(bc_json)
+            item['videos'] = self.get_videos(response)
+            item['returnable'] = False
+            item['reviews'], item['rating'] = self.get_recensions(prod_json)
+            item['sold_count'] = None
 
-        price = round(float(prod_json['offers']['price'])*self.JPY_TO_USD, 2)
+            # https://help.monotaro.com/app/answers/detail/a_id/13
+            item['shipping_days_min'] = 1
+            item['shipping_days_max'] = 10
+        else: # 变种超过50个：继续提取变种
+            pass
 
-        reviews = None
-        rating = None
-        if prod_json.get('aggregateRating'):
-            reviews = prod_json['aggregateRating'].get('reviewCount', 0)
-            rating = round(float(prod_json['aggregateRating'].get('ratingValue', 0.0)), 1)
-
-        weight = self.get_weight(weight_str.lower()) if weight_str else None
-        width, length, height = self.get_dims(dims_str.lower()) if dims_str else (None, None, None)
-
-        yield {
-            "date": datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
-            "url": response.meta['url'],
-            "source": "MonotaRO",
-            "product_id": prod_id,
-            "existence": existence,
-            "title": prod_json['name'],
-            "title_en": None,
-            "description": description,
-            "description_en": None,
-            "summary": None,
-            "sku": prod_id, # TODO
-            "upc": None,
-            "brand": prod_json.get('brand', {}).get('name'),
-            "specifications": specifications,
-            "categories": categories,
-            "images": images,
-            "videos": videos,
-            "price": price,
-            "available_qty": 0 if not existence else None,
-            "options": None, # 本站商品的所谓变种其实有不同商品URL
-            "variants": None,
-            "has_only_default_variant": True,
-            "returnable": False,
-            "reviews": reviews,
-            "rating": rating,
-            "sold_count": None,
-            "shipping_fee": round((self.SHIP_FEE if price < self.FREE_SHIP_PRICE else 0.00), 2),
-            "shipping_days_min": 1, # https://help.monotaro.com/app/answers/detail/a_id/13
-            "shipping_days_max": 10,
-            "weight": weight,
-            "width": width,
-            "length": length,
-            "height": height
-        }
+        more_vars = response.css('a.Button--PaginationNext')
+        if more_vars:
+            next_purl = self.get_prod_url(pid, p+1)
+            headers = { **self.HEADERS, 'Referer': response.url }
+            yield scrapy.Request(next_purl, headers=headers,
+                                 meta={ 'cookiejar': response.meta['cookiejar'] },
+                                 callback=self.parse,
+                                 cb_kwargs={ 'i': i+1, "pid": pid, "p": p+1, "item": item })
+        else:
+            yield item
