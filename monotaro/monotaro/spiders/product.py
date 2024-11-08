@@ -242,6 +242,95 @@ class MonotaroProduct(scrapy.Spider):
         vid_list = [vid for vid in vidx if vid]
         return ";".join(vid_list)
 
+    def get_raw_vars(self, response: HtmlResponse):
+        """
+        从表格（至少一行）中获得所有变种资料
+        """
+
+        raw_vars_info = {} # 键代表属性名，值列表代表属性值
+
+        col_names = response.css('div.ProductsDetails thead th')
+        
+        # 获得有效列（商品画像、SKU码、变种选项名、价格、库存状况）
+        valid_cols = {}
+        for i, th in enumerate(col_names):
+            if th.css(':scope div.SortCell__Title'):
+                th_txt = th.css(':scope div.SortCell__Title::text').get('').strip()
+                valid_cols[th_txt] = i
+                raw_vars_info[th_txt] = []
+            else:
+                th_txt = th.css('::text').get('').strip()
+                if th_txt and (th_txt in {'商品画像', '注文コード', '販売価格(税別)', '出荷目安'}):
+                    valid_cols[th_txt] = i
+                    raw_vars_info[th_txt] = []
+
+        # 积累有效列资料
+        rows = response.css('div.ProductsDetails tbody > tr')
+        for row in rows:
+            rcols = row.css('td')
+
+            for k, v in valid_cols.items():
+                var_spec = None
+                if k == '商品画像':
+                    k = 'image'
+                    var_spec = rcols[v].css('div.SKUProductImage img::attr(src)').get()
+                    if var_spec:
+                        var_spec = 'https:'+var_spec
+                elif k == '注文コード':
+                    k = 'variant_id'
+                    var_spec = rcols[v].css('a::text').get('-')
+                elif k == '販売価格(税別)':
+                    k = 'price'
+                    var_spec = rcols[v].css(':scope span.Price--Md::text').get()
+                    if not var_spec:
+                        continue
+                    var_spec = int(var_spec.replace(',', ''))
+                elif k == '出荷目安':
+                    k = 'available_qty'
+                    if rcols[v].css(':scope span[title="取扱い終了"]'):
+                        continue
+                    elif rcols[v].css(':scope span[title="欠品中"]'):
+                        var_spec = 0
+                else:
+                    var_spec = rcols[v].css('::text').get('').strip()
+
+                raw_vars_info[k].append(var_spec)
+
+        return raw_vars_info
+
+    def get_opts_vars(self, raw_vars_info: dict):
+        """
+        整理获得的变种资料为标准格式
+        """
+
+        options = []
+        for k in raw_vars_info:
+            if (k == '品番') and (raw_vars_info['品番'][0] == '-'): # 实际上无“品番”选项之情况
+                continue
+            elif k not in {'image', 'variant_id', 'price', 'available_qty'}:
+                options.append(k)
+
+        variants = []
+        total_vars = len(raw_vars_info['sku'])
+        for i in range(total_vars):
+            variant = {
+                "variant_id": raw_vars_info['variant_id'][i],
+                "barcode": None,
+                "sku": raw_vars_info['variant_id'][i],
+                "option_values": [{
+                    "option_id": None,
+                    "option_value_id": None,
+                    "option_name": opt,
+                    "option_value": raw_vars_info[opt][i]
+                } for opt in options],
+                "images": raw_vars_info['image'][i],
+                "price": raw_vars_info['price'][i], # 稍后再汇率换算
+                "available_qty": raw_vars_info['available_qty'][i]
+            }
+            variants.append(variant)
+
+        return options if options else None, variants
+
     def get_recensions(self, dat: dict):
         recens = dat.get('aggregateRating')
         if recens:
@@ -259,7 +348,7 @@ class MonotaroProduct(scrapy.Spider):
     def parse(self, response: HtmlResponse, i: int, pid: str, p: int = 1, item: dict = {}):
         print(f"{i:_}/{len(self.start_urls):_}", response.url)
 
-        if p == 1: # 提取商品资料
+        if p == 1: # 提取基本商品资料（包含最初50个变种）
             if response.status == 404:
                 print("Product not found", response.url)
                 return
@@ -296,12 +385,28 @@ class MonotaroProduct(scrapy.Spider):
             alert_descr = self.get_alert_descr(response)
             item['description'] = self.combine_descr(basic_descr, add_descr, alert_descr)
 
+            item['title_en'] = None
             item['description_en'] = None
             item['summary'] = None
             item['upc'] = None
             item['brand'] = self.get_brand(prod_json)
             item['categories'] = self.get_cats(bc_json)
             item['videos'] = self.get_videos(response)
+
+            raw_vars = self.get_raw_vars(response)
+            item['option'], variants = self.get_opts_vars(raw_vars)
+            item['existence'] = (variants[0]['available_qty'] is None)
+            item['available_qty'] = variants[0]['available_qty']
+            item['sku'] = variants[0]['variant_id']
+
+            price_jpy = variants[0]['price']
+            item['shipping_fee'] = round(500/self.jpy_rate, 2) if price_jpy < 500 else 0.00
+            item['price'] = round(price_jpy/self.jpy_rate, 2)
+
+            for j, v in enumerate(variants):
+                variants[j]['price'] = round(v['price']/self.jpy_rate, 2)
+            item['variants'] = variants
+
             item['returnable'] = False
             item['reviews'], item['rating'] = self.get_recensions(prod_json)
             item['sold_count'] = None
@@ -310,7 +415,11 @@ class MonotaroProduct(scrapy.Spider):
             item['shipping_days_min'] = 1
             item['shipping_days_max'] = 10
         else: # 变种超过50个：继续提取变种
-            pass
+            raw_vars = self.get_raw_vars(response)
+            variants = self.get_opts_vars(raw_vars)
+            for j, v in enumerate(variants):
+                variants[j]['price'] = round(v['price']/self.jpy_rate, 2)
+            item['variants'].extend(variants)
 
         more_vars = response.css('a.Button--PaginationNext')
         if more_vars:
@@ -321,5 +430,7 @@ class MonotaroProduct(scrapy.Spider):
                                  callback=self.parse,
                                  cb_kwargs={ 'i': i+1, "pid": pid, "p": p+1, "item": item })
         else:
-            item['variants'] = item['variants'] if item['variants'] else None
+            item['variants'] = item['variants'] if item['option'] and item['variants'] else None # 变种提取结束
+            item['has_only_default_variant'] = not (item['variants'] and (len(item['variants']) > 1))
+            item['date'] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
             yield item
