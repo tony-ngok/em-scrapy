@@ -28,32 +28,74 @@ class MonotaroProduct(scrapy.Spider):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # with open('monotaro_prod_urls.txt', 'r') as f:
-        #     for line in f:
-        #         if line.strip():
-        #             self.start_urls.append(line.strip())
-        # print(f'Total {len(self.start_urls):_} products'.replace("_", "."))
+        with open('monotaro_prod_urls.txt', 'r') as f:
+            for line in f:
+                if line.strip():
+                    self.start_urls.append(line.strip())
+        print(f'Total {len(self.start_urls):_} products'.replace("_", "."))
 
         self.jpy_rate = 153.237093
-        # try:
-        #     resp = requests.get('https://open.er-api.com/v6/latest/USD')
-        #     if resp.ok:
-        #         self.jpy_rate = resp.json()['rates']['JPY']
-        #     else:
-        #         raise Exception(f'Status {resp.status_code}')
-        # except Exception as e:
-        #     print("Fail to get latest USD/JPY rate", str(e))
-        # finally:
-        #     print(f"USD/JPY rate: {self.jpy_rate:_}".replace(".", ",").replace("_", "."))
-    
-    def get_id(self, url: str) -> str:
-        """
-        从商品URL中提取商品号
-        """
+        try:
+            resp = requests.get('https://open.er-api.com/v6/latest/USD')
+            if resp.ok:
+                self.jpy_rate = resp.json()['rates']['JPY']
+            else:
+                raise Exception(f'Status {resp.status_code}')
+        except Exception as e:
+            print("Fail to get latest USD/JPY rate", str(e))
+        finally:
+            print(f"USD/JPY rate: {self.jpy_rate:_}".replace(".", ",").replace("_", "."))
 
-        id_match = findall(r'/g/(\d+)', url)
-        if id_match:
-            return id_match[0]
+    def get_prod_url(self, prod_id: str, p: int = 1):
+        if p > 1:
+            return f'https://www.monotaro.com/g/{prod_id}/page-{p}/'
+        return f'https://www.monotaro.com/g/{prod_id}/'
+
+    def get_basic_descr(self, response):
+        basic_descr = ""
+
+        if isinstance(response, HtmlResponse):
+            response = BeautifulSoup(response.css('p.DescriptionText').get(''), 'html.parser')
+            response = response.p
+            if not response:
+                return ""
+
+        for child in response.children:
+            if isinstance(child, str):
+                basic_descr += " ".join(child.strip().split())
+            elif isinstance(child, Tag):
+                if child.name == 'a':
+                    return ""
+                elif child.name == 'br':
+                    basic_descr += '<br>'
+                else:
+                    basic_descr += self.get_basic_descr(child)
+
+        return basic_descr
+
+    def get_alert_descr(self, response):
+        alert_descr = ""
+
+        if isinstance(response, HtmlResponse):
+            response = BeautifulSoup(response.css('div.product_data_caution').get(''), 'html.parser')
+            response = response.div
+            if not response:
+                return ""
+
+        for child in response.children:
+            if isinstance(child, str):
+                alert_descr += " ".join(child.strip().split())
+            elif isinstance(child, Tag):
+                if child.name == 'a':
+                    return ""
+                elif (child.name == 'div') and ('product_data_caution-title' in child.get('class')):
+                    alert_descr += '<h4>注意</h4>'
+                elif child.name == 'br':
+                    alert_descr += '<br>'
+                else:
+                    alert_descr += self.get_basic_descr(child)
+
+        return alert_descr
 
     def get_specs_etc(self, response: HtmlResponse):
         specs = []
@@ -284,7 +326,7 @@ class MonotaroProduct(scrapy.Spider):
                         "option_name": opt,
                         "option_value": raw_vars_info[opt][i]
                     } for opt in options],
-                    "images": raw_vars_info['image'][i],
+                    "images": raw_vars_info['image'][i] if raw_vars_info.get('image') else None,
                     "price": raw_vars_info['price'][i], # 稍后再汇率换算
                     "available_qty": raw_vars_info['available_qty'][i]
                 }
