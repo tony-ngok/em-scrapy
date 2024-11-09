@@ -477,6 +477,143 @@ class TestProduct(unittest.TestCase):
         self.assertIn("<th>用途</th>", product["description"])
         self.assertIn("<th>材質</th>", product["description"])
 
+    def test_available_product_6(self):
+        url = "https://www.monotaro.com/g/00264157/"
+        with open("monotaro_test/pages/マグネットシート マットタイプ モノタロウ 【通販モノタロウ】.html", "rb") as file:
+            body = file.read()
+
+        response = HtmlResponse(
+            url=url,
+            body=body,
+        )
+        result = list(self.spider.parse(response, 0, '00264157'))
+        self.assertEqual(len(result), 1)
+        product = result[0]
+
+        target_product = {
+            "url": url,
+            "product_id": "00264157",
+            "existence": True,
+            "title": "マグネットシート マットタイプ",
+            "sku": "48713035",
+            "brand": "モノタロウ",
+            "specifications": [
+                {
+                    "name": "サイズ",
+                    "value": "A4"
+                },
+                {
+                    "name": "色",
+                    "value": "クリア"
+                },
+                {
+                    "name": "厚さ(mm)",
+                    "value": "0.2"
+                },
+                {
+                    "name": "寸法(mm)",
+                    "value": "308×219"
+                }
+            ],
+            "categories": "オフィスサプライ > 事務用品 > ファイリング > クリヤーホルダー",
+            "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono48713044-221004-01.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono48713035-170706-04.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono48713035-221004-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841650-240612-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841650-240612-06.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841650-240614-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841659-240612-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841659-240614-02.jpg",
+            "videos": "https://www.youtube.com/embed/U9V_QlSnrik",
+            "price": 0.84,
+            "available_qty": None,
+            "options": [
+                {
+                    "id": None,
+                    "name": "品番"
+                },
+                {
+                    "id": None,
+                    "name": "内容量"
+                }
+            ],
+            "variants": [
+                {
+                    "variant_id": "48713035",
+                    "barcode": None,
+                    "sku": "48713035",
+                    "option_values": [
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "品番",
+                            "option_value": "MCH-02A410"
+                        },
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "内容量",
+                            "option_value": "1パック(10枚)"
+                        }
+                    ],
+                    "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono48713035-221004-02.jpg",
+                    "price": 0.84,
+                    "available_qty": None
+                },
+                {
+                    "variant_id": "54841650",
+                    "barcode": None,
+                    "sku": "54841650",
+                    "option_values": [
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "品番",
+                            "option_value": "MCH-02A4100"
+                        },
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "内容量",
+                            "option_value": "1パック(100枚)"
+                        }
+                    ],
+                    "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841650-240614-02.jpg",
+                    "price": 7.77,
+                    "available_qty": 0
+                },
+                {
+                    "variant_id": "54841659",
+                    "barcode": None,
+                    "sku": "54841659",
+                    "option_values": [
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "品番",
+                            "option_value": "MCH-02A4600"
+                        },
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "内容量",
+                            "option_value": "1箱(600枚)"
+                        }
+                    ],
+                    "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841659-240614-02.jpg",
+                    "price": 43.66,
+                    "available_qty": 0
+                }
+            ],
+            "reviews": 438,
+            "rating": 4.69,
+            "shipping_fee": 3.26,
+            "weight": None,
+            "length": 12.13,
+            "width": 8.62,
+            "height": None
+        }
+        for key in target_product:
+            self.assertEqual(product[key], target_product[key])
+
+        print(product["description"])
+        self.assertIn("<h4>注意</h4>", product["description"])
+        self.assertIn("<th>用途</th>", product["description"])
+        self.assertIn("<th>材質</th>", product["description"])
+
     def test_unavailable_product(self):
         url = "https://www.monotaro.com/g/06431439/"
         with open("monotaro_test/pages/AP-708209 お医者さんの(R)首サポーター Fit 1個 アルファックス 【通販モノタロウ】.html", "rb") as file:
