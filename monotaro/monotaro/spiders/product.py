@@ -326,7 +326,7 @@ class MonotaroProduct(scrapy.Spider):
                         "option_name": opt,
                         "option_value": raw_vars_info[opt][i]
                     } for opt in options],
-                    "images": raw_vars_info['image'][i],
+                    "images": raw_vars_info['image'][i] if raw_vars_info.get('image') else None,
                     "price": raw_vars_info['price'][i], # 稍后再汇率换算
                     "available_qty": raw_vars_info['available_qty'][i]
                 }
