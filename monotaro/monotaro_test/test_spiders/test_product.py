@@ -269,6 +269,73 @@ class TestProduct(unittest.TestCase):
         self.assertNotIn("<h4>注意</h4>", product["description"])
         self.assertIn("<th>機能</th>", product["description"])
 
+    def test_available_product_4(self):
+        url = "https://www.monotaro.com/g/06201561/"
+        with open("monotaro_test/pages/アサヒ おいしい水 天然水 六甲 PET2L 1ケース(2L×6本) アサヒ飲料 【通販モノタロウ】.html", "rb") as file:
+            body = file.read()
+
+        response = HtmlResponse(
+            url=url,
+            body=body,
+        )
+        result = list(self.spider.parse(response, 0, '06201561'))
+        self.assertEqual(len(result), 1)
+        product = result[0]
+
+        target_product = {
+            "url": url,
+            "product_id": "06201561",
+            "existence": True,
+            "title": "アサヒ おいしい水 天然水 六甲 PET2L",
+            "sku": "44705756",
+            "brand": "アサヒ飲料",
+            "specifications": [
+                {
+                    "name": "寸法(mm)",
+                    "value": "104×89.4×311"
+                },
+                {
+                    "name": "質量(g)",
+                    "value": "2029"
+                },
+                {
+                    "name": "賞味期限",
+                    "value": "720日"
+                },
+                {
+                    "name": "原材料",
+                    "value": "水(深井戸水)"
+                },
+                {
+                    "name": "アレルギー",
+                    "value": "なし"
+                },
+                {
+                    "name": "内容量",
+                    "value": "1ケース(2L×6本)"
+                }
+            ],
+            "categories": "オフィスサプライ > 食品・飲料 > 水/ミネラルウォーター > ミネラルウォーター",
+            "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono44705756-230822-02.jpg",
+            "price": 6.19,
+            "available_qty": None,
+            "options": None,
+            "variants": None,
+            "reviews": 4,
+            "rating": 4.50,
+            "shipping_fee": 3.26,
+            "weight": 4.47,
+            "length": 4.09,
+            "width": 3.52,
+            "height": 12.24
+        }
+        for key in target_product:
+            self.assertEqual(product[key], target_product[key])
+
+        print(product["description"])
+        self.assertNotIn("<h4>注意</h4>", product["description"])
+        self.assertIn("<th>栄養成分</th>", product["description"])
+
     def test_unavailable_product(self):
         url = "https://www.monotaro.com/g/06431439/"
         with open("monotaro_test/pages/AP-708209 お医者さんの(R)首サポーター Fit 1個 アルファックス 【通販モノタロウ】.html", "rb") as file:
