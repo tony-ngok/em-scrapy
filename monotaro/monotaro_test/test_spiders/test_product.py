@@ -52,6 +52,7 @@ class TestProduct(unittest.TestCase):
             ],
             "categories": "オフィスサプライ > 事務用品 > ファイリング > 収納ボックス/ケース > 書類ケース",
             "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono23197143-160331-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono23197143-210302-02.jpg",
+            "videos": None,
             "price": 1.17,
             "available_qty": None,
             "options": [{
@@ -123,6 +124,7 @@ class TestProduct(unittest.TestCase):
             ],
             "categories": "医療・介護用品 > 救急・衛生 > 救急・救助用品 > 酸素スプレー・吸入器",
             "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono58154695-130311-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono58154695-201127-02.jpg",
+            "videos": None,
             "price": 5.61,
             "available_qty": None,
             "options": [{
@@ -234,6 +236,7 @@ class TestProduct(unittest.TestCase):
             ],
             "categories": "測定・測量用品 > 測定用品 > 環境測定(自然環境/安全環境) > 酸素濃度計",
             "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono44631495-230815-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono44631495-230815-04.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono44631495-230815-06.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono44631495-240318-04.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono44631495-240318-06.jpg",
+            "videos": None,
             "price": 176.07,
             "available_qty": None,
             "options": [{
@@ -317,6 +320,7 @@ class TestProduct(unittest.TestCase):
             ],
             "categories": "オフィスサプライ > 食品・飲料 > 水/ミネラルウォーター > ミネラルウォーター",
             "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono44705756-230822-02.jpg",
+            "videos": None,
             "price": 6.19,
             "available_qty": None,
             "options": None,
@@ -335,6 +339,143 @@ class TestProduct(unittest.TestCase):
         print(product["description"])
         self.assertNotIn("<h4>注意</h4>", product["description"])
         self.assertIn("<th>栄養成分</th>", product["description"])
+
+    def test_available_product_5(self):
+        url = "https://www.monotaro.com/g/02362145/"
+        with open("monotaro_test/pages/クリアホルダー 厚さ0.2mm モノタロウ クリヤーホルダー 【通販モノタロウ】.html", "rb") as file:
+            body = file.read()
+
+        response = HtmlResponse(
+            url=url,
+            body=body,
+        )
+        result = list(self.spider.parse(response, 0, '02362145'))
+        self.assertEqual(len(result), 1)
+        product = result[0]
+
+        target_product = {
+            "url": url,
+            "product_id": "02362145",
+            "existence": True,
+            "title": "クリアホルダー 厚さ0.2mm",
+            "sku": "48713035",
+            "brand": "モノタロウ",
+            "specifications": [
+                {
+                    "name": "サイズ",
+                    "value": "A4"
+                },
+                {
+                    "name": "色",
+                    "value": "クリア"
+                },
+                {
+                    "name": "厚さ(mm)",
+                    "value": "0.2"
+                },
+                {
+                    "name": "寸法(mm)",
+                    "value": "308×219"
+                }
+            ],
+            "categories": "オフィスサプライ > 食品・飲料 > 水/ミネラルウォーター > ミネラルウォーター",
+            "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono48713044-221004-01.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono48713035-170706-04.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono48713035-221004-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841650-240612-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono48713035-170706-04.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841650-240614-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841659-240612-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841659-240614-02.jpg",
+            "videos": "https://www.youtube.com/watch?v=U9V_QlSnrik",
+            "price": 0.84,
+            "available_qty": None,
+            "options": [
+                {
+                    "id": None,
+                    "name": "品番"
+                },
+                {
+                    "id": None,
+                    "name": "内容量"
+                }
+            ],
+            "variants": [
+                {
+                    "variant_id": "48713035",
+                    "barcode": None,
+                    "sku": "48713035",
+                    "option_values": [
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "品番",
+                            "option_value": "MCH-02A410"
+                        },
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "内容量",
+                            "option_value": "1パック(10枚)"
+                        }
+                    ],
+                    "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono48713035-221004-02.jpg",
+                    "price": 0.84,
+                    "available_qty": None
+                },
+                {
+                    "variant_id": "54841650",
+                    "barcode": None,
+                    "sku": "54841650",
+                    "option_values": [
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "品番",
+                            "option_value": "MCH-02A4100"
+                        },
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "内容量",
+                            "option_value": "1パック(100枚)"
+                        }
+                    ],
+                    "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841650-240614-02.jpg",
+                    "price": 7.77,
+                    "available_qty": None
+                },
+                {
+                    "variant_id": "54841659",
+                    "barcode": None,
+                    "sku": "54841659",
+                    "option_values": [
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "品番",
+                            "option_value": "MCH-02A4600"
+                        },
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "内容量",
+                            "option_value": "1箱(600枚)"
+                        }
+                    ],
+                    "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841659-240614-02.jpg",
+                    "price": 43.66,
+                    "available_qty": None
+                }
+            ],
+            "reviews": 438,
+            "rating": 4.69,
+            "shipping_fee": 3.26,
+            "weight": None,
+            "length": 12.13,
+            "width": 8.62,
+            "height": None
+        }
+        for key in target_product:
+            self.assertEqual(product[key], target_product[key])
+
+        print(product["description"])
+        self.assertNotIn("<h4>注意</h4>", product["description"])
+        self.assertIn("<th>用途</th>", product["description"])
+        self.assertIn("<th>材質</th>", product["description"])
 
     def test_unavailable_product(self):
         url = "https://www.monotaro.com/g/06431439/"
@@ -376,6 +517,7 @@ class TestProduct(unittest.TestCase):
             ],
             "categories": "医療・介護用品 > ヘルスケア > サポーター・テーピング > サポーター > 首用 サポーター",
             "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono61690687-240311-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono61690687-240311-04.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono61690687-240311-06.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono61690687-240311-08.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono61690687-240311-10.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono61690687-240311-12.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono61690687-240311-14.jpg",
+            "videos": None,
             "price": 24.79,
             "available_qty": 0,
             "options": [{
