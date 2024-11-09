@@ -118,7 +118,7 @@ class MonotaroProduct(scrapy.Spider):
                 for child in span.children:
                     if isinstance(child, Tag) and (child.name == 'span'):
                         spec_name = child.text.strip()
-                        if (spec_name in {'用途', '使用方法', '材質'}) or ('成分' in spec_name):
+                        if (spec_name in {'用途', '使用方法', '材質', '機能'}) or ('成分' in spec_name):
                             is_add_descr = True
                     elif isinstance(child, Tag) and (child.name == 'div'): # 较长的参数值放入描述中
                         is_add_descr = True
@@ -138,15 +138,9 @@ class MonotaroProduct(scrapy.Spider):
                         })
 
                         if spec_name in {'質量(g)', '重量(g)'}:
-                            try:
-                                weight = round(float(spec_val)*0.002205, 2)
-                            except ValueError:
-                                pass
+                            weight = self.parse_weight(spec_val, 'g')
                         elif spec_name in {'質量(kg)', '重量(kg)'}:
-                            try:
-                                weight = round(float(spec_val)*2.20462, 2)
-                            except ValueError:
-                                pass
+                            weight = self.parse_weight(spec_val, 'kg')
                         else:
                             if spec_name == '寸法(Φ×mm)':
                                 length, width, height = self.parse_dims(spec_val, 'mm', True)
@@ -184,6 +178,15 @@ class MonotaroProduct(scrapy.Spider):
                                         height = round(float(spec_val)*0.0393701, 2)
 
         return (specs if specs else None), add_descr, weight, length, width, height
+
+    def parse_weight(self, w_text: str, unit: str):
+        w_match = findall(r'(\d+(?:\.\d+)?)', w_text)
+        if w_match and (len(w_match) == 1):
+            if unit == 'g':
+                return round(float(w_match[0])*0.002205, 2)
+            elif unit == 'kg':
+                return round(float(w_match[0])*2.20462, 2)
+        return None
 
     def parse_dims(self, dims_text: str, unit: str, is_diam: bool = False):
         """
