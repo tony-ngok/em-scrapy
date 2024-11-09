@@ -62,8 +62,9 @@ class MonotaroProductUrl(scrapy.Spider):
         for a in prod_ax:
             img = a.css('div.SearchResultProductColumn__LeftColumn img::attr(data-rep-img-src)').get('')
             nomore = a.css('div.SearchResultProductColumn__RightColumn span[title="取扱い終了"]')
+            custom = a.css(':scope a[data-mtc="scn,customize"]')
 
-            if img and (not (('mono_image_na' in img) or nomore)): # 没有画像和彻底断货的商品无法卖
+            if img and (not (('mono_image_na' in img) or nomore or custom)): # 没有画像和彻底断货的商品无法卖
                 href = a.css('div.SearchResultProductColumn__LeftColumn > a::attr(href)').get()
                 if href not in self.prod_nos:
                     prod_no = self.get_no(href)

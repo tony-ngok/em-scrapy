@@ -245,7 +245,7 @@ class MonotaroProduct(scrapy.Spider):
         return None
 
     def get_images(self, response: HtmlResponse):
-        imgx = response.css('img.ProductImage--Lg::attr(src)').getall()
+        imgx = response.css('div.ImgFixedSizeModalMain__Item > img::attr(src)').getall()
         img_list = ['https:'+img for img in imgx if img and 'mono_image_na' not in img]
         return ";".join(img_list) if img_list else None
 

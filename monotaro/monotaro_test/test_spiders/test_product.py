@@ -379,7 +379,7 @@ class TestProduct(unittest.TestCase):
                 }
             ],
             "categories": "オフィスサプライ > 事務用品 > ファイリング > クリヤーホルダー",
-            "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono48713044-221004-01.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono48713035-170706-04.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono48713035-221004-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841650-240612-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841650-240612-06.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841650-240614-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841659-240612-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841659-240614-02.jpg",
+            "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono48713044-221004-01.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono48713035-170706-04.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono48713035-221004-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841650-240612-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841650-240612-06.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841650-240614-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841659-240612-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841659-240614-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono73387082-230905-02.jpg",
             "videos": "https://www.youtube.com/embed/U9V_QlSnrik",
             "price": 0.84,
             "available_qty": None,
@@ -495,30 +495,26 @@ class TestProduct(unittest.TestCase):
             "product_id": "00264157",
             "existence": True,
             "title": "マグネットシート マットタイプ",
-            "sku": "48713035",
+            "sku": "34921634",
             "brand": "モノタロウ",
             "specifications": [
                 {
-                    "name": "サイズ",
-                    "value": "A4"
-                },
-                {
-                    "name": "色",
-                    "value": "クリア"
-                },
-                {
                     "name": "厚さ(mm)",
-                    "value": "0.2"
+                    "value": "0.8"
                 },
                 {
-                    "name": "寸法(mm)",
-                    "value": "308×219"
+                    "name": "RoHS指令(10物質対応)",
+                    "value": "対応"
+                },
+                {
+                    "name": "内容量",
+                    "value": "1枚"
                 }
             ],
-            "categories": "オフィスサプライ > 事務用品 > ファイリング > クリヤーホルダー",
-            "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono48713044-221004-01.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono48713035-170706-04.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono48713035-221004-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841650-240612-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841650-240612-06.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841650-240614-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841659-240612-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841659-240614-02.jpg",
-            "videos": "https://www.youtube.com/embed/U9V_QlSnrik",
-            "price": 0.84,
+            "categories": "オフィスサプライ > 事務用品 > 掲示用品 > 掲示用小物 > マグネット用品 > マグネットシート",
+            "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono60854893-200925-04.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono34921634-130625-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono34921634-130625-04.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono34921634-200925-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono34921634-240809-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono34921643-130625-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono34921643-130625-04.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono34921643-200925-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono60854805-130625-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono60854805-200925-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono60854814-130625-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono60854814-200925-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono60854823-130625-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono60854823-200925-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono60854832-130625-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono60854832-130711-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono60854832-200925-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono60854841-130625-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono60854841-200925-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono60854857-130625-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono60854857-130711-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono60854857-200925-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono60854866-130625-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono60854866-200925-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono60854875-130625-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono60854875-200925-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono60854884-130625-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono60854884-200925-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono60854893-130625-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono60854893-200925-02.jpg",
+            "videos": "https://www.youtube.com/embed/IlU3fj1NDLs",
+            "price": 1.10,
             "available_qty": None,
             "options": [
                 {
@@ -527,83 +523,357 @@ class TestProduct(unittest.TestCase):
                 },
                 {
                     "id": None,
-                    "name": "内容量"
+                    "name": "寸法(mm)"
+                },
+                {
+                    "id": None,
+                    "name": "色"
                 }
             ],
             "variants": [
                 {
-                    "variant_id": "48713035",
+                    "variant_id": "34921634",
                     "barcode": None,
-                    "sku": "48713035",
+                    "sku": "34921634",
                     "option_values": [
                         {
                             "option_id": None,
                             "option_value_id": None,
                             "option_name": "品番",
-                            "option_value": "MCH-02A410"
+                            "option_value": "MS-3010W"
                         },
                         {
                             "option_id": None,
                             "option_value_id": None,
-                            "option_name": "内容量",
-                            "option_value": "1パック(10枚)"
+                            "option_name": "寸法(mm)",
+                            "option_value": "100×300"
+                        },
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "色",
+                            "option_value": "白"
                         }
                     ],
-                    "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono48713035-221004-02.jpg",
-                    "price": 0.84,
+                    "images": None,
+                    "price": 1.10,
                     "available_qty": None
                 },
                 {
-                    "variant_id": "54841650",
+                    "variant_id": "34921643",
                     "barcode": None,
-                    "sku": "54841650",
+                    "sku": "34921643",
                     "option_values": [
                         {
                             "option_id": None,
                             "option_value_id": None,
                             "option_name": "品番",
-                            "option_value": "MCH-02A4100"
+                            "option_value": "MS-3020W"
                         },
                         {
                             "option_id": None,
                             "option_value_id": None,
-                            "option_name": "内容量",
-                            "option_value": "1パック(100枚)"
+                            "option_name": "寸法(mm)",
+                            "option_value": "200×300"
+                        },
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "色",
+                            "option_value": "白"
                         }
                     ],
-                    "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841650-240614-02.jpg",
-                    "price": 7.77,
-                    "available_qty": 0
+                    "images": None,
+                    "price": 2.15,
+                    "available_qty": None
                 },
                 {
-                    "variant_id": "54841659",
+                    "variant_id": "60854805",
                     "barcode": None,
-                    "sku": "54841659",
+                    "sku": "60854805",
                     "option_values": [
                         {
                             "option_id": None,
                             "option_value_id": None,
                             "option_name": "品番",
-                            "option_value": "MCH-02A4600"
+                            "option_value": "MS-3010B"
                         },
                         {
                             "option_id": None,
                             "option_value_id": None,
-                            "option_name": "内容量",
-                            "option_value": "1箱(600枚)"
+                            "option_name": "寸法(mm)",
+                            "option_value": "100×300"
+                        },
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "色",
+                            "option_value": "青"
                         }
                     ],
-                    "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841659-240614-02.jpg",
-                    "price": 43.66,
-                    "available_qty": 0
+                    "images": None,
+                    "price": 1.10,
+                    "available_qty": None
+                },
+                {
+                    "variant_id": "60854814",
+                    "barcode": None,
+                    "sku": "60854814",
+                    "option_values": [
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "品番",
+                            "option_value": "MS-3010G"
+                        },
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "寸法(mm)",
+                            "option_value": "100×300"
+                        },
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "色",
+                            "option_value": "緑"
+                        }
+                    ],
+                    "images": None,
+                    "price": 1.10,
+                    "available_qty": None
+                },
+                {
+                    "variant_id": "60854823",
+                    "barcode": None,
+                    "sku": "60854823",
+                    "option_values": [
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "品番",
+                            "option_value": "MS-3010R"
+                        },
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "寸法(mm)",
+                            "option_value": "100×300"
+                        },
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "色",
+                            "option_value": "赤"
+                        }
+                    ],
+                    "images": None,
+                    "price": 1.10,
+                    "available_qty": None
+                },
+                {
+                    "variant_id": "60854832",
+                    "barcode": None,
+                    "sku": "60854832",
+                    "option_values": [
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "品番",
+                            "option_value": "MS-3010Y"
+                        },
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "寸法(mm)",
+                            "option_value": "100×300"
+                        },
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "色",
+                            "option_value": "黄"
+                        }
+                    ],
+                    "images": None,
+                    "price": 1.10,
+                    "available_qty": None
+                },
+                {
+                    "variant_id": "60854841",
+                    "barcode": None,
+                    "sku": "60854841",
+                    "option_values": [
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "品番",
+                            "option_value": "MS-3010O"
+                        },
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "寸法(mm)",
+                            "option_value": "100×300"
+                        },
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "色",
+                            "option_value": "オレンジ"
+                        }
+                    ],
+                    "images": None,
+                    "price": 1.10,
+                    "available_qty": None
+                },
+                {
+                    "variant_id": "60854857",
+                    "barcode": None,
+                    "sku": "60854857",
+                    "option_values": [
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "品番",
+                            "option_value": "MS-3020B"
+                        },
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "寸法(mm)",
+                            "option_value": "200×300"
+                        },
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "色",
+                            "option_value": "青"
+                        }
+                    ],
+                    "images": None,
+                    "price": 2.15,
+                    "available_qty": None
+                },
+                {
+                    "variant_id": "60854866",
+                    "barcode": None,
+                    "sku": "60854866",
+                    "option_values": [
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "品番",
+                            "option_value": "MS-3020G"
+                        },
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "寸法(mm)",
+                            "option_value": "200×300"
+                        },
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "色",
+                            "option_value": "緑"
+                        }
+                    ],
+                    "images": None,
+                    "price": 2.15,
+                    "available_qty": None
+                },
+                {
+                    "variant_id": "60854875",
+                    "barcode": None,
+                    "sku": "60854875",
+                    "option_values": [
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "品番",
+                            "option_value": "MS-3020R"
+                        },
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "寸法(mm)",
+                            "option_value": "200×300"
+                        },
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "色",
+                            "option_value": "赤"
+                        }
+                    ],
+                    "images": None,
+                    "price": 2.15,
+                    "available_qty": None
+                },
+                {
+                    "variant_id": "60854884",
+                    "barcode": None,
+                    "sku": "60854884",
+                    "option_values": [
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "品番",
+                            "option_value": "MS-3020Y"
+                        },
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "寸法(mm)",
+                            "option_value": "200×300"
+                        },
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "色",
+                            "option_value": "黄"
+                        }
+                    ],
+                    "images": None,
+                    "price": 2.15,
+                    "available_qty": None
+                },
+                {
+                    "variant_id": "60854893",
+                    "barcode": None,
+                    "sku": "60854893",
+                    "option_values": [
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "品番",
+                            "option_value": "MS-3020O"
+                        },
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "寸法(mm)",
+                            "option_value": "200×300"
+                        },
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "色",
+                            "option_value": "オレンジ"
+                        }
+                    ],
+                    "images": None,
+                    "price": 2.15,
+                    "available_qty": None
                 }
             ],
-            "reviews": 438,
-            "rating": 4.69,
+            "reviews": 79,
+            "rating": 4.32,
             "shipping_fee": 3.26,
             "weight": None,
-            "length": 12.13,
-            "width": 8.62,
+            "length": None,
+            "width": None,
             "height": None
         }
         for key in target_product:
@@ -611,8 +881,7 @@ class TestProduct(unittest.TestCase):
 
         print(product["description"])
         self.assertIn("<h4>注意</h4>", product["description"])
-        self.assertIn("<th>用途</th>", product["description"])
-        self.assertIn("<th>材質</th>", product["description"])
+        self.assertIn("<th>材質(表面/裏面)</th>", product["description"])
 
     def test_unavailable_product(self):
         url = "https://www.monotaro.com/g/06431439/"
