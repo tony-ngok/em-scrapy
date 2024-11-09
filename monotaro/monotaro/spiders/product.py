@@ -118,7 +118,7 @@ class MonotaroProduct(scrapy.Spider):
                 for child in span.children:
                     if isinstance(child, Tag) and (child.name == 'span'):
                         spec_name = child.text.strip()
-                        if (spec_name in {'用途', '使用方法', '材質', '機能'}) or ('成分' in spec_name):
+                        if (spec_name in {'用途', '使用方法', '機能'}) or ('成分' in spec_name) or ('材質' in spec_name):
                             is_add_descr = True
                     elif isinstance(child, Tag) and (child.name == 'div'): # 较长的参数值放入描述中
                         is_add_descr = True
