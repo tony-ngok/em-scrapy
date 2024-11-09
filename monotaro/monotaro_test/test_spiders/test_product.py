@@ -1,5 +1,6 @@
 import unittest
 
+from em_product.product import StandardProduct
 from scrapy.utils.test import get_crawler
 from scrapy.http import HtmlResponse
 
@@ -87,6 +88,7 @@ class TestProduct(unittest.TestCase):
         print(product["description"])
         self.assertIn("<h4>注意</h4>", product["description"])
         self.assertIn("<th>材質</th>", product["description"])
+        StandardProduct(**product)
 
     def test_available_product_2(self):
         url = "https://www.monotaro.com/g/00530783/"
@@ -159,6 +161,7 @@ class TestProduct(unittest.TestCase):
         print(product["description"])
         self.assertIn("<h4>注意</h4>", product["description"])
         self.assertIn("<th>用途</th>", product["description"])
+        StandardProduct(**product)
     
     def test_available_product_3(self):
         url = "https://www.monotaro.com/g/06199072/"
@@ -271,6 +274,7 @@ class TestProduct(unittest.TestCase):
         print(product["description"])
         self.assertNotIn("<h4>注意</h4>", product["description"])
         self.assertIn("<th>機能</th>", product["description"])
+        StandardProduct(**product)
 
     def test_available_product_4(self):
         url = "https://www.monotaro.com/g/06201561/"
@@ -339,6 +343,7 @@ class TestProduct(unittest.TestCase):
         print(product["description"])
         self.assertNotIn("<h4>注意</h4>", product["description"])
         self.assertIn("<th>栄養成分</th>", product["description"])
+        StandardProduct(**product)
 
     def test_available_product_5(self):
         url = "https://www.monotaro.com/g/02362145/"
@@ -476,6 +481,7 @@ class TestProduct(unittest.TestCase):
         self.assertIn("<h4>注意</h4>", product["description"])
         self.assertIn("<th>用途</th>", product["description"])
         self.assertIn("<th>材質</th>", product["description"])
+        StandardProduct(**product)
 
     def test_available_product_6(self):
         url = "https://www.monotaro.com/g/00264157/"
@@ -882,6 +888,7 @@ class TestProduct(unittest.TestCase):
         print(product["description"])
         self.assertIn("<h4>注意</h4>", product["description"])
         self.assertIn("<th>材質(表面/裏面)</th>", product["description"])
+        StandardProduct(**product)
 
     def test_available_product_7(self):
         url = "https://www.monotaro.com/g/01126628/"
@@ -976,6 +983,7 @@ class TestProduct(unittest.TestCase):
         print(product["description"])
         self.assertIn("<h4>注意</h4>", product["description"])
         self.assertIn("<th>用途</th>", product["description"])
+        StandardProduct(**product)
 
     def test_unavailable_product(self):
         url = "https://www.monotaro.com/g/06431439/"
@@ -1053,6 +1061,7 @@ class TestProduct(unittest.TestCase):
         self.assertNotIn("<h4>注意</h4>", product["description"])
         self.assertIn("<th>用途</th>", product["description"])
         self.assertIn("<th>材質</th>", product["description"])
+        StandardProduct(**product)
 
 
 if __name__ == '__main__':
