@@ -386,7 +386,7 @@ class MonotaroProduct(scrapy.Spider):
                                  cb_kwargs={ 'i': i+1, "pid": pid })
 
     def parse(self, response: HtmlResponse, i: int, pid: str, p: int = 1, item: dict = {}):
-        print(f"{i:_}/{len(self.start_urls):_}".replace(".", ","), response.url)
+        print(f"{i:_}/{len(self.start_urls):_}".replace("_", "."), response.url)
 
         if p == 1: # 提取基本商品资料（包含最初50个变种）
             if response.status == 404:
