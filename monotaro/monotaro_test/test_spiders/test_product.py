@@ -436,7 +436,7 @@ class TestProduct(unittest.TestCase):
                     ],
                     "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841650-240614-02.jpg",
                     "price": 7.77,
-                    "available_qty": None
+                    "available_qty": 0
                 },
                 {
                     "variant_id": "54841659",
@@ -458,7 +458,7 @@ class TestProduct(unittest.TestCase):
                     ],
                     "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841659-240614-02.jpg",
                     "price": 43.66,
-                    "available_qty": None
+                    "available_qty": 0
                 }
             ],
             "reviews": 438,
@@ -473,7 +473,7 @@ class TestProduct(unittest.TestCase):
             self.assertEqual(product[key], target_product[key])
 
         print(product["description"])
-        self.assertNotIn("<h4>注意</h4>", product["description"])
+        self.assertIn("<h4>注意</h4>", product["description"])
         self.assertIn("<th>用途</th>", product["description"])
         self.assertIn("<th>材質</th>", product["description"])
 
