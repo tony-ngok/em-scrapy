@@ -28,9 +28,10 @@ class MonotaroProduct(scrapy.Spider):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        with open('monotaro_prod_urls.json', 'r') as f:
-            produits = load(f)
-        self.start_urls = [p['prod_url'] for p in produits]
+        with open('monotaro_prod_urls.txt', 'r') as f:
+            for line in f:
+                if line.strip():
+                    self.start_urls.append(line.strip())
         print(f'Total {len(self.start_urls):_} products'.replace("_", "."))
 
         self.jpy_rate = 153.237093
