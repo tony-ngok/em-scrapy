@@ -274,8 +274,8 @@ class MonotaroProduct(scrapy.Spider):
                 th_txt = th.css('::text').get('').strip()
                 if th_txt:
                     if th_txt == '商品画像':
-                        valid_cols['images'] = i
-                        raw_vars_info['images'] = []
+                        valid_cols['image'] = i
+                        raw_vars_info['image'] = []
                     elif th_txt == '注文コード':
                         valid_cols['variant_id'] = i
                         raw_vars_info['variant_id'] = []
