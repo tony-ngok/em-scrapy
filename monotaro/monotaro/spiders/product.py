@@ -250,8 +250,8 @@ class MonotaroProduct(scrapy.Spider):
         return ";".join(img_list) if img_list else None
 
     def get_videos(self, response: HtmlResponse):
-        vidx = response.css('a.ytp-title-link::attr(href)').getall()
-        vid_list = [vid for vid in vidx if vid]
+        vidx = response.css('div.MovieContents__Iframe > iframe::attr(src)').getall()
+        vid_list = [vid.split('?')[0] for vid in vidx if vid]
         return ";".join(vid_list) if vid_list else None
 
     def get_raw_vars(self, response: HtmlResponse):
