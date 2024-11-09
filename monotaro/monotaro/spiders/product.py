@@ -54,12 +54,7 @@ class MonotaroProduct(scrapy.Spider):
         if id_match:
             return id_match[0]
 
-    def get_specs(self, txt: str) -> tuple:
-        """
-        解析商品参数；部分参数（如使用注意事项）加入描述中
-        """
-
-        # TODO
+def get_specs_etc(self, response: HtmlResponse):
         specs = []
         add_descr = ""
         weight = None
