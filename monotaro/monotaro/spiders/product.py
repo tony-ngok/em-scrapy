@@ -3,10 +3,10 @@ import sys
 sys.path.append('..')
 
 from datetime import datetime
-from json import load, loads
+from json import loads
 from re import findall
 
-import requests
+# import requests
 from bs4 import BeautifulSoup, Tag
 import scrapy
 from scrapy.http import HtmlResponse
@@ -28,23 +28,23 @@ class MonotaroProduct(scrapy.Spider):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        with open('monotaro_prod_urls.txt', 'r') as f:
-            for line in f:
-                if line.strip():
-                    self.start_urls.append(line.strip())
-        print(f'Total {len(self.start_urls):_} products'.replace("_", "."))
+        # with open('monotaro_prod_urls.txt', 'r') as f:
+        #     for line in f:
+        #         if line.strip():
+        #             self.start_urls.append(line.strip())
+        # print(f'Total {len(self.start_urls):_} products'.replace("_", "."))
 
         self.jpy_rate = 153.237093
-        try:
-            resp = requests.get('https://open.er-api.com/v6/latest/USD')
-            if resp.ok:
-                self.jpy_rate = resp.json()['rates']['JPY']
-            else:
-                raise Exception(f'Status {resp.status_code}')
-        except Exception as e:
-            print("Fail to get latest USD/JPY rate", str(e))
-        finally:
-            print(f"USD/JPY rate: {self.jpy_rate:_}".replace(".", ",").replace("_", "."))
+        # try:
+        #     resp = requests.get('https://open.er-api.com/v6/latest/USD')
+        #     if resp.ok:
+        #         self.jpy_rate = resp.json()['rates']['JPY']
+        #     else:
+        #         raise Exception(f'Status {resp.status_code}')
+        # except Exception as e:
+        #     print("Fail to get latest USD/JPY rate", str(e))
+        # finally:
+        #     print(f"USD/JPY rate: {self.jpy_rate:_}".replace(".", ",").replace("_", "."))
 
     def get_prod_url(self, prod_id: str, p: int = 1):
         if p > 1:
@@ -55,7 +55,7 @@ class MonotaroProduct(scrapy.Spider):
         basic_descr = ""
 
         if isinstance(response, HtmlResponse):
-            response = BeautifulSoup(response.css('p.DescriptionText').get(''), 'html.parser')
+            response = BeautifulSoup(response.css('p.DescriptionText').get(''), "html.parser")
             response = response.p
             if not response:
                 return ""
@@ -108,7 +108,7 @@ class MonotaroProduct(scrapy.Spider):
         spans = response.css('span.AttributeLabel__Wrap').getall()
         for span in spans:
             if span:
-                span = BeautifulSoup(span, 'html_parser')
+                span = BeautifulSoup(span, 'html.parser')
                 span = span.span
 
                 spec_name = ''
@@ -261,9 +261,19 @@ class MonotaroProduct(scrapy.Spider):
                 raw_vars_info[th_txt] = []
             else:
                 th_txt = th.css('::text').get('').strip()
-                if th_txt and (th_txt in {'商品画像', '注文コード', '販売価格(税別)', '出荷目安'}):
-                    valid_cols[th_txt] = i
-                    raw_vars_info[th_txt] = []
+                if th_txt:
+                    if th_txt == '商品画像':
+                        valid_cols['images'] = i
+                        raw_vars_info['images'] = []
+                    elif th_txt == '注文コード':
+                        valid_cols['variant_id'] = i
+                        raw_vars_info['variant_id'] = []
+                    elif (th_txt == '販売価格') and ('Table__HeadCell--GpagePrice' in th.css('::attr(class)').get('').split()):
+                        valid_cols['price'] = i
+                        raw_vars_info['price'] = []
+                    elif th_txt == '出荷目安':
+                        valid_cols['available_qty'] = i
+                        raw_vars_info['available_qty'] = []
 
         # 积累有效列资料
         rows = response.css('div.ProductsDetails tbody > tr')
@@ -272,23 +282,20 @@ class MonotaroProduct(scrapy.Spider):
 
             for k, v in valid_cols.items():
                 var_spec = None
-                if k == '商品画像':
-                    k = 'image'
+
+                if k == 'image':
                     var_spec = rcols[v].css('div.SKUProductImage img::attr(src)').get()
                     if var_spec:
                         var_spec = 'https:'+var_spec
-                elif k == '注文コード':
-                    k = 'variant_id'
+                elif k == 'variant_id':
                     var_spec = rcols[v].css('a::text').get('-')
-                elif k == '販売価格(税別)':
-                    k = 'price'
+                elif k == 'price':
                     var_spec = rcols[v].css(':scope span.Price--Md::text').get()
                     if not var_spec:
                         var_spec = 'SKIP_VAR'
                     else:
                         var_spec = int(var_spec.replace(',', ''))
-                elif k == '出荷目安':
-                    k = 'available_qty'
+                elif k == 'available_qty':
                     if rcols[v].css(':scope span[title="取扱い終了"]'):
                         var_spec = 'SKIP_VAR'
                     elif rcols[v].css(':scope span[title="欠品中"]'):
@@ -313,9 +320,9 @@ class MonotaroProduct(scrapy.Spider):
                 options.append(k)
 
         variants = []
-        total_vars = len(raw_vars_info['sku'])
+        total_vars = len(raw_vars_info['variant_id'])
         for i in range(total_vars):
-            if (raw_vars_info['price'] != 'SKIP_VAR') and (raw_vars_info['available_qty'] != 'SKIP_VAR'):
+            if (raw_vars_info['price'][i] != 'SKIP_VAR') and (raw_vars_info['available_qty'][i] != 'SKIP_VAR'):
                 variant = {
                     "variant_id": raw_vars_info['variant_id'][i],
                     "barcode": None,
@@ -332,7 +339,11 @@ class MonotaroProduct(scrapy.Spider):
                 }
                 variants.append(variant)
 
-        return options if options else None, variants
+        options = [{
+            "id": None,
+            "name": opt
+        } for opt in options] if options else None
+        return options, variants
 
     def get_recensions(self, dat: dict):
         recens = dat.get('aggregateRating')
@@ -349,7 +360,7 @@ class MonotaroProduct(scrapy.Spider):
                                  cb_kwargs={ 'i': i+1, "pid": pid })
 
     def parse(self, response: HtmlResponse, i: int, pid: str, p: int = 1, item: dict = {}):
-        print(f"{i:_}/{len(self.start_urls):_}", response.url)
+        # print(f"{i:_}/{len(self.start_urls):_}", response.url)
 
         if p == 1: # 提取基本商品资料（包含最初50个变种）
             if response.status == 404:
@@ -380,7 +391,7 @@ class MonotaroProduct(scrapy.Spider):
                 return
 
             raw_vars = self.get_raw_vars(response)
-            item['option'], variants = self.get_opts_vars(raw_vars)
+            item['options'], variants = self.get_opts_vars(raw_vars)
             if not variants:
                 print("Product end", response.url)
                 return
@@ -437,7 +448,7 @@ class MonotaroProduct(scrapy.Spider):
                                  callback=self.parse,
                                  cb_kwargs={ 'i': i+1, "pid": pid, "p": p+1, "item": item })
         else:
-            item['variants'] = item['variants'] if item['option'] and item['variants'] else None # 变种提取结束
+            item['variants'] = item['variants'] if item['options'] and item['variants'] else None # 变种提取结束
             item['has_only_default_variant'] = not (item['variants'] and (len(item['variants']) > 1))
             item['date'] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
             yield item
