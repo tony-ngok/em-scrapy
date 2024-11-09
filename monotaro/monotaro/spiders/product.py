@@ -54,7 +54,7 @@ class MonotaroProduct(scrapy.Spider):
         if id_match:
             return id_match[0]
 
-def get_specs_etc(self, response: HtmlResponse):
+    def get_specs_etc(self, response: HtmlResponse):
         specs = []
         add_descr = ""
         weight = None
