@@ -883,6 +883,100 @@ class TestProduct(unittest.TestCase):
         self.assertIn("<h4>注意</h4>", product["description"])
         self.assertIn("<th>材質(表面/裏面)</th>", product["description"])
 
+    def test_available_product_7(self):
+        url = "https://www.monotaro.com/g/01126628/"
+        with open("monotaro_test/pages/クリスタルホース食品F型 タイガースポリマー サクションホース 【通販モノタロウ】.html", "rb") as file:
+            body = file.read()
+
+        response1 = HtmlResponse(
+            url=url,
+            body=body,
+        )
+        result1 = list(self.spider.parse(response1, 0, '01126628'))
+        self.assertEqual(len(result1), 1)
+        product1 = result1[0]
+
+        url2 = "https://www.monotaro.com/g/01126628/page-2/"
+        with open("monotaro_test/pages/クリスタルホース食品F型 タイガースポリマー サクションホース 【通販モノタロウ】 2.html", "rb") as file:
+            body = file.read()
+
+        response = HtmlResponse(
+            url=url2,
+            body=body,
+        )
+        result = list(self.spider.parse(response, 0, '01126628', 2, product1))
+        self.assertEqual(len(result), 1)
+        product = result[0]
+
+        target_product = {
+            "url": url,
+            "product_id": "01126628",
+            "existence": True,
+            "title": "クリスタルホース食品F型",
+            "sku": "06468245",
+            "brand": "タイガースポリマー",
+            "specifications": [
+                {
+                    "name": "使用流体",
+                    "value": "流体食品(酒、醤油、酢、清涼飲料水)"
+                },
+                {
+                    "name": "内容量",
+                    "value": "1本"
+                }
+            ],
+            "categories": "配管・水廻り部材/ポンプ/空圧・油圧機器・ホース > コンプレッサー・空圧機器・ホース > ホース > サクションホース",
+            "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono06467983-140908-02.jpg",
+            "videos": None,
+            "price": 31.26,
+            "available_qty": None,
+            "options": [
+                {
+                    "id": None,
+                    "name": "品番"
+                },
+                {
+                    "id": None,
+                    "name": "内径(Φmm)"
+                },
+                {
+                    "id": None,
+                    "name": "外径(Φmm)"
+                },
+                {
+                    "id": None,
+                    "name": "長さ(m)"
+                },
+                {
+                    "id": None,
+                    "name": "許容圧力(MPa[kgf/cm2])"
+                }
+            ],
+            "reviews": None,
+            "rating": None,
+            "shipping_fee": 0.00,
+            "weight": None,
+            "length": None,
+            "width": None,
+            "height": None
+        }
+        for key in target_product:
+            self.assertEqual(product[key], target_product[key])
+
+        self.assertEqual(len(product["variants"]), 26)
+        self.assertEqual(product["variants"][0]['variant_id'], product["sku"])
+        self.assertEqual(product["variants"][0]['sku'], product["sku"])
+        self.assertEqual(product["variants"][0]['images'], None)
+        self.assertEqual(product["variants"][0]['price'], product["price"])
+        self.assertEqual(product["variants"][0]['available_qty'], product["available_qty"])
+
+        for v in product["variants"]:
+            self.assertEqual(len(v['option_values']), len(product["options"]))
+
+        print(product["description"])
+        self.assertIn("<h4>注意</h4>", product["description"])
+        self.assertIn("<th>用途</th>", product["description"])
+
     def test_unavailable_product(self):
         url = "https://www.monotaro.com/g/06431439/"
         with open("monotaro_test/pages/AP-708209 お医者さんの(R)首サポーター Fit 1個 アルファックス 【通販モノタロウ】.html", "rb") as file:
