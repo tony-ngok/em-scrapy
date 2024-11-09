@@ -118,13 +118,15 @@ class MonotaroProduct(scrapy.Spider):
                 for child in span.children:
                     if isinstance(child, Tag) and (child.name == 'span'):
                         spec_name = child.text.strip()
+                        if (spec_name in {'用途', '使用方法', '材質'}) or ('成分' in spec_name):
+                            is_add_descr = True
                     elif isinstance(child, Tag) and (child.name == 'div'): # 较长的参数值放入描述中
                         is_add_descr = True
                         spec_val = " ".join(child.text.strip().replace("\n", '<br>').split())
-                    elif isinstance(child, str):
+                    elif isinstance(child, str) and child.strip():
                         if "。" in spec_val:
                             is_add_descr = True
-                        spec_val = child.text.strip()
+                        spec_val = child.strip()
 
                 if spec_name and spec_val:
                     if is_add_descr:
@@ -136,9 +138,15 @@ class MonotaroProduct(scrapy.Spider):
                         })
 
                         if spec_name in {'質量(g)', '重量(g)'}:
-                            weight = round(float(spec_val)*0.002205, 2)
+                            try:
+                                weight = round(float(spec_val)*0.002205, 2)
+                            except ValueError:
+                                pass
                         elif spec_name in {'質量(kg)', '重量(kg)'}:
-                            weight = round(float(spec_val)*2.20462, 2)
+                            try:
+                                weight = round(float(spec_val)*2.20462, 2)
+                            except ValueError:
+                                pass
                         else:
                             if spec_name == '寸法(Φ×mm)':
                                 length, width, height = self.parse_dims(spec_val, 'mm', True)
@@ -188,7 +196,7 @@ class MonotaroProduct(scrapy.Spider):
         """
 
         match1 = findall(r'(\d+(?:\.\d+)?)\s*×\s*(\d+(?:\.\d+)?)\s*×\s*(\d+(?:\.\d+)?)', dims_text)
-        if match1:
+        if match1 and (len(match1) == 1):
             l, w, h = match1[0]
             if unit == 'm':
                 return round(float(l)*39.37008, 2), round(float(w)*39.37008, 2), round(float(h)*39.37008, 2)
@@ -198,7 +206,7 @@ class MonotaroProduct(scrapy.Spider):
                 return round(float(l)*0.0393701, 2), round(float(w)*0.0393701, 2), round(float(h)*0.0393701, 2)
 
         match2 = findall(r'(\d+(?:\.\d+)?)\s*×\s*(\d+(?:\.\d+)?)', dims_text)
-        if match2:
+        if match2 and (len(match2) == 1):
             d1, d2 = match2[0]
             if is_diam:
                 if unit == 'm':
