@@ -13,8 +13,8 @@ class TestProduct(unittest.TestCase):
         self.spider = self.crawler._create_spider()
 
     def test_available_product_1(self):
-        url = "https://www.muji.com/jp/ja/store/cmdty/detail/4550002868284"
-        with open("monotaro_test/pages/アロマストーン _ 無印良品.html", "rb") as file:
+        url = "https://www.monotaro.com/g/01429775/"
+        with open("monotaro_test/pages/3579 A4ステーショナリーケース L型 和泉化成 クリア色 材質PP - 【通販モノタロウ】.html", "rb") as file:
             body = file.read()
 
         response = HtmlResponse(
@@ -27,45 +27,68 @@ class TestProduct(unittest.TestCase):
 
         target_product = {
             "url": url,
-            "product_id": "02868284",
+            "product_id": "01429775",
             "existence": True,
             "title": "アロマストーン",
-            "sku": "4550002868284",
-            "upc": "4550002868284",
-            "brand": "無印良品",
+            "sku": "23197143",
+            "brand": "和泉化成",
             "specifications": [
                 {
-                    "name": "原産国・地域",
-                    "value": "日本"
+                    "name": "サイズ",
+                    "value": "A4"
                 },
                 {
-                    "name": "仕様・混率",
-                    "value": "アロマストーン"
+                    "name": "色",
+                    "value": "クリア"
                 },
                 {
-                    "name": "外寸",
-                    "value": "ストーン約直径65ｍｍ×30mm　トレー約直径63mm×5mm"
+                    "name": "材質",
+                    "value": "PP"
                 },
                 {
-                    "name": "リフィル等パーツ",
-                    "value": "替皿"
+                    "name": "寸法(mm)",
+                    "value": "317×253×27"
                 },
                 {
-                    "name": "重量（梱包材含む）",
-                    "value": "約170g"
+                    "name": "内容量",
+                    "value": "1個"
                 }
             ],
-            "categories": "生活雑貨 > アロマ・ルームフレグランス > アロマディフューザー",
-            "images": "https://www.muji.com/public/media/img/item/4550002868284_org.jpg;https://www.muji.com/public/media/img/item/4550002868284_01_org.jpg;https://www.muji.com/public/media/img/item/4550002868284_02_org.jpg",
-            "price": 6.50,
+            "categories": "オフィスサプライ > 事務用品 > ファイリング > 収納ボックス/ケース > 書類ケース",
+            "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono23197143-160331-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono23197143-210302-02.jpg",
+            "price": 1.17,
             "available_qty": None,
-            "reviews": 438,
-            "rating": 3.80,
-            "shipping_fee": 3.28,
-            "weight": 0.37
+            "options": [{
+                "id": None,
+                "name": "品番"
+            }],
+            "variants": [{
+                "variant_id": "23197143",
+                "barcode": None,
+                "sku": "23197143",
+                "option_values": [{
+                    "option_id": None,
+                    "option_value_id": None,
+                    "option_name": "品番",
+                    "option_value": "3579"
+                }],
+                "images": None,
+                "price": 1.17,
+                "available_qty": None
+            }],
+            "reviews": 15,
+            "rating": 3.47,
+            "shipping_fee": 3.26,
+            "weight": 0.37,
+            "length": 12.48,
+            "width": 9.96,
+            "height": 1.06
         }
         for key in target_product:
             self.assertEqual(product[key], target_product[key])
+        
+        self.assertIn("<h4>注意</h4>", product["description"])
+        print(product["description"])
 
     def test_available_product_2(self):
         url = "https://www.muji.com/jp/ja/store/cmdty/detail/4550344594056"

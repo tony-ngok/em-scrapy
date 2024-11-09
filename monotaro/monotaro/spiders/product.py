@@ -28,11 +28,11 @@ class MonotaroProduct(scrapy.Spider):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        with open('monotaro_prod_urls.txt', 'r') as f:
-            for line in f:
-                if line.strip():
-                    self.start_urls.append(line.strip())
-        print(f'Total {len(self.start_urls):_} products'.replace("_", "."))
+        # with open('monotaro_prod_urls.txt', 'r') as f:
+        #     for line in f:
+        #         if line.strip():
+        #             self.start_urls.append(line.strip())
+        # print(f'Total {len(self.start_urls):_} products'.replace("_", "."))
 
         self.jpy_rate = 153.237093
         # try:
