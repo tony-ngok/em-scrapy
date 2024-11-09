@@ -7,6 +7,7 @@ from json import load, loads
 from re import findall
 
 import requests
+from bs4 import BeautifulSoup, Tag
 import scrapy
 from scrapy.http import HtmlResponse
 
@@ -16,12 +17,6 @@ class MonotaroProduct(scrapy.Spider):
     name = "monotaro_product"
     allowed_domains = ["www.monotaro.com"]
     start_urls = []
-
-    CM_TO_IN = 0.393701
-    M_TO_IN = 39.37008
-    MM_TO_IN = 0.0393701
-    G_TO_LB = 0.002205
-    KG_TO_LB = 2.20462
 
     HEADERS = {
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8",
@@ -66,191 +61,345 @@ class MonotaroProduct(scrapy.Spider):
 
         # TODO
         specs = []
-        speck_set = set()
-        add_descr = []
-        weight_str = ""
-        dims_str = ""
+        add_descr = ""
+        weight = None
+        length = None
+        width = None
+        height = None
 
-        specs_kmatch = findall(r'{\\\"className\\\":\\\"HeaderCell_cellValue__4rOy0\\\",[^$]*\\\"children\\\":\\\"([^$]*)\\\"}', txt)
-        specs_vmatch = findall(r'{\\\"className\\\":\\\"Cell_cellValue__B2F5r\\\",[^$]*\\\"children\\\":\\\"([^$]*)\\\"}', txt)
-        # print(specs_vmatch)
-        if specs_kmatch and specs_vmatch:
-            for speck, specv in zip(specs_kmatch, specs_vmatch):
-                speck = speck.replace(' ', '')
-                if speck not in speck_set:
-                    speck_set.add(speck)
+        spans = response.css('span.AttributeLabel__Wrap').getall()
+        for span in spans:
+            if span:
+                span = BeautifulSoup(span, 'html_parser')
+                span = span.span
 
-                    if ('使用' in speck) or ('取扱' in speck):
-                        add_descr.append((speck, specv))
+                spec_name = ''
+                spec_val = ''
+                is_add_descr = False
+
+                for child in span.children:
+                    if isinstance(child, Tag) and (child.name == 'span'):
+                        spec_name = child.text.strip()
+                    elif isinstance(child, Tag) and (child.name == 'div'): # 较长的参数值放入描述中
+                        is_add_descr = True
+                        spec_val = " ".join(child.text.strip().replace("\n", '<br>').split())
+                    elif isinstance(child, str):
+                        if "。" in spec_val:
+                            is_add_descr = True
+                        spec_val = child.text.strip()
+
+                if spec_name and spec_val:
+                    if is_add_descr:
+                        add_descr += f'<tr><th>{spec_name}</th><td>{spec_val}</td></tr>'
                     else:
                         specs.append({
-                            "name": speck,
-                            "value": specv
+                            "name": spec_name,
+                            "value": spec_val
                         })
 
-                        if '外寸' in speck:
-                            dims_str = specv
-                        if '重量' in speck:
-                            weight_str = specv
-        
-        return ((specs if specs else None), add_descr, weight_str, dims_str)
+                        if spec_name in {'質量(g)', '重量(g)'}:
+                            weight = round(float(spec_val)*0.002205, 2)
+                        elif spec_name in {'質量(kg)', '重量(kg)'}:
+                            weight = round(float(spec_val)*2.20462, 2)
+                        else:
+                            if spec_name == '寸法(Φ×mm)':
+                                length, width, height = self.parse_dims(spec_val, 'mm', True)
+                            elif spec_name == '寸法(mm)':
+                                length, width, height = self.parse_dims(spec_val, 'mm', spec_val.startswith('Φ'))
+                            elif spec_name == '寸法(Φ×cm)':
+                                length, width, height = self.parse_dims(spec_val, 'cm', True)
+                            elif spec_name == '寸法(cm)':
+                                length, width, height = self.parse_dims(spec_val, 'cm', spec_val.startswith('Φ'))
+                            elif spec_name == '寸法(Φ×m)':
+                                length, width, height = self.parse_dims(spec_val, 'm', True)
+                            elif spec_name == '寸法(m)':
+                                length, width, height = self.parse_dims(spec_val, 'm', spec_val.startswith('Φ'))
+                            else:
+                                if length is None:
+                                    if spec_name == '長さ(m)':
+                                        length = round(float(spec_val)*39.37008, 2)
+                                    elif spec_name == '長さ(cm)':
+                                        length = round(float(spec_val)*0.393701, 2)
+                                    elif spec_name == '長さ(mm)':
+                                        length = round(float(spec_val)*0.0393701, 2)
+                                if width is None:
+                                    if spec_name == '幅(m)':
+                                        width = round(float(spec_val)*39.37008, 2)
+                                    elif spec_name == '幅(cm)':
+                                        width = round(float(spec_val)*0.393701, 2)
+                                    elif spec_name == '幅(mm)':
+                                        width = round(float(spec_val)*0.0393701, 2)
+                                if height is None:
+                                    if spec_name == '高さ(m)':
+                                        height = round(float(spec_val)*39.37008, 2)
+                                    elif spec_name == '高さ(cm)':
+                                        height = round(float(spec_val)*0.393701, 2)
+                                    elif spec_name == '高さ(mm)':
+                                        height = round(float(spec_val)*0.0393701, 2)
 
-    def parse_add_descr(self, add_descr: list) -> str:
+        return (specs if specs else None), add_descr, weight, length, width, height
+
+    def parse_dims(self, dims_text: str, unit: str, is_diam: bool = False):
         """
-        将商品注意事项整理成表，加到描述中
+        提取商品长、宽、高（寸法）\n
+        支援以下格式：
+        * 长×宽×高
+        * 长×宽
+        * 直径×高\n
+        不支援参数不明的单个数值
         """
 
-        descr = '<table class="monotaro-descr">'
-        for k, v in add_descr:
-            descr += f"<tr><th>{k}</th><td>{v}</td></tr>"
-        descr += '</table>'
-        return descr
-
-    def get_weight(self, txt: str) -> float:
-        """
-        获取商品重量
-        """
-
-        weight = None
-        w_match = findall(r'(\d*\.?\d+)(kg|g)', txt)
-        if w_match:
-            if w_match[0][1] == 'kg':
-                weight = round(float(w_match[0][0])*self.KG_TO_LB, 2)
-            elif w_match[0][1] == 'g':
-                weight = round(float(w_match[0][0])*self.G_TO_LB, 2)
-
-        return weight    
-
-    def get_dims(self, txt: str) -> list:
-        """
-        获取商品长宽高
-        """
-
-        dims = [None, None, None]
-        units = [None, None, None]
-        dims_out = [None, None, None]
-
-        match1 = findall(r'[w]*(\d*\.?\d+)\s*([cm]*)\s*[x|×]\s*[d|l]*(\d*\.?\d+)\s*([cm]*)\s*[x|×]\s*[h]*(\d*\.?\d+)\s*([cm]+)', txt) # 宽*长*高
-        match2 = findall(r'[w]*(\d*\.?\d+)\s*([cm]*)\s*[x|×]\s*[d|l]*(\d*\.?\d+)\s*([cm]+)', txt) # 宽*长
-        match3 = findall(r'[d|l]*(\d*\.?\d+)\s*([cm]+)', txt) # 长
-
+        match1 = findall(r'(\d+(?:\.\d+)?)\s*×\s*(\d+(?:\.\d+)?)\s*×\s*(\d+(?:\.\d+)?)', dims_text)
         if match1:
-            units[2] = match1[0][5]
-            units[1] = match1[0][3] if match1[0][3] else units[2]
-            units[0] = match1[0][1] if match1[0][1] else units[1]
-            for i in range(3):
-                dims[i] = float(match1[0][i*2])
-        elif match2:
-            units[1] = match2[0][3]
-            units[0] = match2[0][1] if match2[0][1] else units[1]
-            dims[0] = float(match2[0][0])
-            dims[1] = float(match2[0][2])
-        elif match3:
-            units[1] = match3[0][1]
-            dims[1] = float(match3[0][0])
+            l, w, h = match1[0]
+            if unit == 'm':
+                return round(float(l)*39.37008, 2), round(float(w)*39.37008, 2), round(float(h)*39.37008, 2)
+            elif unit == 'cm':
+                return round(float(l)*0.393701, 2), round(float(w)*0.393701, 2), round(float(h)*0.393701, 2)
+            elif unit == 'mm':
+                return round(float(l)*0.0393701, 2), round(float(w)*0.0393701, 2), round(float(h)*0.0393701, 2)
 
-        for i, (d, u) in enumerate(zip(dims, units)):
-            if u == 'm':
-                dims_out[i] = round(d*self.M_TO_IN, 2)
-            elif u == 'cm':
-                dims_out[i] = round(d*self.CM_TO_IN, 2)
+        match2 = findall(r'(\d+(?:\.\d+)?)\s*×\s*(\d+(?:\.\d+)?)', dims_text)
+        if match2:
+            d1, d2 = match2[0]
+            if is_diam:
+                if unit == 'm':
+                    return round(float(d1)*39.37008, 2), round(float(d1)*39.37008, 2), round(float(d2)*39.37008, 2)
+                elif unit == 'cm':
+                    return round(float(d1)*0.393701, 2), round(float(d1)*0.393701, 2), round(float(d2)*0.393701, 2)
+                elif unit == 'mm':
+                    return round(float(d1)*0.0393701, 2), round(float(d1)*0.0393701, 2), round(float(d2)*0.0393701, 2)
+            else:
+                if unit == 'm':
+                    return round(float(d1)*39.37008, 2), round(float(d2)*39.37008, 2), None
+                elif unit == 'cm':
+                    return round(float(d1)*0.393701, 2), round(float(d2)*0.393701, 2), None
+                elif unit == 'mm':
+                    return round(float(d1)*0.0393701, 2), round(float(d2)*0.0393701, 2), None
 
-        return dims_out
+        return None, None, None
+
+    def combine_descr(self, basic_descr: str, add_descr: str, alert_descr: str):
+        descr1 = f'<div class="monotaro-descr">{basic_descr}</div>' if basic_descr else ""
+        descr2 = f'<table class="monotaro-descr">{add_descr}</table>' if add_descr else ""
+        descr3 = f'<div class="monotaro-descr">{alert_descr}</div>' if alert_descr else ""
+        return descr1+descr2+descr3 if descr1 or descr2 or descr3 else None
+
+    def get_brand(self, dat: dict):
+        if dat.get('brand'):
+            return dat['brand'].get('name') or None
+
+    def get_cats(self, cat_dat: dict):
+        cat_list = [item['item']['name'] for item in cat_dat.get('itemListElement', [])[1:]]
+        if cat_list:
+            return " > ".join(cat_list)
+        return None
+
+    def get_images(self, response: HtmlResponse):
+        imgx = response.css('img.ProductImage--Lg::attr(src)').getall()
+        img_list = ['https:'+img for img in imgx if img and 'mono_image_na' not in img]
+        return ";".join(img_list)
+
+    def get_videos(self, response: HtmlResponse):
+        vidx = response.css('a.ytp-title-link::attr(href)').getall()
+        vid_list = [vid for vid in vidx if vid]
+        return ";".join(vid_list)
+
+    def get_raw_vars(self, response: HtmlResponse):
+        """
+        从表格（至少一行）中获得所有变种资料
+        """
+
+        raw_vars_info = {} # 键代表属性名，值列表代表属性值
+
+        col_names = response.css('div.ProductsDetails thead th')
+
+        # 获得有效列（商品画像、SKU码、变种选项名、价格、库存状况）
+        valid_cols = {}
+        for i, th in enumerate(col_names):
+            if th.css(':scope div.SortCell__Title'):
+                th_txt = th.css(':scope div.SortCell__Title::text').get('').strip()
+                valid_cols[th_txt] = i
+                raw_vars_info[th_txt] = []
+            else:
+                th_txt = th.css('::text').get('').strip()
+                if th_txt and (th_txt in {'商品画像', '注文コード', '販売価格(税別)', '出荷目安'}):
+                    valid_cols[th_txt] = i
+                    raw_vars_info[th_txt] = []
+
+        # 积累有效列资料
+        rows = response.css('div.ProductsDetails tbody > tr')
+        for row in rows:
+            rcols = row.css('td')
+
+            for k, v in valid_cols.items():
+                var_spec = None
+                if k == '商品画像':
+                    k = 'image'
+                    var_spec = rcols[v].css('div.SKUProductImage img::attr(src)').get()
+                    if var_spec:
+                        var_spec = 'https:'+var_spec
+                elif k == '注文コード':
+                    k = 'variant_id'
+                    var_spec = rcols[v].css('a::text').get('-')
+                elif k == '販売価格(税別)':
+                    k = 'price'
+                    var_spec = rcols[v].css(':scope span.Price--Md::text').get()
+                    if not var_spec:
+                        var_spec = 'SKIP_VAR'
+                    else:
+                        var_spec = int(var_spec.replace(',', ''))
+                elif k == '出荷目安':
+                    k = 'available_qty'
+                    if rcols[v].css(':scope span[title="取扱い終了"]'):
+                        var_spec = 'SKIP_VAR'
+                    elif rcols[v].css(':scope span[title="欠品中"]'):
+                        var_spec = 0
+                else:
+                    var_spec = rcols[v].css('::text').get('').strip()
+
+                raw_vars_info[k].append(var_spec)
+
+        return raw_vars_info
+
+    def get_opts_vars(self, raw_vars_info: dict):
+        """
+        整理获得的变种资料为标准格式
+        """
+
+        options = []
+        for k in raw_vars_info:
+            if (k == '品番') and (raw_vars_info['品番'][0] == '-'): # 实际上无“品番”选项之情况
+                continue
+            elif k not in {'image', 'variant_id', 'price', 'available_qty'}:
+                options.append(k)
+
+        variants = []
+        total_vars = len(raw_vars_info['sku'])
+        for i in range(total_vars):
+            if (raw_vars_info['price'] != 'SKIP_VAR') and (raw_vars_info['available_qty'] != 'SKIP_VAR'):
+                variant = {
+                    "variant_id": raw_vars_info['variant_id'][i],
+                    "barcode": None,
+                    "sku": raw_vars_info['variant_id'][i],
+                    "option_values": [{
+                        "option_id": None,
+                        "option_value_id": None,
+                        "option_name": opt,
+                        "option_value": raw_vars_info[opt][i]
+                    } for opt in options],
+                    "images": raw_vars_info['image'][i],
+                    "price": raw_vars_info['price'][i], # 稍后再汇率换算
+                    "available_qty": raw_vars_info['available_qty'][i]
+                }
+                variants.append(variant)
+
+        return options if options else None, variants
+
+    def get_recensions(self, dat: dict):
+        recens = dat.get('aggregateRating')
+        if recens:
+            return recens['ratingCount'], round(float(recens['ratingValue']), 2)
+        return None, None
 
     def start_requests(self):
-        for i, pu in enumerate(self.start_urls, start=1):
-            print(f"{i:_}".replace('_', '.'), pu)
-            yield scrapy.Request(pu, headers=self.headers, meta={ 'url': pu }, callback=self.parse)
+        for i, pid in enumerate(self.start_urls):
+            url = self.get_prod_url(pid)
+            yield scrapy.Request(url, headers=self.HEADERS,
+                                 meta={ 'cookiejar': i },
+                                 callback=self.parse,
+                                 cb_kwargs={ 'i': i+1, "pid": pid })
 
-    def parse(self, response: HtmlResponse):
-        prod_json = ""
-        bc_json = ""
-        
-        for scr in response.css('script[type="application/ld+json"]::text').getall():
-            if '"Product"' in scr:
-                prod_json = scr
-            elif 'BreadCrumbList"' in scr:
-                bc_json = scr
-            if prod_json and bc_json:
-                break
-        
-        try:
-            prod_json = loads(prod_json)
-            bc_json = loads(bc_json)
-        except:
-            return
+    def parse(self, response: HtmlResponse, i: int, pid: str, p: int = 1, item: dict = {}):
+        print(f"{i:_}/{len(self.start_urls):_}", response.url)
 
-        images = ";".join(prod_json.get('image', []))
-        if not images:
-            return
+        if p == 1: # 提取基本商品资料（包含最初50个变种）
+            if response.status == 404:
+                print("Product not found", response.url)
+                return
 
-        url = response.meta['url']
-        prod_id = self.get_id(url)
-        existence = 'instock' in prod_json['offers']['availability'].lower()
-        title = prod_json['name']
+            prod_json = None
+            bc_json = None
+            for scr in response.css('script[type="application/ld+json"]::text').getall():
+                if '"Product"' in scr:
+                    prod_json = loads(scr)
+                elif 'BreadCrumbList"' in scr:
+                    bc_json = loads(scr)
+                if prod_json and bc_json:
+                    break
+            if not (prod_json and bc_json):
+                print("No product info", response.url)
+                return
 
-        description = "<div>"
-        descr = prod_json.get("description", "").replace("\n", "<br>")
-        description += f'<div class="monotaro-descr">{descr}</div>'
-        
-        specifications, add_descr, weight_str, dims_str = self.get_specs("") # TODO
-        if add_descr:
-            description += self.parse_add_descr(add_descr)
+            item['title'] = prod_json.get('name')
+            if not item['title']:
+                print("No name", response.url)
+                return
 
-        description += "</div>"
-        # print(description+'\n')
+            item['images'] = self.get_images(response)
+            if not item['images']:
+                print("No images", response.url)
+                return
 
-        categories = None
-        cat_list = [item['item']['name'] for item in bc_json.get('itemListElement', [{}])[1:]]
-        if cat_list:
-            categories = " > ".join(cat_list)
-        
-        vid_list = response.css('div.MovieContents__Iframe > iframe::attr(src)').getall()
-        videos = ";".join(vid_list) if vid_list else None
+            raw_vars = self.get_raw_vars(response)
+            item['option'], variants = self.get_opts_vars(raw_vars)
+            if not variants:
+                print("Product end", response.url)
+                return
 
-        price = round(float(prod_json['offers']['price'])*self.JPY_TO_USD, 2)
+            item['url'] = response.url
+            item['source'] = 'MonotaRO'
+            item['product_id'] = pid
 
-        reviews = None
-        rating = None
-        if prod_json.get('aggregateRating'):
-            reviews = prod_json['aggregateRating'].get('reviewCount', 0)
-            rating = round(float(prod_json['aggregateRating'].get('ratingValue', 0.0)), 1)
+            item['specifications'], add_descr, item['weight'], item['length'], item['width'], item['height'] = self.get_specs_etc(response)
+            basic_descr = self.get_basic_descr(response)
+            alert_descr = self.get_alert_descr(response)
+            item['description'] = self.combine_descr(basic_descr, add_descr, alert_descr)
 
-        weight = self.get_weight(weight_str.lower()) if weight_str else None
-        width, length, height = self.get_dims(dims_str.lower()) if dims_str else (None, None, None)
+            item['title_en'] = None
+            item['description_en'] = None
+            item['summary'] = None
+            item['upc'] = None
+            item['brand'] = self.get_brand(prod_json)
+            item['categories'] = self.get_cats(bc_json)
+            item['videos'] = self.get_videos(response)
 
-        yield {
-            "date": datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
-            "url": response.meta['url'],
-            "source": "MonotaRO",
-            "product_id": prod_id,
-            "existence": existence,
-            "title": prod_json['name'],
-            "title_en": None,
-            "description": description,
-            "description_en": None,
-            "summary": None,
-            "sku": prod_id, # TODO
-            "upc": None,
-            "brand": prod_json.get('brand', {}).get('name'),
-            "specifications": specifications,
-            "categories": categories,
-            "images": images,
-            "videos": videos,
-            "price": price,
-            "available_qty": 0 if not existence else None,
-            "options": None, # 本站商品的所谓变种其实有不同商品URL
-            "variants": None,
-            "has_only_default_variant": True,
-            "returnable": False,
-            "reviews": reviews,
-            "rating": rating,
-            "sold_count": None,
-            "shipping_fee": round((self.SHIP_FEE if price < self.FREE_SHIP_PRICE else 0.00), 2),
-            "shipping_days_min": 1, # https://help.monotaro.com/app/answers/detail/a_id/13
-            "shipping_days_max": 10,
-            "weight": weight,
-            "width": width,
-            "length": length,
-            "height": height
-        }
+            item['existence'] = (variants[0]['available_qty'] is None)
+            item['available_qty'] = variants[0]['available_qty']
+            item['sku'] = variants[0]['variant_id']
+
+            price_jpy = variants[0]['price']
+            item['shipping_fee'] = round(500/self.jpy_rate, 2) if price_jpy < 3500 else 0.00
+            item['price'] = round(price_jpy/self.jpy_rate, 2)
+
+            for j, v in enumerate(variants):
+                variants[j]['price'] = round(v['price']/self.jpy_rate, 2)
+            item['variants'] = variants
+
+            item['returnable'] = False
+            item['reviews'], item['rating'] = self.get_recensions(prod_json)
+            item['sold_count'] = None
+
+            # https://help.monotaro.com/app/answers/detail/a_id/13
+            item['shipping_days_min'] = 1
+            item['shipping_days_max'] = 10
+        else: # 变种超过50个：继续提取变种
+            raw_vars = self.get_raw_vars(response)
+            variants = self.get_opts_vars(raw_vars)
+            for j, v in enumerate(variants):
+                variants[j]['price'] = round(v['price']/self.jpy_rate, 2)
+            item['variants'].extend(variants)
+
+        more_vars = response.css('a.Button--PaginationNext')
+        if more_vars:
+            next_purl = self.get_prod_url(pid, p+1)
+            headers = { **self.HEADERS, 'Referer': response.url }
+            yield scrapy.Request(next_purl, headers=headers,
+                                 meta={ 'cookiejar': response.meta['cookiejar'] },
+                                 callback=self.parse,
+                                 cb_kwargs={ 'i': i+1, "pid": pid, "p": p+1, "item": item })
+        else:
+            item['variants'] = item['variants'] if item['option'] and item['variants'] else None # 变种提取结束
+            item['has_only_default_variant'] = not (item['variants'] and (len(item['variants']) > 1))
+            item['date'] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+            yield item
