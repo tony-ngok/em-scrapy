@@ -247,12 +247,12 @@ class MonotaroProduct(scrapy.Spider):
     def get_images(self, response: HtmlResponse):
         imgx = response.css('img.ProductImage--Lg::attr(src)').getall()
         img_list = ['https:'+img for img in imgx if img and 'mono_image_na' not in img]
-        return ";".join(img_list)
+        return ";".join(img_list) if img_list else None
 
     def get_videos(self, response: HtmlResponse):
         vidx = response.css('a.ytp-title-link::attr(href)').getall()
         vid_list = [vid for vid in vidx if vid]
-        return ";".join(vid_list)
+        return ";".join(vid_list) if vid_list else None
 
     def get_raw_vars(self, response: HtmlResponse):
         """
