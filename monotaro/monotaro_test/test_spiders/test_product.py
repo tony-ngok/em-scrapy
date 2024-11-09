@@ -83,9 +83,9 @@ class TestProduct(unittest.TestCase):
         for key in target_product:
             self.assertEqual(product[key], target_product[key])
 
+        print(product["description"])
         self.assertIn("<h4>注意</h4>", product["description"])
         self.assertIn("<th>材質</th>", product["description"])
-        print(product["description"])
 
     def test_available_product_2(self):
         url = "https://www.monotaro.com/g/00530783/"
@@ -154,9 +154,120 @@ class TestProduct(unittest.TestCase):
         for key in target_product:
             self.assertEqual(product[key], target_product[key])
 
+        print(product["description"])
         self.assertIn("<h4>注意</h4>", product["description"])
         self.assertIn("<th>用途</th>", product["description"])
+    
+    def test_available_product_3(self):
+        url = "https://www.monotaro.com/g/06199072/"
+        with open("monotaro_test/pages/JS8801 酸素濃度計 MCP=Joman 検知ガス酸素(O2) - 【通販モノタロウ】.html", "rb") as file:
+            body = file.read()
+
+        response = HtmlResponse(
+            url=url,
+            body=body,
+        )
+        result = list(self.spider.parse(response, 0, '06199072'))
+        self.assertEqual(len(result), 1)
+        product = result[0]
+
+        target_product = {
+            "url": url,
+            "product_id": "06199072",
+            "existence": True,
+            "title": "酸素濃度計",
+            "sku": "44631495",
+            "brand": "MCP=Joman",
+            "specifications": [
+                {
+                    "name": "寸法(mm)",
+                    "value": "95.9×66.9×52"
+                },
+                {
+                    "name": "測定範囲",
+                    "value": "0～30%VOL"
+                },
+                {
+                    "name": "質量(g)",
+                    "value": "147.5(バッテリー含む)"
+                },
+                {
+                    "name": "バッテリー",
+                    "value": "3.7V 750mAh充電式リチウム電池"
+                },
+                {
+                    "name": "解像度",
+                    "value": "0.001"
+                },
+                {
+                    "name": "警報方式",
+                    "value": "ブザー音/フラッシュ/振動(高値と低値の設定が可能)"
+                },
+                {
+                    "name": "動作温度(℃)",
+                    "value": "‐10～50"
+                },
+                {
+                    "name": "検知ガス",
+                    "value": "酸素(O2)"
+                },
+                {
+                    "name": "保管温度(℃)",
+                    "value": "0～40"
+                },
+                {
+                    "name": "バッテリー稼動時間",
+                    "value": "60時間(作業により異なる場合あり)"
+                },
+                {
+                    "name": "バックライト",
+                    "value": "有り"
+                },
+                {
+                    "name": "充電端子",
+                    "value": "micro USB充電ポート"
+                },
+                {
+                    "name": "内容量",
+                    "value": "1個"
+                }
+            ],
+            "categories": "測定・測量用品 > 測定用品 > 環境測定(自然環境/安全環境) > 酸素濃度計",
+            "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono44631495-230815-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono44631495-230815-04.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono44631495-230815-06.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono44631495-240318-04.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono44631495-240318-06.jpg",
+            "price": 176.07,
+            "available_qty": None,
+            "options": [{
+                "id": None,
+                "name": "品番"
+            }],
+            "variants": [{
+                "variant_id": "44631495",
+                "barcode": None,
+                "sku": "44631495",
+                "option_values": [{
+                    "option_id": None,
+                    "option_value_id": None,
+                    "option_name": "品番",
+                    "option_value": "JS8801"
+                }],
+                "images": None,
+                "price": 176.07,
+                "available_qty": None
+            }],
+            "reviews": None,
+            "rating": None,
+            "shipping_fee": 0.00,
+            "weight": 0.33,
+            "length": 3.78,
+            "width": 2.63,
+            "height": 2.05
+        }
+        for key in target_product:
+            self.assertEqual(product[key], target_product[key])
+
         print(product["description"])
+        self.assertNotIn("<h4>注意</h4>", product["description"])
+        self.assertIn("<th>機能</th>", product["description"])
 
     def test_unavailable_product(self):
         url = "https://www.monotaro.com/g/06431439/"
@@ -229,10 +340,10 @@ class TestProduct(unittest.TestCase):
         for key in target_product:
             self.assertEqual(product[key], target_product[key])
 
+        print(product["description"])
         self.assertNotIn("<h4>注意</h4>", product["description"])
         self.assertIn("<th>用途</th>", product["description"])
         self.assertIn("<th>材質</th>", product["description"])
-        print(product["description"])
 
 
 if __name__ == '__main__':
