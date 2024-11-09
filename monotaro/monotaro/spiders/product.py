@@ -250,7 +250,7 @@ class MonotaroProduct(scrapy.Spider):
         raw_vars_info = {} # 键代表属性名，值列表代表属性值
 
         col_names = response.css('div.ProductsDetails thead th')
-        
+
         # 获得有效列（商品画像、SKU码、变种选项名、价格、库存状况）
         valid_cols = {}
         for i, th in enumerate(col_names):
@@ -283,12 +283,13 @@ class MonotaroProduct(scrapy.Spider):
                     k = 'price'
                     var_spec = rcols[v].css(':scope span.Price--Md::text').get()
                     if not var_spec:
-                        continue
-                    var_spec = int(var_spec.replace(',', ''))
+                        var_spec = 'SKIP_VAR'
+                    else:
+                        var_spec = int(var_spec.replace(',', ''))
                 elif k == '出荷目安':
                     k = 'available_qty'
                     if rcols[v].css(':scope span[title="取扱い終了"]'):
-                        continue
+                        var_spec = 'SKIP_VAR'
                     elif rcols[v].css(':scope span[title="欠品中"]'):
                         var_spec = 0
                 else:
@@ -313,21 +314,22 @@ class MonotaroProduct(scrapy.Spider):
         variants = []
         total_vars = len(raw_vars_info['sku'])
         for i in range(total_vars):
-            variant = {
-                "variant_id": raw_vars_info['variant_id'][i],
-                "barcode": None,
-                "sku": raw_vars_info['variant_id'][i],
-                "option_values": [{
-                    "option_id": None,
-                    "option_value_id": None,
-                    "option_name": opt,
-                    "option_value": raw_vars_info[opt][i]
-                } for opt in options],
-                "images": raw_vars_info['image'][i],
-                "price": raw_vars_info['price'][i], # 稍后再汇率换算
-                "available_qty": raw_vars_info['available_qty'][i]
-            }
-            variants.append(variant)
+            if (raw_vars_info['price'] != 'SKIP_VAR') and (raw_vars_info['available_qty'] != 'SKIP_VAR'):
+                variant = {
+                    "variant_id": raw_vars_info['variant_id'][i],
+                    "barcode": None,
+                    "sku": raw_vars_info['variant_id'][i],
+                    "option_values": [{
+                        "option_id": None,
+                        "option_value_id": None,
+                        "option_name": opt,
+                        "option_value": raw_vars_info[opt][i]
+                    } for opt in options],
+                    "images": raw_vars_info['image'][i],
+                    "price": raw_vars_info['price'][i], # 稍后再汇率换算
+                    "available_qty": raw_vars_info['available_qty'][i]
+                }
+                variants.append(variant)
 
         return options if options else None, variants
 
@@ -376,6 +378,12 @@ class MonotaroProduct(scrapy.Spider):
                 print("No images", response.url)
                 return
 
+            raw_vars = self.get_raw_vars(response)
+            item['option'], variants = self.get_opts_vars(raw_vars)
+            if not variants:
+                print("Product end", response.url)
+                return
+
             item['url'] = response.url
             item['source'] = 'MonotaRO'
             item['product_id'] = pid
@@ -393,14 +401,12 @@ class MonotaroProduct(scrapy.Spider):
             item['categories'] = self.get_cats(bc_json)
             item['videos'] = self.get_videos(response)
 
-            raw_vars = self.get_raw_vars(response)
-            item['option'], variants = self.get_opts_vars(raw_vars)
             item['existence'] = (variants[0]['available_qty'] is None)
             item['available_qty'] = variants[0]['available_qty']
             item['sku'] = variants[0]['variant_id']
 
             price_jpy = variants[0]['price']
-            item['shipping_fee'] = round(500/self.jpy_rate, 2) if price_jpy < 500 else 0.00
+            item['shipping_fee'] = round(500/self.jpy_rate, 2) if price_jpy < 3500 else 0.00
             item['price'] = round(price_jpy/self.jpy_rate, 2)
 
             for j, v in enumerate(variants):
