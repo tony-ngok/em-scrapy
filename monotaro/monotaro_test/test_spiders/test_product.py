@@ -42,10 +42,6 @@ class TestProduct(unittest.TestCase):
                     "value": "クリア"
                 },
                 {
-                    "name": "材質",
-                    "value": "PP"
-                },
-                {
                     "name": "寸法(mm)",
                     "value": "317×253×27"
                 },
@@ -86,214 +82,157 @@ class TestProduct(unittest.TestCase):
         }
         for key in target_product:
             self.assertEqual(product[key], target_product[key])
-        
+
         self.assertIn("<h4>注意</h4>", product["description"])
+        self.assertIn("<th>材質</th>", product["description"])
         print(product["description"])
 
-    # def test_available_product_2(self):
-    #     url = "https://www.muji.com/jp/ja/store/cmdty/detail/4550344594056"
-    #     with open("monotaro_test/pages/インテリアフレグランスオイル _ 無印良品.html", "rb") as file:
-    #         body = file.read()
+    def test_available_product_2(self):
+        url = "https://www.monotaro.com/g/00530783/"
+        with open("monotaro_test/pages/C-002F 携帯酸素 富士さん素 ルック 寸法Φ66×250mm 1本(5L) C-002F - 【通販モノタロウ】.html", "rb") as file:
+            body = file.read()
 
-    #     response = HtmlResponse(
-    #         url=url,
-    #         body=body,
-    #     )
-    #     result = list(self.spider.parse(response))
-    #     self.assertEqual(len(result), 1)
-    #     product = result[0]
+        response = HtmlResponse(
+            url=url,
+            body=body,
+        )
+        result = list(self.spider.parse(response, 0, '00530783'))
+        self.assertEqual(len(result), 1)
+        product = result[0]
 
-    #     target_product = {
-    #         "url": url,
-    #         "product_id": "44594056",
-    #         "existence": True,
-    #         "title": "インテリアフレグランスオイル",
-    #         "sku": "4550344594056",
-    #         "upc": "4550344594056",
-    #         "brand": "無印良品",
-    #         "specifications": [
-    #             {
-    #                 "name": "原産国・地域",
-    #                 "value": "日本"
-    #             },
-    #             {
-    #                 "name": "仕様・混率",
-    #                 "value": "インテリアフレグランスオイル"
-    #             },
-    #             {
-    #                 "name": "容量",
-    #                 "value": "60mL"
-    #             },
-    #             {
-    #                 "name": "部材ごとの素材",
-    #                 "value": "本体：ガラス"
-    #             },
-    #             {
-    #                 "name": "重量（梱包材含む）",
-    #                 "value": "約170g"
-    #             }
-    #         ],
-    #         "categories": "生活雑貨 > アロマ・ルームフレグランス > インテリアフレグランス",
-    #         "images": "https://www.muji.com/public/media/img/item/4550344594056_org.jpg;https://www.muji.com/public/media/img/item/4550344594056_01_org.jpg;https://www.muji.com/public/media/img/item/4550344594056_02_org.jpg;https://www.muji.com/public/media/img/item/4550344594056_03_org.jpg;https://www.muji.com/public/media/img/item/4550344594056_04_org.jpg",
-    #         "price": 7.81,
-    #         "available_qty": None,
-    #         "reviews": 234,
-    #         "rating": 4.60,
-    #         "shipping_fee": 3.28,
-    #         "weight": 0.37
-    #     }
-    #     for key in target_product:
-    #         self.assertEqual(product[key], target_product[key])
+        target_product = {
+            "url": url,
+            "product_id": "00530783",
+            "existence": True,
+            "title": "携帯酸素 富士さん素",
+            "sku": "58154695",
+            "brand": "ルック",
+            "specifications": [
+                {
+                    "name": "寸法(mm)",
+                    "value": "Φ66×250"
+                },
+                {
+                    "name": "RoHS指令(10物質対応)",
+                    "value": "対応"
+                },
+                {
+                    "name": "内容量",
+                    "value": "1本(5L)"
+                }
+            ],
+            "categories": "医療・介護用品 > 救急・衛生 > 救急・救助用品 > 酸素スプレー・吸入器",
+            "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono58154695-130311-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono58154695-201127-02.jpg",
+            "price": 5.61,
+            "available_qty": None,
+            "options": [{
+                "id": None,
+                "name": "品番"
+            }],
+            "variants": [{
+                "variant_id": "58154695",
+                "barcode": None,
+                "sku": "58154695",
+                "option_values": [{
+                    "option_id": None,
+                    "option_value_id": None,
+                    "option_name": "品番",
+                    "option_value": "C-002F"
+                }],
+                "images": None,
+                "price": 5.61,
+                "available_qty": None
+            }],
+            "reviews": 5,
+            "rating": 3.80,
+            "shipping_fee": 3.26,
+            "weight": None,
+            "length": 2.60,
+            "width": 2.60,
+            "height": 9.84
+        }
+        for key in target_product:
+            self.assertEqual(product[key], target_product[key])
 
-    # def test_available_product_3(self):
-    #     url = "https://www.muji.com/jp/ja/store/cmdty/detail/4550344554586"
-    #     with open("monotaro_test/pages/超音波うるおいアロマディフューザー _ 無印良品.html", "rb") as file:
-    #         body = file.read()
+        self.assertIn("<h4>注意</h4>", product["description"])
+        self.assertIn("<th>用途</th>", product["description"])
+        print(product["description"])
 
-    #     response = HtmlResponse(
-    #         url=url,
-    #         body=body,
-    #     )
-    #     result = list(self.spider.parse(response))
-    #     self.assertEqual(len(result), 1)
-    #     product = result[0]
+    def test_unavailable_product(self):
+        url = "https://www.monotaro.com/g/06431439/"
+        with open("monotaro_test/pages/AP-708209 お医者さんの(R)首サポーター Fit 1個 アルファックス 【通販モノタロウ】.html", "rb") as file:
+            body = file.read()
 
-    #     target_product = {
-    #         "url": url,
-    #         "product_id": "44554586",
-    #         "existence": True,
-    #         "title": "超音波うるおいアロマディフューザー",
-    #         "sku": "4550344554586",
-    #         "upc": "4550344554586",
-    #         "brand": "無印良品",
-    #         "specifications": [
-    #             {
-    #                 "name": "原産国・地域",
-    #                 "value": "中国"
-    #             },
-    #             {
-    #                 "name": "外寸",
-    #                 "value": "直径16.8cm×高さ12.1cm　　重さ約490g（本体のみ）"
-    #             },
-    #             {
-    #                 "name": "容量",
-    #                 "value": "タンク容量：約350ml"
-    #             },
-    #             {
-    #                 "name": "型名",
-    #                 "value": "MJ-UAD1"
-    #             },
-    #             {
-    #                 "name": "部材ごとの素材",
-    #                 "value": "本体、主要部品共にＰＰ"
-    #             },
-    #             {
-    #                 "name": "消費電力",
-    #                 "value": "約15W"
-    #             },
-    #             {
-    #                 "name": "連続使用時の稼働時間",
-    #                 "value": "約3時間（専用USB_ACアダプター使用、満水時）"
-    #             },
-    #             {
-    #                 "name": "主な機能・性能",
-    #                 "value": "LED照明：2段階　　タイマー機能：60分、120分"
-    #             },
-    #             {
-    #                 "name": "付属物情報",
-    #                 "value": "AC_アダプター、計量カップ、抗菌カートリッジ"
-    #             },
-    #             {
-    #                 "name": "コード長",
-    #                 "value": "約1.8m"
-    #             },
-    #             {
-    #                 "name": "重量（梱包材含む）",
-    #                 "value": "約500g"
-    #             }
-    #         ],
-    #         "categories": "家具・収納・家電 > 家電・照明器具・時計 > 生活家電・AV家電",
-    #         "images": "https://www.muji.com/public/media/img/item/4550344554586_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_01_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_02_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_03_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_04_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_05_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_06_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_07_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_08_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_09_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_10_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_11_org.jpg;https://www.muji.com/public/media/img/item/4550344554586_12_org.jpg",
-    #         "price": 45.89,
-    #         "available_qty": None,
-    #         "reviews": 65,
-    #         "rating": 4.50,
-    #         "shipping_fee": 0.00,
-    #         "weight": 1.10
-    #     }
-    #     for key in target_product:
-    #         self.assertEqual(product[key], target_product[key])
+        response = HtmlResponse(
+            url=url,
+            body=body,
+        )
+        result = list(self.spider.parse(response, 0, '06431439'))
+        self.assertEqual(len(result), 1)
+        product = result[0]
 
-    # def test_unavailable_product(self):
-    #     url = "https://www.muji.com/jp/ja/store/cmdty/detail/4550344295236"
-    #     with open("monotaro_test/pages/フレグランスミスト　くつろぎブレンド _ 無印良品.html", "rb") as file:
-    #         body = file.read()
+        target_product = {
+            "url": url,
+            "product_id": "06431439",
+            "existence": False,
+            "title": "お医者さんの(R)首サポーター Fit",
+            "sku": "61690687",
+            "brand": "アルファックス",
+            "specifications": [
+                {
+                    "name": "質量(g)",
+                    "value": "100"
+                },
+                {
+                    "name": "寸法(cm)",
+                    "value": "縦8・横57.5・厚み1.7"
+                },
+                {
+                    "name": "首廻り(cm)",
+                    "value": "30～46"
+                },
+                {
+                    "name": "内容量",
+                    "value": "1個"
+                }
+            ],
+            "categories": "医療・介護用品 > ヘルスケア > サポーター・テーピング > サポーター > 首用 サポーター",
+            "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono61690687-240311-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono61690687-240311-04.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono61690687-240311-06.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono61690687-240311-08.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono61690687-240311-10.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono61690687-240311-12.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono61690687-240311-14.jpg",
+            "price": 24.79,
+            "available_qty": 0,
+            "options": [{
+                "id": None,
+                "name": "品番"
+            }],
+            "variants": [{
+                "variant_id": "61690687",
+                "barcode": None,
+                "sku": "61690687",
+                "option_values": [{
+                    "option_id": None,
+                    "option_value_id": None,
+                    "option_name": "品番",
+                    "option_value": "AP-708209"
+                }],
+                "images": None,
+                "price": 24.79,
+                "available_qty": 0
+            }],
+            "reviews": None,
+            "rating": None,
+            "shipping_fee": 0.00,
+            "weight": 0.22,
+            "length": None,
+            "width": None,
+            "height": None,
+        }
+        for key in target_product:
+            self.assertEqual(product[key], target_product[key])
 
-    #     response = HtmlResponse(
-    #         url=url,
-    #         body=body,
-    #     )
-    #     result = list(self.spider.parse(response))
-    #     self.assertEqual(len(result), 1)
-    #     product = result[0]
-
-    #     target_product = {
-    #         "url": url,
-    #         "product_id": "44295236",
-    #         "existence": False,
-    #         "title": "フレグランスミスト　くつろぎブレンド",
-    #         "sku": "4550344295236",
-    #         "upc": "4550344295236",
-    #         "brand": "無印良品",
-    #         "specifications": [
-    #             {
-    #                 "name": "原産国・地域",
-    #                 "value": "日本"
-    #             },
-    #             {
-    #                 "name": "仕様・混率",
-    #                 "value": "フレグランスミスト　くつろぎブレンド"
-    #             },
-    #             {
-    #                 "name": "外寸",
-    #                 "value": "W3.2cmxD3.2cmxH12.9cm(ケース入）"
-    #             },
-    #             {
-    #                 "name": "容量",
-    #                 "value": "28mL"
-    #             },
-    #             {
-    #                 "name": "部材ごとの素材",
-    #                 "value": "箱：紙　ポンプ：PP、PE　キャップ：PP"
-    #             },
-    #             {
-    #                 "name": "アルコール使用",
-    #                 "value": "使用"
-    #             },
-    #             {
-    #                 "name": "スプレーｏｒポンプヘッド",
-    #                 "value": "スプレーヘッド"
-    #             },
-    #             {
-    #                 "name": "光毒性の有無",
-    #                 "value": "無"
-    #             },
-    #             {
-    #                 "name": "重量（梱包材含む）",
-    #                 "value": "約90g"
-    #             }
-    #         ],
-    #         "categories": "生活雑貨 > アロマ・ルームフレグランス > フレグランス",
-    #         "images": "https://www.muji.com/public/media/img/item/4550344295236_org.jpg;https://www.muji.com/public/media/img/item/4550344295236_01_org.jpg;https://www.muji.com/public/media/img/item/4550344295236_02_org.jpg;https://www.muji.com/public/media/img/item/4550344295236_03_org.jpg",
-    #         "price": 11.09,
-    #         "available_qty": 0,
-    #         "reviews": 83,
-    #         "rating": 4.70,
-    #         "shipping_fee": 3.28,
-    #         "weight": 0.20
-    #     }
-    #     for key in target_product:
-    #         self.assertEqual(product[key], target_product[key])
+        self.assertNotIn("<h4>注意</h4>", product["description"])
+        self.assertIn("<th>用途</th>", product["description"])
+        self.assertIn("<th>材質</th>", product["description"])
+        print(product["description"])
 
 
 if __name__ == '__main__':
