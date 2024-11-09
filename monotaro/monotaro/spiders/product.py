@@ -25,6 +25,12 @@ class MonotaroProduct(scrapy.Spider):
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0"
     }
 
+    custom_settings = {
+        "ITEM_PIPELINES": {
+            "utils.mongodb.pipelines.pipeline1.MongoPipeLine1": 400,
+        }
+    }
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -118,7 +124,7 @@ class MonotaroProduct(scrapy.Spider):
                 for child in span.children:
                     if isinstance(child, Tag) and (child.name == 'span'):
                         spec_name = child.text.strip()
-                        if (spec_name in {'用途', '使用方法', '機能'}) or ('成分' in spec_name) or ('材質' in spec_name):
+                        if (spec_name in {'用途', '使用方法', '機能', '内容'}) or ('成分' in spec_name) or ('材質' in spec_name):
                             is_add_descr = True
                     elif isinstance(child, Tag) and (child.name == 'div'): # 较长的参数值放入描述中
                         is_add_descr = True
@@ -157,25 +163,25 @@ class MonotaroProduct(scrapy.Spider):
                             else:
                                 if length is None:
                                     if spec_name == '長さ(m)':
-                                        length = round(float(spec_val)*39.37008, 2)
+                                        length = self.parse_weight(spec_val, 'm')
                                     elif spec_name == '長さ(cm)':
-                                        length = round(float(spec_val)*0.393701, 2)
+                                        length = self.parse_weight(spec_val, 'cm')
                                     elif spec_name == '長さ(mm)':
-                                        length = round(float(spec_val)*0.0393701, 2)
+                                        length = self.parse_weight(spec_val, 'mm')
                                 if width is None:
                                     if spec_name == '幅(m)':
-                                        width = round(float(spec_val)*39.37008, 2)
+                                        width = self.parse_weight(spec_val, 'm')
                                     elif spec_name == '幅(cm)':
-                                        width = round(float(spec_val)*0.393701, 2)
+                                        width = self.parse_weight(spec_val, 'cm')
                                     elif spec_name == '幅(mm)':
-                                        width = round(float(spec_val)*0.0393701, 2)
+                                        width = self.parse_weight(spec_val, 'mm')
                                 if height is None:
                                     if spec_name == '高さ(m)':
-                                        height = round(float(spec_val)*39.37008, 2)
+                                        height = self.parse_weight(spec_val, 'm')
                                     elif spec_name == '高さ(cm)':
-                                        height = round(float(spec_val)*0.393701, 2)
+                                        height = self.parse_weight(spec_val, 'cm')
                                     elif spec_name == '高さ(mm)':
-                                        height = round(float(spec_val)*0.0393701, 2)
+                                        height = self.parse_weight(spec_val, 'mm')
 
         return (specs if specs else None), add_descr, weight, length, width, height
 
@@ -186,6 +192,12 @@ class MonotaroProduct(scrapy.Spider):
                 return round(float(w_match[0])*0.002205, 2)
             elif unit == 'kg':
                 return round(float(w_match[0])*2.20462, 2)
+            elif unit == 'm':
+                return round(float(w_match[0])*39.37008, 2)
+            elif unit == 'cm':
+                return round(float(w_match[0])*0.393701, 2)
+            elif unit == 'mm':
+                return round(float(w_match[0])*0.0393701, 2)
         return None
 
     def parse_dims(self, dims_text: str, unit: str, is_diam: bool = False):
@@ -374,7 +386,7 @@ class MonotaroProduct(scrapy.Spider):
                                  cb_kwargs={ 'i': i+1, "pid": pid })
 
     def parse(self, response: HtmlResponse, i: int, pid: str, p: int = 1, item: dict = {}):
-        # print(f"{i:_}/{len(self.start_urls):_}", response.url)
+        print(f"{i:_}/{len(self.start_urls):_}".replace(".", ","), response.url)
 
         if p == 1: # 提取基本商品资料（包含最初50个变种）
             if response.status == 404:
