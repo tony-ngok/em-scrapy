@@ -266,11 +266,14 @@ class MonotaroProduct(scrapy.Spider):
         # 获得有效列（商品画像、SKU码、变种选项名、价格、库存状况）
         valid_cols = {}
         for i, th in enumerate(col_names):
-            if th.css(':scope div.SortCell__Title'):
-                th_txt = th.css(':scope div.SortCell__Title::text').get('').strip()
+            if th.css(':scope div.SortCell__Title'): # 变种选项
+                th_raw = th.css(':scope div.SortCell__Title').get('')
+                th_soup = BeautifulSoup(th_raw, 'html.parser')
+                th_txt = th_soup.text.strip()
+
                 valid_cols[th_txt] = i
                 raw_vars_info[th_txt] = []
-            else:
+            else: # 变种基本资料
                 th_txt = th.css('::text').get('').strip()
                 if th_txt:
                     if th_txt == '商品画像':
@@ -445,7 +448,7 @@ class MonotaroProduct(scrapy.Spider):
             item['shipping_days_max'] = 10
         else: # 变种超过50个：继续提取变种
             raw_vars = self.get_raw_vars(response)
-            variants = self.get_opts_vars(raw_vars)
+            _, variants = self.get_opts_vars(raw_vars)
             for j, v in enumerate(variants):
                 variants[j]['price'] = round(v['price']/self.jpy_rate, 2)
             item['variants'].extend(variants)
