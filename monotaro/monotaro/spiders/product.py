@@ -266,14 +266,14 @@ class MonotaroProduct(scrapy.Spider):
         # 获得有效列（商品画像、SKU码、变种选项名、价格、库存状况）
         valid_cols = {}
         for i, th in enumerate(col_names):
-            if th.css(':scope div.SortCell__Title'):
+            if th.css(':scope div.SortCell__Title'): # 变种选项
                 th_raw = th.css(':scope div.SortCell__Title').get('')
                 th_soup = BeautifulSoup(th_raw, 'html.parser')
                 th_txt = th_soup.text.strip()
 
                 valid_cols[th_txt] = i
                 raw_vars_info[th_txt] = []
-            else:
+            else: # 变种基本资料
                 th_txt = th.css('::text').get('').strip()
                 if th_txt:
                     if th_txt == '商品画像':
