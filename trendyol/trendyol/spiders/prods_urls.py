@@ -64,7 +64,9 @@ class TrendyolProdUrl(scrapy.Spider):
             prod_id = prod.split('-')[-1]
             if prod_id not in self.prods_ids:
                 self.prods_ids.add(prod_id)
-                self.write_url(prod_id)
+                if prod.startswith('/'):
+                    prod = prod[1:]
+                self.write_url(prod)
 
         total_count = resultat['totalCount']
         offset_match = re.findall(r'Product_(\d+)', resultat['offsetParameters'])
