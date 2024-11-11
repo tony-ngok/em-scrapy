@@ -388,8 +388,11 @@ class MonotaroProduct(scrapy.Spider):
                                  callback=self.parse,
                                  cb_kwargs={ 'i': i+1, "pid": pid })
 
-    def parse(self, response: HtmlResponse, i: int, pid: str, p: int = 1, item: dict = {}):
+    def parse(self, response: HtmlResponse, i: int, pid: str, p: int = 1, item = None):
         print(f"{i:_}/{len(self.start_urls):_}".replace("_", "."), response.url)
+
+        # https://www.pullrequest.com/blog/python-pitfalls-the-perils-of-using-lists-and-dicts-as-default-arguments/
+        item = item or {}
 
         if p == 1: # 提取基本商品资料（包含最初50个变种）
             if response.status == 404:
