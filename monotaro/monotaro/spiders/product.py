@@ -472,7 +472,7 @@ class MonotaroProduct(scrapy.Spider):
             yield scrapy.Request(next_purl, headers=headers,
                                  meta={ 'cookiejar': response.meta['cookiejar'] },
                                  callback=self.parse,
-                                 cb_kwargs={ 'i': i+1, "pid": pid, "p": p+1, "item": item })
+                                 cb_kwargs={ 'i': i, "pid": pid, "p": p+1, "item": item })
         else:
             item['variants'] = item['variants'] if item['options'] and item['variants'] else None # 变种提取结束
             item['has_only_default_variant'] = not (item['variants'] and (len(item['variants']) > 1))
