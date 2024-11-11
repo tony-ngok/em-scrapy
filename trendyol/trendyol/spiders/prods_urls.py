@@ -59,7 +59,7 @@ class TrendyolProdUrl(scrapy.Spider):
             print("Empty categorie")
             return
 
-        prods = ['https://www.trendyol.com'+prod['url'] for prod in resultat['products'] if prod['cardType'] == 'PRODUCT']
+        prods = [prod['url'] for prod in resultat['products'] if prod['cardType'] == 'PRODUCT']
         for prod in prods:
             prod_id = prod.split('-')[-1]
             if prod_id not in self.prods_ids:
