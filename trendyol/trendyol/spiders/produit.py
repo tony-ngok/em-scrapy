@@ -14,11 +14,11 @@ class TrendyolProduit(scrapy.Spider):
     allowed_domains = ['www.trendyol.com', 'apigw.trendyol.com']
     start_urls = []
 
-    custom_settings = {
-        "ITEM_PIPELINES": {
-            "trendyol.pipelines.MongoPipeLine3": 400,
-        }
-    }
+    # custom_settings = {
+    #     "ITEM_PIPELINES": {
+    #         "trendyol.pipelines.MongoPipeLine3": 400,
+    #     }
+    # }
 
     COOKIES = {
         "FirstSession": "0",
@@ -105,6 +105,7 @@ class TrendyolProduit(scrapy.Spider):
             scr_txt = scr.css('::text').get('').strip()
 
             json_match = re.findall(r'__PRODUCT_DETAIL_APP_INITIAL_STATE__=(\{.*\});', scr_txt)
+            print(json_match)
             if json_match:
                 prod_json = json.loads(json_match[0])['product']
                 break
@@ -247,8 +248,8 @@ class TrendyolProduit(scrapy.Spider):
                 return round(val*self.CM_TO_IN, 2)
 
     def parse(self, response: HtmlResponse):
-        i = response.meta['cookiejar']
-        print(f"{i:_}/{len(self.start_urls):_}".replace("_", "."), response.url)
+        # i = response.meta['cookiejar']
+        # print(f"{i:_}/{len(self.start_urls):_}".replace("_", "."), response.url)
 
         prod_json = self.get_json(response)
         if not prod_json:
@@ -327,7 +328,7 @@ class TrendyolProduit(scrapy.Spider):
 
         yield {
             "item": item,
-            "i": i,
+            # "i": i,
             "video_id": video_id,
             "has_more_descr": has_more_descr
         }
@@ -355,30 +356,28 @@ class TrendyolProduit(scrapy.Spider):
         #     item['description'] = descr_info if descr_info else None
         #     yield item
 
-    # def parse_descr_page(self, response: HtmlResponse, item, video_id):
-    #     item = response.meta['item']
-    #     url = item['url']
-    #     descr_info = item['description']
-    #     video_id = response.meta['video_id']
+    def parse_descr_page(self, response: HtmlResponse, item, video_id):
+        # url = item['url']
+        descr_info = item['description']
 
-    #     descr_page = response.json()['result']
-    #     descr_page = '' if not descr_page else '<div class="trendyol-descr">'+descr_page.strip().replace("\n", "")+'</div>'
+        descr_page = response.json()['result']
+        descr_page = '' if not descr_page else '<div class="trendyol-descr">'+descr_page.strip().replace("\n", "")+'</div>'
 
-    #     description = descr_info+descr_page
-    #     item['description'] = description if description else None
+        description = descr_info+descr_page
+        item['description'] = description if description else None
 
-    #     if video_id:
-    #         video_api = f'https://apigw.trendyol.com/discovery-web-websfxmediacenter-santral/video-content-by-id/{video_id}?channelId=1'
-    #         headers = { **self.HEADERS, 'Referer': url }
-    #         yield scrapy.Request(video_api, headers=headers,
-    #                              meta={
-    #                                  "item": item,
-    #                              },
-    #                              callback=self.parse_video)
-    #     else:
-    #         yield item
+        # if video_id:
+        #     video_api = f'https://apigw.trendyol.com/discovery-web-websfxmediacenter-santral/video-content-by-id/{video_id}?channelId=1'
+        #     headers = { **self.HEADERS, 'Referer': url }
+        #     yield scrapy.Request(video_api, headers=headers,
+        #                          meta={
+        #                              "item": item,
+        #                          },
+        #                          callback=self.parse_video)
+        # else:
+        yield item
 
-    # def parse_video(self, response: HtmlResponse):
-    #     item = response.meta['item']
-    #     item['videos'] = response.json().get('result', {}).get('url')
-    #     yield item
+    def parse_video(self, response: HtmlResponse):
+        item = response.meta['item']
+        item['videos'] = response.json().get('result', {}).get('url')
+        yield item
