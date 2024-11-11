@@ -25,8 +25,8 @@ class TestProduct(unittest.TestCase):
         self.assertEqual(len(res1), 1)
         prod1 = res1[0]["item"]
 
-        has_more_descr = res1["has_more_descr"]
-        video_id = res1["video_id"]
+        has_more_descr = res1[0]["has_more_descr"]
+        video_id = res1[0]["video_id"]
         self.assertTrue(has_more_descr)
         self.assertIsNone(video_id)
 
