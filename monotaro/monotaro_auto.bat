@@ -7,7 +7,7 @@ pip install -U bs4
 pip install -U pymongo
 git pull
 
-del muji.log
+del monotaro.log
 scrapy crawl monotaro_category
 scrapy crawl monotaro_prod_url
 scrapy crawl monotaro_product
