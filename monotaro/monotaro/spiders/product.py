@@ -381,7 +381,10 @@ class MonotaroProduct(scrapy.Spider):
         for i, pid in enumerate(self.start_urls):
             url = self.get_prod_url(pid)
             yield scrapy.Request(url, headers=self.HEADERS,
-                                 meta={ 'cookiejar': i },
+                                 meta={
+                                     'cookiejar': i,
+                                     'handle_httpstatus_list': [301, 404]
+                                     },
                                  callback=self.parse,
                                  cb_kwargs={ 'i': i+1, "pid": pid })
 
@@ -470,7 +473,10 @@ class MonotaroProduct(scrapy.Spider):
             next_purl = self.get_prod_url(pid, p+1)
             headers = { **self.HEADERS, 'Referer': response.url }
             yield scrapy.Request(next_purl, headers=headers,
-                                 meta={ 'cookiejar': response.meta['cookiejar'] },
+                                 meta={
+                                     'cookiejar': response.meta['cookiejar'],
+                                     'handle_httpstatus_list': [301, 404]
+                                     },
                                  callback=self.parse,
                                  cb_kwargs={ 'i': i, "pid": pid, "p": p+1, "item": item })
         else:
