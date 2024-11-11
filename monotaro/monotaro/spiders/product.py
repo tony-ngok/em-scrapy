@@ -27,7 +27,7 @@ class MonotaroProduct(scrapy.Spider):
 
     custom_settings = {
         "ITEM_PIPELINES": {
-            "utils.mongodb.pipelines.pipeline1.MongoPipeLine1": 400,
+            "utils.mongodb.pipeline1.MongoPipeLine1": 400,
         }
     }
 
@@ -302,7 +302,7 @@ class MonotaroProduct(scrapy.Spider):
                         raw_vars_info['available_qty'] = []
 
         # 积累有效列资料
-        rows = response.css('div.ProductsDetails tbody > tr')
+        rows = response.css('div.ProductsDetails > table[data-js="pd_list_table"] tbody > tr[data-ee-list-item="product_item"]')
         for row in rows:
             rcols = row.css('td')
 
@@ -428,6 +428,7 @@ class MonotaroProduct(scrapy.Spider):
                 print("Product end", response.url)
                 return
 
+            item['date'] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
             item['url'] = response.url
             item['source'] = 'MonotaRO'
             item['product_id'] = pid
@@ -486,5 +487,4 @@ class MonotaroProduct(scrapy.Spider):
         else:
             item['variants'] = item['variants'] if item['options'] and item['variants'] else None # 变种提取结束
             item['has_only_default_variant'] = not (item['variants'] and (len(item['variants']) > 1))
-            item['date'] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
             yield item

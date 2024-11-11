@@ -8,7 +8,7 @@ from pymongo.collection import Collection
 from pymongo.errors import ConnectionFailure, ExecutionTimeout, NetworkTimeout
 
 
-def gen_uo(dat: dict, has_vars: bool = False, has_recensions: bool = False, has_ship_fee: bool = False):
+def gen_uo(dat: dict, has_vars: bool = False, has_recensions: bool = False, has_ship_fee: bool = False, has_ship_date: bool = False):
     """
     插入/更新单个商品的upsert操作
     """
@@ -35,6 +35,11 @@ def gen_uo(dat: dict, has_vars: bool = False, has_recensions: bool = False, has_
     if has_ship_fee:
         updates["shipping_fee"] = dat["shipping_fee"]
         dat.pop('shipping_fee')
+    if has_ship_date:
+        updates["shipping_days_min"] = dat["shipping_days_min"]
+        updates["shipping_days_max"] = dat["shipping_days_max"]
+        dat.pop('shipping_days_min')
+        dat.pop('shipping_days_max')
 
     query = { "_id": dat["product_id"] }
     return UpdateOne(query, {"$set": updates, "$setOnInsert": dat }, upsert=True)
@@ -50,12 +55,16 @@ def get_uos(dateiname: str, has_vars: bool = False, has_recensions: bool = False
             ops = [gen_uo(json.loads(line.strip()), has_vars, has_recensions, has_ship_fee)
                    for line in f if line.strip()]
         return ops
+    return []
 
 
 def bulk_write(ops: list[UpdateOne], coll: Collection, max_tries: int) -> bool:
     """
     批量插入/更新商品资料
     """
+
+    if not ops:
+        return True
 
     for i in range(1, max_tries+1):
         try:
@@ -93,3 +102,14 @@ def update_sold_out(coll: Collection, max_tries: int, d: int = 7) -> bool:
             print(f"({i}/{max_tries})", "Update error", str(e))
             time.sleep(2)
     return False
+
+
+def exists_ids(coll: Collection, items_ids: list):
+    """
+    返回该批次中已存在数据中的ID
+    """
+
+    if items_ids:
+        exists = coll.find({ "_id": { "$in": items_ids } }, { "_id": 1 })
+        return {item["_id"] for item in exists}
+    return set()

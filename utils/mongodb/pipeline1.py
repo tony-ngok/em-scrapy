@@ -18,7 +18,8 @@ class MongoPipeLine1:
 
     file_root = "products{}.txt" # 临时存取抓到的批量数据
 
-    def __init__(self, uri: str, db_name: str, coll_name: str, batch_size: int, max_tries: int, days_bef: int, has_vars: bool, has_recensions: bool, has_ship_fee: bool, has_ship_date: bool):
+    def __init__(self, uri: str, db_name: str, coll_name: str, batch_size: int, max_tries: int, days_bef: int,
+                 has_vars: bool, has_recensions: bool, has_ship_fee: bool, has_ship_date: bool):
         self.uri = uri
         self.db_name = db_name
         self.coll_name = coll_name
@@ -36,7 +37,7 @@ class MongoPipeLine1:
 
     @classmethod
     def from_crawler(cls, crawler: Crawler):
-        spider = cls(
+        return cls(
             uri=crawler.settings.get("MONGO_URI"),
             db_name=crawler.settings.get("MONGO_DB_NAME"),
             coll_name=crawler.settings.get("MONGO_COLL_NAME", "products"),
@@ -48,8 +49,6 @@ class MongoPipeLine1:
             has_ship_fee=crawler.settings.getbool("HAS_SHIP_FEE", False),
             has_ship_date=crawler.settings.getbool("HAS_SHIP_DATE", False) # 是否有送达日期（意味着配送日数会变）
         )
-
-        return spider
 
     def open_spider(self, spider: Spider):
         for i in range(1, self.max_tries+1):
