@@ -48,7 +48,7 @@ class TrendyolProdUrl(scrapy.Spider):
                                  cb_kwargs={ "i": i+1, "cat": cat })
 
     def parse(self, response: HtmlResponse, i: int, cat: str, pi: int = 1):
-        print(f"{i:_}/{len(self.start_urls):_}", response.url)
+        print(f"{i:_}/{len(self.start_urls):_}".replace("_", "."), response.url)
         if response.status == 404:
             print("Categorie not found")
             return
@@ -75,7 +75,6 @@ class TrendyolProdUrl(scrapy.Spider):
         if (pi >= 208) or (offset >= total_count):
             print(i, cat, "done")
         else:
-            pi += 1
             api_url_pi = self.gen_api(cat, pi+1)
             yield scrapy.Request(api_url_pi, headers=self.HEADERS,
                                  meta={ "cookiejar": response.meta['cookiejar'] },

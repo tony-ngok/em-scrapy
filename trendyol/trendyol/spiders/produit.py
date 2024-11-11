@@ -14,6 +14,45 @@ class TrendyolProduit(scrapy.Spider):
     allowed_domains = ['www.trendyol.com', 'apigw.trendyol.com']
     start_urls = []
 
+    COOKIES = {
+        "FirstSession": "0",
+        "ForceUpdateSearchAbDecider": "forced",
+        "OptanonAlertBoxClosed": "2024-11-11T16:04:45.521Z",
+        "OptanonConsent": "isGpcEnabled=0&datestamp=Mon+Nov+11+2024+10%3A04%3A50+GMT-0600+(hora+est%C3%A1ndar+central)&version=6.30.0&isIABGlobal=false&hosts=&genVendors=V77%3A0%2CV67%3A0%2CV79%3A0%2CV71%3A0%2CV69%3A0%2CV7%3A0%2CV5%3A0%2CV9%3A0%2CV1%3A0%2CV70%3A0%2CV3%3A0%2CV68%3A0%2CV78%3A0%2CV17%3A0%2CV76%3A0%2CV80%3A0%2CV16%3A0%2CV72%3A0%2CV10%3A0%2CV40%3A0%2C&consentId=bb0f89e6-3e05-476e-bea1-f2a2e4d4ab88&interactionCount=1&landingPath=NotLandingPage&groups=C0002%3A1%2CC0004%3A1%2CC0003%3A1%2CC0001%3A1%2CC0007%3A1%2CC0009%3A1&geolocation=TR%3B06&AwaitingReconsent=false",
+        "SearchMode": "1",
+        "VisitCount": "1",
+        "WebAbTesting": "A_14-B_46-C_100-D_15-E_93-F_27-G_21-H_13-I_85-J_97-K_55-L_85-M_49-N_16-O_80-P_96-Q_12-R_43-S_70-T_100-U_85-V_47-W_71-X_49-Y_71-Z_45",
+        "WebRecoAbDecider": "ABcrossRecoVersion_1-ABcrossRecoAdsVersion_1-ABsimilarRecoAdsVersion_1-ABsimilarSameBrandVersion_1-ABattributeRecoVersion_1-ABbasketRecoVersion_1-ABcollectionRecoVersion_1-ABshopTheLookVersion_1-ABcrossSameBrandVersion_1-ABcompleteTheLookVersion_1-ABsimilarRecoVersion_1-ABpdpGatewayVersion_1-ABhomepageVersion_firstComponent%3AinitialNewTest_1.performanceSorting%3AwidgetPerformanceFreqV1_3.sorter%3AhomepageSorterNewTest_d%28M%29-ABnavigationSideMenuVersion_sideMenu%3AinitialTest_1%28M%29-ABnavigationSectionVersion_section%3AazSectionTest_1%28M%29",
+        "__cf_bm": "phfrOpULWrqS.QC1d0PEvPmXBBI7AClvBkKJDTmQTfs-1731341078-1.0.1.1-8GVC3XMsmmGdi0oLj.bx9RMKQRnvtC4vGvNExTf_Ev0YqKCr9y.92co24deWkcEpXO7Pd3cI6IBl8.xhptgmCw",
+        "_cfuvid": "vnnSDSct1UUsdrnhOJ3rEs24JjGNGPondl95HNInMH4-1731341078622-0.0.1.1-604800000",
+        "_fbp": "fb.1.1731341089980.416062928773427444",
+        "_gcl_au": "1.1.81461011.1731341088",
+        "_ym_d": "1731341092",
+        "_ym_isad": "2",
+        "_ym_uid": "1731341092939299798",
+        "hvtb": "1",
+        "msearchAb": "ABSearchFETestV1_A-ABSuggestionLC_B-ABSuggestionPS_A",
+        "pid": "5150f76a-af49-4b83-9795-9a47243bdfae",
+        "platform": "web",
+        "recoAb": "ABRecoBETestV1_B-ABRecoFirstTest_A",
+        "sid": "Ux7FkHQJOe"
+    }
+
+    HEADERS = {
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8",
+        "Accept-Encoding": "gzip, deflate, br, zstd",
+        "Accept-Language": "fr-FR,fr;q=0.8,en-GB;q=0.5,en;q=0.3",
+        "Connection": "keep-alive",
+        "Priority": "u=0, i",
+        "Referer": "https://www.google.com.tr/",
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "none",
+        "Sec-Fetch-User": "?1",
+        "Upgrade-Insecure-Requests": "1",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0"
+    }
+
     CM_TO_IN = 0.393701
     G_TO_LB = 0.002205
     KG_TO_LB = 2.20462
@@ -22,38 +61,13 @@ class TrendyolProduit(scrapy.Spider):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # self.start_urls = [
-        #     'https://www.trendyol.com/bubito/kislik-tatli-kapsonlu-bebek-pelus-welsoft-tulum-p-446949530',
-        #     'https://www.trendyol.com/sihhat-pharma/sihhat-aqua-beyaz-vazelin-50-ml-p-51920806',
-        #     'https://www.trendyol.com/the-fine-organics/avustralya-nanesi-aktif-karbon-dis-beyazlatma-tozu-50g-p-762586955',
-        #     'https://www.trendyol.com/l-oreal-paris/panorama-hacim-veren-maskara-koyu-kahverengi-p-796043319',
-        #     'https://www.trendyol.com/oxvin/walker-baggy-bol-paca-2-iplik-orta-kalinlikta-uzun-esofman-alti-orijinal-kalip-p-855410433',
-        #     'https://www.trendyol.com/oxvin/walker-baggy-bol-paca-2-iplik-orta-kalinlikta-uzun-esofman-alti-orijinal-kalip-p-855410436',
-        #     'https://www.trendyol.com/mert-sert-mobilya/vern-120cm-konsol-tv-sehpasi-tv-unitesi-kahve-kosesi-banyo-dolabi-cok-amacli-dolap-p-773280008',
-        #     'https://www.trendyol.com/bioderma/sebium-foaming-gel-karma-yagli-ve-akne-egilimli-ciltler-icin-yuz-temizleme-jeli-500-ml-p-132469',
-        #     'https://www.trendyol.com/copierbond/ve-ge-a4-fotokopi-kagidi-80-g-500-lu-5-paket-2500ad-1-koli-p-6026206'
-        # ]
-        
-        self.headers = {
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8",
-            "Accept-Encoding": "gzip, deflate, br, zstd",
-            "Accept-Language": "fr-FR,fr;q=0.8,en-GB;q=0.5,en;q=0.3",
-            "Connection": "keep-alive",
-            "Priority": "u=0, i",
-            "Referer": "https://www.google.com.tr/",
-            "Sec-Fetch-Dest": "document",
-            "Sec-Fetch-Mode": "navigate",
-            "Sec-Fetch-Site": "none",
-            "Sec-Fetch-User": "?1",
-            "Upgrade-Insecure-Requests": "1",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0"
-        }
-
-        # with open('coursi.json', 'r', encoding='utf-8') as f_in:
-        with open('trendyol_prods_urls.json', 'r', encoding='utf-8') as f_in:
-            self.start_urls = [prod['prod_url'] for prod in json.load(f_in)]
+        with open('trendyol_prods_urls.txt', 'r', encoding='utf-8') as f_in:
+            for line in f_in:
+                if line.strip():
+                    self.start_urls.append(line.strip())
         print(f"Total {len(self.start_urls):_} produit(s)".replace('_', '.'))
 
+        self.exch_rate = 34.377928
         exch = requests.get('https://open.er-api.com/v6/latest/USD')
         try:
             if exch.status_code in range(200, 300):
@@ -64,15 +78,13 @@ class TrendyolProduit(scrapy.Spider):
                 raise Exception("Get USD/TRY: error", exch.status_code)
         except Exception as e:
             print(str(e))
-            self.exch_rate = 34.27608
         finally:
             print(f"USD/TRY: {self.exch_rate}".replace('.', ','))
 
     def start_requests(self):
-        for i, url in enumerate(self.start_urls, start=1):
-            print(url, f"({i:_}/{len(self.start_urls):_})".replace("_", "."))
-            yield scrapy.Request(url, headers=self.headers,
-                                    meta={ "url": url },
+        for i, url in enumerate(self.start_urls):
+            yield scrapy.Request(url, headers=self.HEADERS,
+                                    meta={ "cookiejar": i },
                                     callback=self.parse)
 
     def get_json(self, response: HtmlResponse):
@@ -159,8 +171,8 @@ class TrendyolProduit(scrapy.Spider):
 
             kk = k.lower()
             vv = v.lower()
-            if ('gramaj' in kk) or ('hacim' in kk) or ('ağırlık' in kk):
-                weight = self.get_dim(vv, r'(\d+(?:\.\d+)?)\s?(g|kg|ml|l|cc|gr)\b')
+            if ('gramaj' in kk) or ('ağırlık' in kk):
+                weight = self.get_dim(vv, r'(\d+(?:\.\d+)?)\s?(g|kg|gr)\b')
             elif ('derinlik' in kk):
                 length = self.get_dim(vv, r'(\d+(?:\.\d+)?)\s?(m|cm)\b')
             elif ('genişlik' in kk):
@@ -219,31 +231,31 @@ class TrendyolProduit(scrapy.Spider):
             val = float(dim_match[0][0])
             unit = dim_match[0][1]
 
-            if unit in {'kg', 'l'}:
+            if unit == 'kg':
                 return round(val*self.KG_TO_LB, 2)
-            if unit in {'g', 'ml', 'cc', 'gr'}:
+            if unit in {'g', 'gr'}:
                 return round(val*self.G_TO_LB, 2)
             if unit == 'm':
                 return round(val*self.M_TO_IN, 2)
             if unit == 'cm':
                 return round(val*self.CM_TO_IN, 2)
 
-    def parse(self, response: HtmlResponse):
-        url = response.meta['url']
-        
+    def parse(self, response: HtmlResponse, i: int):
+        print(f"{i:_}/{len(self.start_urls):_}".replace("_", "."), response.url)
+
         prod_json = self.get_json(response)
         if not prod_json:
-            print("No product JSON:", url)
+            print("No product JSON:", response.url)
             return
 
         img_list = prod_json.get('images')
         if not img_list:
-            print("No images:", url)
+            print("No images:", response.url)
             return
         
         price_raw = prod_json.get('price', {}).get('sellingPrice', {}).get('value')
         if price_raw is None:
-            print("No price:", url)
+            print("No price:", response.url)
             return
         price = round(price_raw/self.exch_rate, 2)
         
@@ -272,7 +284,7 @@ class TrendyolProduit(scrapy.Spider):
 
         item = {
             "date": datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
-            "url": url,
+            "url": response.url,
             "source": "Trendyol",
             "product_id": product_id,
             "existence": existence,
@@ -297,7 +309,7 @@ class TrendyolProduit(scrapy.Spider):
             "reviews": reviews,
             "rating": rating,
             "sold_count": None,
-            "shipping_fee": 0.00 if prod_json.get('isFreeCargo') or (price >= 200*self.exch_rate) else round(34.99/self.exch_rate, 2), # https://www.trendyol.com/yardim/sorular/2002?grup=1
+            "shipping_fee": 0.00 if prod_json.get('isFreeCargo') or (price_raw >= 200) else round(34.99/self.exch_rate, 2), # https://www.trendyol.com/yardim/sorular/2002?grup=1
             "shipping_days_min": None,
             "shipping_days_max": None,
             "weight": spec_info['weight'],
@@ -308,17 +320,18 @@ class TrendyolProduit(scrapy.Spider):
 
         if has_more_descr:
             descr_api = f'https://apigw.trendyol.com/discovery-web-productgw-service/api/product-detail/{product_id}/html-content?channelId=1'
-            headers = { **self.headers, 'Referer': url }
+            headers = { **self.headers, 'Referer': response.url }
             yield scrapy.Request(descr_api, headers=headers,
                                  meta={
                                      "item": item,
                                      "video_id": video_id
                                  },
-                                 callback=self.parse_descr_page)
+                                 callback=self.parse_descr_page,
+                                 cb_kwargs={ 'item': item, "video_id": video_id })
         elif video_id:
             item['description'] = descr_info if descr_info else None
             video_api = f'https://apigw.trendyol.com/discovery-web-websfxmediacenter-santral/video-content-by-id/{video_id}?channelId=1'
-            headers = { **self.headers, 'Referer': url }
+            headers = { **self.HEADERS, 'Referer': response.url }
             yield scrapy.Request(video_api, headers=headers,
                                  meta={
                                      "item": item,
@@ -328,7 +341,7 @@ class TrendyolProduit(scrapy.Spider):
             item['description'] = descr_info if descr_info else None
             yield item
 
-    def parse_descr_page(self, response: HtmlResponse):
+    def parse_descr_page(self, response: HtmlResponse, item, video_id):
         item = response.meta['item']
         url = item['url']
         descr_info = item['description']
@@ -342,7 +355,7 @@ class TrendyolProduit(scrapy.Spider):
         
         if video_id:
             video_api = f'https://apigw.trendyol.com/discovery-web-websfxmediacenter-santral/video-content-by-id/{video_id}?channelId=1'
-            headers = { **self.headers, 'Referer': url }
+            headers = { **self.HEADERS, 'Referer': url }
             yield scrapy.Request(video_api, headers=headers,
                                  meta={
                                      "item": item,
