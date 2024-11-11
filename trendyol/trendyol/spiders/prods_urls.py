@@ -75,8 +75,6 @@ class TrendyolProdUrl(scrapy.Spider):
         else:
             pi += 1
             api_url_pi = self.gen_api(cat, pi+1)
-
-            print(i, api_url_pi)
             yield scrapy.Request(api_url_pi, headers=self.HEADERS,
                                  meta={ "cookiejar": response.meta['cookiejar'] },
                                  callback=self.parse,
