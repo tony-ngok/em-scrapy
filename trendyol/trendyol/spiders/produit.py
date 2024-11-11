@@ -61,25 +61,25 @@ class TrendyolProduit(scrapy.Spider):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        with open('trendyol_prods_urls.txt', 'r', encoding='utf-8') as f_in:
-            for line in f_in:
-                if line.strip():
-                    self.start_urls.append(line.strip())
-        print(f"Total {len(self.start_urls):_} produit(s)".replace('_', '.'))
+        # with open('trendyol_prods_urls.txt', 'r', encoding='utf-8') as f_in:
+        #     for line in f_in:
+        #         if line.strip():
+        #             self.start_urls.append(line.strip())
+        # print(f"Total {len(self.start_urls):_} produit(s)".replace('_', '.'))
 
         self.exch_rate = 34.377928
-        exch = requests.get('https://open.er-api.com/v6/latest/USD')
-        try:
-            if exch.status_code in range(200, 300):
-                exch_data = exch.json()
-                self.exch_rate = exch_data['rates']['TRY']
-                print("Get USD/TRY")
-            else:
-                raise Exception("Get USD/TRY: error", exch.status_code)
-        except Exception as e:
-            print(str(e))
-        finally:
-            print(f"USD/TRY: {self.exch_rate}".replace('.', ','))
+        # exch = requests.get('https://open.er-api.com/v6/latest/USD')
+        # try:
+        #     if exch.status_code in range(200, 300):
+        #         exch_data = exch.json()
+        #         self.exch_rate = exch_data['rates']['TRY']
+        #         print("Get USD/TRY")
+        #     else:
+        #         raise Exception("Get USD/TRY: error", exch.status_code)
+        # except Exception as e:
+        #     print(str(e))
+        # finally:
+        #     print(f"USD/TRY: {self.exch_rate}".replace('.', ','))
 
     def start_requests(self):
         for i, url in enumerate(self.start_urls):
