@@ -22,7 +22,7 @@ class MujiProduct(scrapy.Spider):
 
     custom_settings = {
         "ITEM_PIPELINES": {
-            "utils.mongodb.pipelines.pipeline1.MongoPipeLine1": 400,
+            "utils.mongodb.pipeline1.MongoPipeLine1": 400,
         }
     }
 
