@@ -8,8 +8,7 @@ from scrapy.http import HtmlResponse
 from scrapy.selector import SelectorList
 
 
-# scrapy crawl trendyol_produit -O trendyol_produits.json # 复写整个数据
-# scrapy crawl trendyol_produit -o trendyol_produits.json # 不复写
+# scrapy crawl trendyol_produit
 class TrendyolProduit(scrapy.Spider):
     name = 'trendyol_produit'
     allowed_domains = ['www.trendyol.com', 'apigw.trendyol.com']
