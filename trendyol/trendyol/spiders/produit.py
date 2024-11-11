@@ -2,7 +2,7 @@ import json
 import re
 from datetime import datetime
 
-import requests
+# import requests
 import scrapy
 from scrapy.http import HtmlResponse
 from scrapy.selector import SelectorList

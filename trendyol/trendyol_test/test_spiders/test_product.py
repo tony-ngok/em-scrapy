@@ -7,22 +7,100 @@ from scrapy.http import HtmlResponse
 from trendyol.spiders.produit import TrendyolProduit
 
 
-# python -m monotaro_test.test_spiders.test_product
+# python -m trendyol_test.test_spiders.test_product
 class TestProduct(unittest.TestCase):
     def setUp(self):
         self.crawler = get_crawler(TrendyolProduit)
         self.spider = self.crawler._create_spider()
 
     def test_available_product_1(self):
-        url = "https://www.monotaro.com/g/01429775/"
-        with open("monotaro_test/pages/3579 A4ステーショナリーケース L型 和泉化成 クリア色 材質PP - 【通販モノタロウ】.html", "rb") as file:
+        url = "https://www.trendyol.com/bioderma/sebium-foaming-gel-500-ml-p-132469"
+        with open("trendyol_test/pages/Bioderma Sébium Foaming Gel Yüz Yıkama Jeli 500 ml Yorumları, Fiyatı - Trendyol.html", "rb") as file:
             body = file.read()
 
         response = HtmlResponse(
             url=url,
             body=body,
         )
-        result = list(self.spider.parse(response, 0, '01429775'))
+        result = list(self.spider.parse(response, 0))
+        self.assertEqual(len(result), 1)
+        product = result[0]
+
+        target_product = {
+            "url": url,
+            "product_id": "132469",
+            "existence": True,
+            "title": "Bioderma Sebium Foaming Gel 500 ml",
+            "sku": "132469",
+            "upc": "3401399277092",
+            "brand": "Bioderma",
+            "specifications": [
+                {
+                    "name": "Cilt Tipi",
+                    "value": "Karma"
+                },
+                {
+                    "name": "Form",
+                    "value": "Jel"
+                },
+                {
+                    "name": "Kullanma Amacı",
+                    "value": "Nemlendirici"
+                },
+                {
+                    "name": "Ek Özellik",
+                    "value": "Anti Alerjik"
+                },
+                {
+                    "name": "Hacim",
+                    "value": "500 ml"
+                },
+                {
+                    "name": "İçerik",
+                    "value": "E Vitamini"
+                },
+                {
+                    "name": "Tip",
+                    "value": "Şişe"
+                },
+                {
+                    "name": "Menşei",
+                    "value": "FR"
+                }
+            ],
+            "categories": "Bioderma > Kozmetik > Cilt Bakımı > Yüz Bakım > Yüz Temizleyicileri",
+            "images": "https://cdn.dsmcdn.com/ty1601/product/media/images/prod/PIM/20241111/07/836433cc-933e-4af6-99e9-bf50a436d3bd/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1599/product/media/images/prod/PIM/20241111/07/3816bdb7-5ee5-465e-a167-4e903c4937f1/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1599/product/media/images/prod/PIM/20241111/07/3e35d2ad-6a07-4e1d-888a-f93f4ca3e3ec/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1600/product/media/images/prod/PIM/20241111/07/d8c97c55-6262-4d30-96c0-1db5b79eb003/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1600/product/media/images/prod/PIM/20241111/07/2a550520-d74f-415b-9711-cfde0c47ad25/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1600/product/media/images/prod/PIM/20241111/07/086f5fcb-8935-4682-8244-7084f67522f2/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1600/product/media/images/prod/PIM/20241111/07/f3df1cb6-585d-4630-b906-d7a6b9314eea/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1600/product/media/images/prod/PIM/20241111/07/4871e252-e4cd-42ec-9903-e54e99564fcd/1_org_zoom.jpg",
+            "videos": None,
+            "price": 13.09,
+            "available_qty": None,
+            "options": None,
+            "variants": None,
+            "reviews": 26950,
+            "rating": 4.58,
+            "shipping_fee": 0.00,
+            "weight": None,
+            "length": None,
+            "width": None,
+            "height": None
+        }
+        for key in target_product:
+            self.assertEqual(product[key], target_product[key])
+
+        print(product["description"])
+        self.assertIn("<h4>注意</h4>", product["description"])
+        self.assertIn("<th>用途</th>", product["description"])
+        StandardProduct(**product)
+
+    def test_available_product_2(self):
+        url = "https://www.trendyol.com/copierbond/ve-ge-a4-fotokopi-kagidi-80-g-500-lu-5-paket-2500ad-1-koli-p-6026206"
+        with open("trendyol_test/pages/Copier Bond A4 Kağıdı 80 g 5'li Paket 80 g 500 Yaprak 2500 Adet Fiyatı - Trendyol.html", "rb") as file:
+            body = file.read()
+
+        response = HtmlResponse(
+            url=url,
+            body=body,
+        )
+        result = list(self.spider.parse(response, 0))
         self.assertEqual(len(result), 1)
         product = result[0]
 
@@ -90,82 +168,9 @@ class TestProduct(unittest.TestCase):
         self.assertIn("<th>材質</th>", product["description"])
         StandardProduct(**product)
 
-    def test_available_product_2(self):
-        url = "https://www.monotaro.com/g/00530783/"
-        with open("monotaro_test/pages/C-002F 携帯酸素 富士さん素 ルック 寸法Φ66×250mm 1本(5L) C-002F - 【通販モノタロウ】.html", "rb") as file:
-            body = file.read()
-
-        response = HtmlResponse(
-            url=url,
-            body=body,
-        )
-        result = list(self.spider.parse(response, 0, '00530783'))
-        self.assertEqual(len(result), 1)
-        product = result[0]
-
-        target_product = {
-            "url": url,
-            "product_id": "00530783",
-            "existence": True,
-            "title": "携帯酸素 富士さん素",
-            "sku": "58154695",
-            "brand": "ルック",
-            "specifications": [
-                {
-                    "name": "寸法(mm)",
-                    "value": "Φ66×250"
-                },
-                {
-                    "name": "RoHS指令(10物質対応)",
-                    "value": "対応"
-                },
-                {
-                    "name": "内容量",
-                    "value": "1本(5L)"
-                }
-            ],
-            "categories": "医療・介護用品 > 救急・衛生 > 救急・救助用品 > 酸素スプレー・吸入器",
-            "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono58154695-130311-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono58154695-201127-02.jpg",
-            "videos": None,
-            "price": 5.61,
-            "available_qty": None,
-            "options": [{
-                "id": None,
-                "name": "品番"
-            }],
-            "variants": [{
-                "variant_id": "58154695",
-                "barcode": None,
-                "sku": "58154695",
-                "option_values": [{
-                    "option_id": None,
-                    "option_value_id": None,
-                    "option_name": "品番",
-                    "option_value": "C-002F"
-                }],
-                "images": None,
-                "price": 5.61,
-                "available_qty": None
-            }],
-            "reviews": 5,
-            "rating": 3.80,
-            "shipping_fee": 3.26,
-            "weight": None,
-            "length": 2.60,
-            "width": 2.60,
-            "height": 9.84
-        }
-        for key in target_product:
-            self.assertEqual(product[key], target_product[key])
-
-        print(product["description"])
-        self.assertIn("<h4>注意</h4>", product["description"])
-        self.assertIn("<th>用途</th>", product["description"])
-        StandardProduct(**product)
-    
     def test_available_product_3(self):
         url = "https://www.monotaro.com/g/06199072/"
-        with open("monotaro_test/pages/JS8801 酸素濃度計 MCP=Joman 検知ガス酸素(O2) - 【通販モノタロウ】.html", "rb") as file:
+        with open("trendyol_test/pages/JS8801 酸素濃度計 MCP=Joman 検知ガス酸素(O2) - 【通販モノタロウ】.html", "rb") as file:
             body = file.read()
 
         response = HtmlResponse(
@@ -278,7 +283,7 @@ class TestProduct(unittest.TestCase):
 
     def test_available_product_4(self):
         url = "https://www.monotaro.com/g/06201561/"
-        with open("monotaro_test/pages/アサヒ おいしい水 天然水 六甲 PET2L 1ケース(2L×6本) アサヒ飲料 【通販モノタロウ】.html", "rb") as file:
+        with open("trendyol_test/pages/アサヒ おいしい水 天然水 六甲 PET2L 1ケース(2L×6本) アサヒ飲料 【通販モノタロウ】.html", "rb") as file:
             body = file.read()
 
         response = HtmlResponse(
@@ -347,7 +352,7 @@ class TestProduct(unittest.TestCase):
 
     def test_available_product_5(self):
         url = "https://www.monotaro.com/g/02362145/"
-        with open("monotaro_test/pages/クリアホルダー 厚さ0.2mm モノタロウ クリヤーホルダー 【通販モノタロウ】.html", "rb") as file:
+        with open("trendyol_test/pages/クリアホルダー 厚さ0.2mm モノタロウ クリヤーホルダー 【通販モノタロウ】.html", "rb") as file:
             body = file.read()
 
         response = HtmlResponse(
@@ -485,7 +490,7 @@ class TestProduct(unittest.TestCase):
 
     def test_available_product_6(self):
         url = "https://www.monotaro.com/g/00264157/"
-        with open("monotaro_test/pages/マグネットシート マットタイプ モノタロウ 【通販モノタロウ】.html", "rb") as file:
+        with open("trendyol_test/pages/マグネットシート マットタイプ モノタロウ 【通販モノタロウ】.html", "rb") as file:
             body = file.read()
 
         response = HtmlResponse(
@@ -890,104 +895,9 @@ class TestProduct(unittest.TestCase):
         self.assertIn("<th>材質(表面/裏面)</th>", product["description"])
         StandardProduct(**product)
 
-    def test_available_product_7(self):
-        url = "https://www.monotaro.com/g/01126628/"
-        with open("monotaro_test/pages/クリスタルホース食品F型 タイガースポリマー サクションホース 【通販モノタロウ】.html", "rb") as file:
-            body = file.read()
-
-        response1 = HtmlResponse(
-            url=url,
-            body=body,
-        )
-        result1 = list(self.spider.parse(response1, 0, '01126628'))
-        self.assertEqual(len(result1), 1)
-        product1 = result1[0]
-
-        url2 = "https://www.monotaro.com/g/01126628/page-2/"
-        with open("monotaro_test/pages/クリスタルホース食品F型 タイガースポリマー サクションホース 【通販モノタロウ】 2.html", "rb") as file:
-            body = file.read()
-
-        response = HtmlResponse(
-            url=url2,
-            body=body,
-        )
-        result = list(self.spider.parse(response, 0, '01126628', 2, product1))
-        self.assertEqual(len(result), 1)
-        product = result[0]
-
-        target_product = {
-            "url": url,
-            "product_id": "01126628",
-            "existence": True,
-            "title": "クリスタルホース食品F型",
-            "sku": "06468245",
-            "brand": "タイガースポリマー",
-            "specifications": [
-                {
-                    "name": "使用流体",
-                    "value": "流体食品(酒、醤油、酢、清涼飲料水)"
-                },
-                {
-                    "name": "内容量",
-                    "value": "1本"
-                }
-            ],
-            "categories": "配管・水廻り部材/ポンプ/空圧・油圧機器・ホース > コンプレッサー・空圧機器・ホース > ホース > サクションホース",
-            "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono06467983-140908-02.jpg",
-            "videos": None,
-            "price": 31.26,
-            "available_qty": None,
-            "options": [
-                {
-                    "id": None,
-                    "name": "品番"
-                },
-                {
-                    "id": None,
-                    "name": "内径(Φmm)"
-                },
-                {
-                    "id": None,
-                    "name": "外径(Φmm)"
-                },
-                {
-                    "id": None,
-                    "name": "長さ(m)"
-                },
-                {
-                    "id": None,
-                    "name": "許容圧力(MPa[kgf/cm2])"
-                }
-            ],
-            "reviews": None,
-            "rating": None,
-            "shipping_fee": 0.00,
-            "weight": None,
-            "length": None,
-            "width": None,
-            "height": None
-        }
-        for key in target_product:
-            self.assertEqual(product[key], target_product[key])
-
-        self.assertEqual(len(product["variants"]), 26)
-        self.assertEqual(product["variants"][0]['variant_id'], product["sku"])
-        self.assertEqual(product["variants"][0]['sku'], product["sku"])
-        self.assertEqual(product["variants"][0]['images'], None)
-        self.assertEqual(product["variants"][0]['price'], product["price"])
-        self.assertEqual(product["variants"][0]['available_qty'], product["available_qty"])
-
-        for v in product["variants"]:
-            self.assertEqual(len(v['option_values']), len(product["options"]))
-
-        print(product["description"])
-        self.assertIn("<h4>注意</h4>", product["description"])
-        self.assertIn("<th>用途</th>", product["description"])
-        StandardProduct(**product)
-
     def test_unavailable_product(self):
         url = "https://www.monotaro.com/g/06431439/"
-        with open("monotaro_test/pages/AP-708209 お医者さんの(R)首サポーター Fit 1個 アルファックス 【通販モノタロウ】.html", "rb") as file:
+        with open("trendyol_test/pages/AP-708209 お医者さんの(R)首サポーター Fit 1個 アルファックス 【通販モノタロウ】.html", "rb") as file:
             body = file.read()
 
         response = HtmlResponse(
