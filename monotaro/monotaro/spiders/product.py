@@ -468,7 +468,7 @@ class MonotaroProduct(scrapy.Spider):
                 variants[j]['price'] = round(v['price']/self.jpy_rate, 2)
             item['variants'].extend(variants)
 
-        print(f"{i:_}/{len(self.start_urls):_}".replace("_", "."), item['options'], item['variants'])
+        print(f"{i:_}/{len(self.start_urls):_}".replace("_", "."), item)
         more_vars = response.css('a.Button--PaginationNext')
         if more_vars:
             next_purl = self.get_prod_url(pid, p+1)
