@@ -104,7 +104,7 @@ class TrendyolProduit(scrapy.Spider):
         for scr in scrs:
             scr_txt = scr.css('::text').get('').strip()
 
-            json_match = re.findall(r'__PRODUCT_DETAIL_APP_INITIAL_STATE__=(\{.*\});', scr_txt)
+            json_match = re.findall(r'__PRODUCT_DETAIL_APP_INITIAL_STATE__\s*=\s*(\{.*\});', scr_txt)
             if json_match:
                 prod_json = json.loads(json_match[0])['product']
                 break
