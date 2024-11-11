@@ -483,4 +483,6 @@ class MonotaroProduct(scrapy.Spider):
             item['variants'] = item['variants'] if item['options'] and item['variants'] else None # 变种提取结束
             item['has_only_default_variant'] = not (item['variants'] and (len(item['variants']) > 1))
             item['date'] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+            if 'https://www.monotaro.com/g/05019780/' in item['url']:
+                print(item)
             yield item
