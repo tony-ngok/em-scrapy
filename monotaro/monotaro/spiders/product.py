@@ -480,9 +480,9 @@ class MonotaroProduct(scrapy.Spider):
                                  callback=self.parse,
                                  cb_kwargs={ 'i': i, "pid": pid, "p": p+1, "item": item })
         else:
+            if len(item['variants']) > 50:
+                print(f"{i:_}/{len(self.start_urls):_}".replace("_", "."), item['options'], item['variants'])
             item['variants'] = item['variants'] if item['options'] and item['variants'] else None # 变种提取结束
             item['has_only_default_variant'] = not (item['variants'] and (len(item['variants']) > 1))
             item['date'] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
-            if len(item['variants']) > 50:
-                print(f"{i:_}/{len(self.start_urls):_}".replace("_", "."), item)
             yield item
