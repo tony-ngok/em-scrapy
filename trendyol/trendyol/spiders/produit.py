@@ -324,7 +324,7 @@ class TrendyolProduit(scrapy.Spider):
             "reviews": reviews,
             "rating": rating,
             "sold_count": None,
-            "shipping_fee": 0.00 if prod_json.get('isFreeCargo') or (price_raw >= 200) else round(34.99/self.exch_rate, 2), # https://www.trendyol.com/yardim/sorular/2002?grup=1
+            "shipping_fee": 0.00 if prod_json.get('isFreeCargo') else round(39.99/self.exch_rate, 2), # https://www.trendyol.com/yardim/sorular/2002?grup=1
             "shipping_days_min": None,
             "shipping_days_max": None,
             "weight": spec_info['weight'],
