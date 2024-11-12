@@ -273,7 +273,7 @@ class MonotaroProduct(scrapy.Spider):
 
         raw_vars_info = {} # 键代表属性名，值列表代表属性值
 
-        col_names = response.css('div.ProductsDetails thead th')
+        col_names = response.css('div.ProductsDetails > table[data-js="pd_list_table"] thead th')
 
         # 获得有效列（商品画像、SKU码、变种选项名、价格、库存状况）
         valid_cols = {}
