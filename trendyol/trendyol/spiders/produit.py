@@ -384,7 +384,6 @@ class TrendyolProduit(scrapy.Spider):
         # else:
         yield item
 
-    def parse_video(self, response: HtmlResponse):
-        item = response.meta['item']
+    def parse_video(self, response: HtmlResponse, item):
         item['videos'] = response.json().get('result', {}).get('url')
         yield item
