@@ -86,15 +86,16 @@ class MongoPipeLine3:
         print("MongoDB connexion fail")
         spider.crawler.engine.close_spider("MongoDB connexion fail")
 
-    def process_batch(self, spider: Spider):
+    def process_batch(self, batch: int, spider: Spider):
         """
         每批次中，将已存在（要更新）与不存在（要创建）的商品分开处理
         """
 
-        print("Stage", self.batch_no+1)
+        self.batch_no += 1
+        print("Stage", self.batch_no)
 
         # 将批次文件读入内存
-        batchfile = self.file_root.format(self.batch_no)
+        batchfile = self.file_root.format(batch)
         items_buffer = []
         with open(batchfile, 'r', encoding='utf-8') as fb:
             for line in fb:
@@ -107,7 +108,7 @@ class MongoPipeLine3:
         ids_in_db = exists_ids(self.coll, ids)
 
         # 区分已存在及待创建的商品
-        exists_file = self.exists_root.format(self.batch_no)
+        exists_file = self.exists_root.format(batch)
         news_items = []
         with open(exists_file, 'a', encoding='utf-8') as fe:
             for item in items_buffer: # 已存在的商品写入另一个文件
@@ -122,8 +123,8 @@ class MongoPipeLine3:
         # 先更新已经存在的商品
         uos = get_uos(exists_file)
         if bulk_write(uos, self.coll, self.max_tries):
-            spider.logger.info(f"Batch {self.batch_no+1} bulk_write (update) done")
-            print(f"Stage {self.batch_no+1}: bulk_write (update) done")
+            spider.logger.info(f"Batch {self.batch_no} bulk_write (update) done")
+            print(f"Stage {self.batch_no}: bulk_write (update) done")
             os.remove(exists_file)
         else:
             print("bulk_write (update) fail")
@@ -142,7 +143,7 @@ class MongoPipeLine3:
                     req2 = scrapy.Request(req_url2, headers=headers,
                                           meta={ "cookiejar": item["i"] },
                                           callback=self.parse_descr_page,
-                                          cb_kwargs={ "batch": self.batch_no, "item": ni["item"], "video_id": video_id, "spider": spider })
+                                          cb_kwargs={ "batch": batch, "item": ni["item"], "video_id": video_id, "spider": spider })
                     spider.crawler.engine.crawl(req2)
                 elif video_id:
                     ni["item"]['description'] = descr_info if descr_info else None
@@ -151,13 +152,11 @@ class MongoPipeLine3:
                     req3 = scrapy.Request(req_url3, headers=headers,
                                           meta={ "cookiejar": item["i"] },
                                           callback=self.parse_video,
-                                          cb_kwargs={ "batch": self.batch_no, "item": ni["item"], "spider": spider })
+                                          cb_kwargs={ "batch": batch, "item": ni["item"], "spider": spider })
                     spider.crawler.engine.crawl(req3)
                 else:
                     ni["item"]['description'] = descr_info if descr_info else None
-                    self.write_new(self.batch_no, ni["item"], spider)
-        else:
-            self.batch_no += 1
+                    self.write_new(batch, ni["item"], spider)
 
     def parse_descr_page(self, response: HtmlResponse, batch: int, item: dict, video_id: str, spider: Spider):
         i = response.meta['cookiejar']
@@ -175,7 +174,7 @@ class MongoPipeLine3:
             req3 = scrapy.Request(req_url3, headers=headers,
                                   meta={ "cookiejar": i },
                                   callback=self.parse_video,
-                                  cb_kwargs={ "batch": self.batch_no, "item": item, "spider": spider })
+                                  cb_kwargs={ "batch": batch, "item": item, "spider": spider })
             spider.crawler.engine.crawl(req3)
         else:
             self.write_new(batch, item, spider)
@@ -192,7 +191,6 @@ class MongoPipeLine3:
             fn.write('\n')
 
         if self.readys % self.batch_size == 0:
-            self.batch_no += 1
             n_uos = get_uos(news_file)
             if bulk_write(n_uos, self.coll, self.max_tries):
                 spider.logger.info(f"Batch {self.batch_no} create done")
@@ -215,7 +213,7 @@ class MongoPipeLine3:
             f.write("\n")
 
         if self.records % self.batch_size == 0:
-            self.process_batch(spider)
+            self.process_batch(self.batch_no, spider)
             self.switch = True
 
         return item
