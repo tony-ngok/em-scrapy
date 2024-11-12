@@ -1,0 +1,20 @@
+{
+    "isSuccess": true,
+    "statusCode": 200,
+    "error": null,
+    "result": {
+        "id": "c931a628-affd-4591-9fcd-f47c40cf4aa3",
+        "url": "https://video-content.dsmcdn.com/prod/720p/2017928/2020919/2027898/c931a628-affd-4591-9fcd-f47c40cf4aa3.mp4",
+        "thumbnail": "https://video-content-img.dsmcdn.com/prod/thumb/2017928/2020919/2027898/c931a628-affd-4591-9fcd-f47c40cf4aa3.jpg",
+        "dimensions": {
+            "width": 720,
+            "height": 1280
+        },
+        "duration": 18,
+        "type": "INTERNAL",
+        "viewCount": 1342,
+        "clickCount": 1342,
+        "videoSourceType": "mp4"
+    },
+    "headers": {}
+}

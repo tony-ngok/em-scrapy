@@ -416,144 +416,6 @@ class TestProduct(unittest.TestCase):
         print(product["description"])
         StandardProduct(**product)
 
-    # def test_available_product_5(self):
-    #     url = "https://www.monotaro.com/g/02362145/"
-    #     with open("trendyol_test/pages/クリアホルダー 厚さ0.2mm モノタロウ クリヤーホルダー 【通販モノタロウ】.html", "rb") as file:
-    #         body = file.read()
-
-    #     response = HtmlResponse(
-    #         url=url,
-    #         body=body,
-    #     )
-    #     result = list(self.spider.parse(response, 0, '02362145'))
-    #     self.assertEqual(len(result), 1)
-    #     product = result[0]
-
-    #     target_product = {
-    #         "url": url,
-    #         "product_id": "02362145",
-    #         "existence": True,
-    #         "title": "クリアホルダー 厚さ0.2mm",
-    #         "sku": "48713035",
-    #         "brand": "モノタロウ",
-    #         "specifications": [
-    #             {
-    #                 "name": "サイズ",
-    #                 "value": "A4"
-    #             },
-    #             {
-    #                 "name": "色",
-    #                 "value": "クリア"
-    #             },
-    #             {
-    #                 "name": "厚さ(mm)",
-    #                 "value": "0.2"
-    #             },
-    #             {
-    #                 "name": "寸法(mm)",
-    #                 "value": "308×219"
-    #             }
-    #         ],
-    #         "categories": "オフィスサプライ > 事務用品 > ファイリング > クリヤーホルダー",
-    #         "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono48713044-221004-01.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono48713035-170706-04.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono48713035-221004-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841650-240612-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841650-240612-06.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841650-240614-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841659-240612-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841659-240614-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono73387082-230905-02.jpg",
-    #         "videos": "https://www.youtube.com/embed/U9V_QlSnrik",
-    #         "price": 0.84,
-    #         "available_qty": None,
-    #         "options": [
-    #             {
-    #                 "id": None,
-    #                 "name": "品番"
-    #             },
-    #             {
-    #                 "id": None,
-    #                 "name": "内容量"
-    #             }
-    #         ],
-    #         "variants": [
-    #             {
-    #                 "variant_id": "48713035",
-    #                 "barcode": None,
-    #                 "sku": "48713035",
-    #                 "option_values": [
-    #                     {
-    #                         "option_id": None,
-    #                         "option_value_id": None,
-    #                         "option_name": "品番",
-    #                         "option_value": "MCH-02A410"
-    #                     },
-    #                     {
-    #                         "option_id": None,
-    #                         "option_value_id": None,
-    #                         "option_name": "内容量",
-    #                         "option_value": "1パック(10枚)"
-    #                     }
-    #                 ],
-    #                 "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono48713035-221004-02.jpg",
-    #                 "price": 0.84,
-    #                 "available_qty": None
-    #             },
-    #             {
-    #                 "variant_id": "54841650",
-    #                 "barcode": None,
-    #                 "sku": "54841650",
-    #                 "option_values": [
-    #                     {
-    #                         "option_id": None,
-    #                         "option_value_id": None,
-    #                         "option_name": "品番",
-    #                         "option_value": "MCH-02A4100"
-    #                     },
-    #                     {
-    #                         "option_id": None,
-    #                         "option_value_id": None,
-    #                         "option_name": "内容量",
-    #                         "option_value": "1パック(100枚)"
-    #                     }
-    #                 ],
-    #                 "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841650-240614-02.jpg",
-    #                 "price": 7.77,
-    #                 "available_qty": 0
-    #             },
-    #             {
-    #                 "variant_id": "54841659",
-    #                 "barcode": None,
-    #                 "sku": "54841659",
-    #                 "option_values": [
-    #                     {
-    #                         "option_id": None,
-    #                         "option_value_id": None,
-    #                         "option_name": "品番",
-    #                         "option_value": "MCH-02A4600"
-    #                     },
-    #                     {
-    #                         "option_id": None,
-    #                         "option_value_id": None,
-    #                         "option_name": "内容量",
-    #                         "option_value": "1箱(600枚)"
-    #                     }
-    #                 ],
-    #                 "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono54841659-240614-02.jpg",
-    #                 "price": 43.66,
-    #                 "available_qty": 0
-    #             }
-    #         ],
-    #         "reviews": 438,
-    #         "rating": 4.69,
-    #         "shipping_fee": 3.26,
-    #         "weight": None,
-    #         "length": 12.13,
-    #         "width": 8.62,
-    #         "height": None
-    #     }
-    #     for key in target_product:
-    #         self.assertEqual(product[key], target_product[key])
-
-    #     print(product["description"])
-    #     self.assertIn("<h4>注意</h4>", product["description"])
-    #     self.assertIn("<th>用途</th>", product["description"])
-    #     self.assertIn("<th>材質</th>", product["description"])
-    #     StandardProduct(**product)
-
     def test_available_product_5(self):
         url = "https://www.trendyol.com/mert-sert-mobilya/vern-120cm-konsol-tv-sehpasi-tv-unitesi-kahve-kosesi-banyo-dolabi-cok-amacli-dolap-p-773280008"
         with open("trendyol_test/pages/MERT SERT MOBİLYA Vern 120cm Konsol, Tv Sehpası, Tv Ünitesi, Kahve Köşesi, Banyo Dolabı, Çok Amaçlı Dolap Fiyatı, Yorumları - Trendyol.html", "rb") as file:
@@ -647,6 +509,68 @@ class TestProduct(unittest.TestCase):
             "length": None,
             "width": 47.24,
             "height": 29.53
+        }
+        for key in target_product:
+            self.assertEqual(product[key], target_product[key])
+
+        print(product["description"])
+        StandardProduct(**product)
+
+    def test_available_product_6(self):
+        url = "https://www.trendyol.com/the-fine-organics/avustralya-nanesi-aktif-karbon-dis-beyazlatma-tozu-50g-p-762586955"
+        with open("trendyol_test/pages/THE FINE ORGANICS Avustralya Nanesi & Aktif Karbon Diş Beyazlatma Tozu, 50g Fiyatı, Yorumları - Trendyol.html", "rb") as file:
+            body = file.read()
+        resp1 = HtmlResponse(
+            url=url,
+            body=body,
+        )
+        res1 = list(self.spider.parse(resp1))
+        self.assertEqual(len(res1), 1)
+        prod1 = res1[0]["item"]
+
+        has_more_descr = res1[0]["has_more_descr"]
+        video_id = res1[0]["video_id"]
+        self.assertFalse(has_more_descr)
+        self.assertEqual(video_id, "c931a628-affd-4591-9fcd-f47c40cf4aa3")
+
+        url3 = "https://apigw.trendyol.com/discovery-web-websfxmediacenter-santral/video-content-by-id/c931a628-affd-4591-9fcd-f47c40cf4aa3?channelId=1"
+        with open("trendyol_test/pages/c931a628-affd-4591-9fcd-f47c40cf4aa3.json", "rb") as file3:
+            body3 = file3.read()
+        response = HtmlResponse(
+            url=url3,
+            body=body3
+        )
+        result = list(self.spider.parse_video(response, prod1))
+        self.assertEqual(len(result), 1)
+        product = result[0]
+
+        target_product = {
+            "url": url,
+            "product_id": "762586955",
+            "existence": True,
+            "title": "Avustralya Nanesi & Aktif Karbon Diş Beyazlatma Tozu, 50g",
+            "sku": "762586955",
+            "upc": "8684255820167",
+            "brand": "THE FINE ORGANICS",
+            "specifications": [{
+                "name": "Form",
+                "value": "Beyazlatıcı Toz"
+            }],
+            "categories": "Kozmetik > Ağız Bakım",
+            "images": "https://cdn.dsmcdn.com/ty1457/product/media/images/prod/QC/20240802/17/03ea47c1-fc57-31bc-906c-71266273a7b6/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1457/product/media/images/prod/QC/20240802/17/be40a592-f810-3c28-aa65-cae17972c32d/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1455/product/media/images/prod/QC/20240802/17/0435e079-1880-328a-8141-38993de77d03/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1456/product/media/images/prod/QC/20240802/17/f830a409-d950-31f7-affb-3260b3dfb8f4/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1455/product/media/images/prod/QC/20240802/17/d4ae8dcb-c048-37d1-b1fd-70e5aa7e6a30/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1455/product/media/images/prod/QC/20240802/17/fd91346b-e26f-34f5-8f86-3af62eb2636e/1_org_zoom.jpg",
+            "videos": "https://video-content.dsmcdn.com/prod/720p/2017928/2020919/2027898/c931a628-affd-4591-9fcd-f47c40cf4aa3.mp4",
+            "price": 4.22,
+            "available_qty": None,
+            "options": None,
+            "variants": None,
+            "has_only_default_variant": True,
+            "reviews": 580,
+            "rating": 4.21,
+            "shipping_fee": 1.16,
+            "weight": None,
+            "length": None,
+            "width": None,
+            "height": None
         }
         for key in target_product:
             self.assertEqual(product[key], target_product[key])
