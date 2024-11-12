@@ -17,11 +17,11 @@ class TestProduct(unittest.TestCase):
         url = "https://www.trendyol.com/bioderma/sebium-foaming-gel-500-ml-p-132469"
         with open("trendyol_test/pages/Bioderma Sébium Foaming Gel Yüz Yıkama Jeli 500 ml Yorumları, Fiyatı - Trendyol.html", "rb") as file:
             body = file.read()
-        response = HtmlResponse(
+        resp1 = HtmlResponse(
             url=url,
             body=body,
         )
-        res1 = list(self.spider.parse(response))
+        res1 = list(self.spider.parse(resp1))
         self.assertEqual(len(res1), 1)
         prod1 = res1[0]["item"]
 
@@ -31,7 +31,7 @@ class TestProduct(unittest.TestCase):
         self.assertIsNone(video_id)
 
         url2 = "https://apigw.trendyol.com/discovery-web-productgw-service/api/product-detail/132469/html-content?channelId=1"
-        with open("trendyol_test/pages/Bioderma Sébium Foaming Gel Yüz Yıkama Jeli 500 ml Yorumları, Fiyatı - Trendyol.html", "rb") as file2:
+        with open("trendyol_test/pages/132469.json", "rb") as file2:
             body2 = file2.read()
         response = HtmlResponse(
             url=url2,
@@ -45,7 +45,7 @@ class TestProduct(unittest.TestCase):
             "url": url,
             "product_id": "132469",
             "existence": True,
-            "title": "Bioderma Sebium Foaming Gel 500 ml",
+            "title": "Sebium Foaming Gel 500 ml",
             "sku": "132469",
             "upc": "3401399277092",
             "brand": "Bioderma",
