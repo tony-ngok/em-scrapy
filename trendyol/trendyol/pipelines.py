@@ -179,7 +179,8 @@ class MongoPipeLine3:
             headers = { **self.headers, 'Referer': item["url"] }
             req3 = scrapy.Request(req_url3, headers=headers,
                                 meta={ "cookiejar": i },
-                                callback=self.parse_video)
+                                callback=self.parse_video,
+                                cb_kwargs={ "item": item})
             spider.crawler.engine.crawl(req3)
         else:
             self.write_new(item)
