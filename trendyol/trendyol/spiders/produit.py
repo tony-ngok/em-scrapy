@@ -88,10 +88,11 @@ class TrendyolProduit(scrapy.Spider):
         #     print(f"USD/TRY: {self.exch_rate}".replace('.', ','))
 
     def start_requests(self):
-        for i, url in enumerate(self.start_urls):
+        for i, todo in enumerate(self.start_urls):
+            url = 'https://www.trendyol.com/'+todo
             yield scrapy.Request(url, headers=self.HEADERS,
-                                    meta={ "cookiejar": i },
-                                    callback=self.parse)
+                                 meta={ "cookiejar": i },
+                                 callback=self.parse)
 
     def get_json(self, response: HtmlResponse):
         '''
