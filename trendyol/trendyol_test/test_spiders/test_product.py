@@ -90,6 +90,7 @@ class TestProduct(unittest.TestCase):
             "available_qty": None,
             "options": None,
             "variants": None,
+            "has_only_default_variant": True,
             "reviews": 26950,
             "rating": 4.58,
             "shipping_fee": 0.00,
@@ -165,6 +166,7 @@ class TestProduct(unittest.TestCase):
             "available_qty": None,
             "options": None,
             "variants": None,
+            "has_only_default_variant": True,
             "reviews": 17531,
             "rating": 4.70,
             "shipping_fee": 0.00,
@@ -179,118 +181,175 @@ class TestProduct(unittest.TestCase):
         print(product["description"])
         StandardProduct(**product)
 
-    # def test_available_product_3(self):
-    #     url = "https://www.monotaro.com/g/06199072/"
-    #     with open("trendyol_test/pages/JS8801 酸素濃度計 MCP=Joman 検知ガス酸素(O2) - 【通販モノタロウ】.html", "rb") as file:
-    #         body = file.read()
+    def test_available_product_3(self):
+        url = "https://www.trendyol.com/bubito/kislik-tatli-kapsonlu-bebek-pelus-welsoft-tulum-p-446949530"
+        with open("trendyol_test/pages/Kışlık Tatlı Kapşonlu Bebek Peluş Welsoft Tulum Bubito _ Trendyol.html", "rb") as file:
+            body = file.read()
+        resp1 = HtmlResponse(
+            url=url,
+            body=body,
+        )
+        result = list(self.spider.parse(resp1))
+        self.assertEqual(len(result), 1)
+        product = result[0]["item"]
 
-    #     response = HtmlResponse(
-    #         url=url,
-    #         body=body,
-    #     )
-    #     result = list(self.spider.parse(response, 0, '06199072'))
-    #     self.assertEqual(len(result), 1)
-    #     product = result[0]
+        has_more_descr = result[0]["has_more_descr"]
+        video_id = result[0]["video_id"]
+        self.assertFalse(has_more_descr)
+        self.assertIsNone(video_id)
 
-    #     target_product = {
-    #         "url": url,
-    #         "product_id": "06199072",
-    #         "existence": True,
-    #         "title": "酸素濃度計",
-    #         "sku": "44631495",
-    #         "brand": "MCP=Joman",
-    #         "specifications": [
-    #             {
-    #                 "name": "寸法(mm)",
-    #                 "value": "95.9×66.9×52"
-    #             },
-    #             {
-    #                 "name": "測定範囲",
-    #                 "value": "0～30%VOL"
-    #             },
-    #             {
-    #                 "name": "質量(g)",
-    #                 "value": "147.5(バッテリー含む)"
-    #             },
-    #             {
-    #                 "name": "バッテリー",
-    #                 "value": "3.7V 750mAh充電式リチウム電池"
-    #             },
-    #             {
-    #                 "name": "解像度",
-    #                 "value": "0.001"
-    #             },
-    #             {
-    #                 "name": "警報方式",
-    #                 "value": "ブザー音/フラッシュ/振動(高値と低値の設定が可能)"
-    #             },
-    #             {
-    #                 "name": "動作温度(℃)",
-    #                 "value": "‐10～50"
-    #             },
-    #             {
-    #                 "name": "検知ガス",
-    #                 "value": "酸素(O2)"
-    #             },
-    #             {
-    #                 "name": "保管温度(℃)",
-    #                 "value": "0～40"
-    #             },
-    #             {
-    #                 "name": "バッテリー稼動時間",
-    #                 "value": "60時間(作業により異なる場合あり)"
-    #             },
-    #             {
-    #                 "name": "バックライト",
-    #                 "value": "有り"
-    #             },
-    #             {
-    #                 "name": "充電端子",
-    #                 "value": "micro USB充電ポート"
-    #             },
-    #             {
-    #                 "name": "内容量",
-    #                 "value": "1個"
-    #             }
-    #         ],
-    #         "categories": "Copierbond > Kırtasiye Ofis Malzemeleri > Kırtasiye Kağıt Ürünleri > Fotokopi & Baskı Kağıtları",
-    #         "images": "",
-    #         "videos": None,
-    #         "price": 176.07,
-    #         "available_qty": None,
-    #         "options": [{
-    #             "id": None,
-    #             "name": "品番"
-    #         }],
-    #         "variants": [{
-    #             "variant_id": "44631495",
-    #             "barcode": None,
-    #             "sku": "44631495",
-    #             "option_values": [{
-    #                 "option_id": None,
-    #                 "option_value_id": None,
-    #                 "option_name": "品番",
-    #                 "option_value": "JS8801"
-    #             }],
-    #             "images": None,
-    #             "price": 176.07,
-    #             "available_qty": None
-    #         }],
-    #         "reviews": None,
-    #         "rating": None,
-    #         "shipping_fee": 0.00,
-    #         "weight": 0.33,
-    #         "length": 3.78,
-    #         "width": 2.63,
-    #         "height": 2.05
-    #     }
-    #     for key in target_product:
-    #         self.assertEqual(product[key], target_product[key])
+        target_product = {
+            "url": url,
+            "product_id": "446949530",
+            "existence": True,
+            "title": "Kışlık Tatlı Kapşonlu Bebek Peluş Welsoft Tulum",
+            "sku": "446949530",
+            "upc": "BB2021BB000900903",
+            "brand": "Bubito",
+            "specifications": [
+                {
+                    "name": "Materyal",
+                    "value": "Pamuklu"
+                },
+                {
+                    "name": "Desen",
+                    "value": "Düz"
+                },
+                {
+                    "name": "Renk",
+                    "value": "Kahverengi"
+                },
+                {
+                    "name": "Yaka Tipi",
+                    "value": "Kapüşonlu"
+                },
+                {
+                    "name": "Materyal Bileşeni",
+                    "value": "%100 Pamuk"
+                },
+                {
+                    "name": "Kumaş Tipi",
+                    "value": "Dokuma"
+                },
+                {
+                    "name": "Boy",
+                    "value": "Standart"
+                },
+                {
+                    "name": "Kalıp",
+                    "value": "Dar"
+                },
+                {
+                    "name": "Paça Tipi",
+                    "value": "Dar Paça"
+                },
+                {
+                    "name": "Kol Boyu",
+                    "value": "Uzun"
+                },
+                {
+                    "name": "Kol Tipi",
+                    "value": "Standart Kol"
+                },
+                {
+                    "name": "Koleksiyon",
+                    "value": "Basic"
+                },
+                {
+                    "name": "Sürdürülebilirlik Detayı",
+                    "value": "Hayır"
+                },
+                {
+                    "name": "Paket İçeriği",
+                    "value": "Tekli"
+                },
+                {
+                    "name": "Ortam",
+                    "value": "Casual/Günlük"
+                }
+            ],
+            "categories": "Çocuk > Çocuk Giyim > Çocuk Bebek Giyim > Çocuk Bebek Takımı",
+            "images": "https://cdn.dsmcdn.com/ty809/product/media/images/20230331/21/316483741/640446403/1/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty808/product/media/images/20230331/21/316483741/640446403/2/2_org_zoom.jpg;https://cdn.dsmcdn.com/ty808/product/media/images/20230331/21/316483741/640446403/3/3_org_zoom.jpg;https://cdn.dsmcdn.com/ty809/product/media/images/20230331/21/316483741/640446403/4/4_org_zoom.jpg;https://cdn.dsmcdn.com/ty808/product/media/images/20230331/21/316483741/640446403/5/5_org_zoom.jpg",
+            "videos": None,
+            "price": 5.33,
+            "available_qty": None,
+            "options": [{
+                "id": "338",
+                "name": "Beden"
+            }],
+            "variants": [
+                {
+                    "variant_id": "640685543",
+                    "barcode": "BB2021BB000900903",
+                    "sku": "640685543",
+                    "option_values": [{
+                        "option_id": "338",
+                        "option_value_id": None,
+                        "option_name": "Beden",
+                        "option_value": "0-3 AY"
+                    }],
+                    "images": None,
+                    "price": 5.82,
+                    "available_qty": None 
+                },
+                {
+                    "variant_id": "640446403",
+                    "barcode": "BB2021BB000900904",
+                    "sku": "640446403",
+                    "option_values": [{
+                        "option_id": "338",
+                        "option_value_id": None,
+                        "option_name": "Beden",
+                        "option_value": "3-6 AY"
+                    }],
+                    "images": None,
+                    "price": 5.82,
+                    "available_qty": None 
+                },
+                {
+                    "variant_id": "640666052",
+                    "barcode": "BB2021BB000900905",
+                    "sku": "640666052",
+                    "option_values": [{
+                        "option_id": "338",
+                        "option_value_id": None,
+                        "option_name": "Beden",
+                        "option_value": "6-9 AY"
+                    }],
+                    "images": None,
+                    "price": 5.82,
+                    "available_qty": None 
+                },
+                {
+                    "variant_id": "1055598253",
+                    "barcode": "BB2022BB202301933",
+                    "sku": "1055598253",
+                    "option_values": [{
+                        "option_id": "338",
+                        "option_value_id": None,
+                        "option_name": "Beden",
+                        "option_value": "9 - 12 Ay"
+                    }],
+                    "images": None,
+                    "price": 5.82,
+                    "available_qty": None 
+                }
+            ],
+            "has_only_default_variant": False,
+            "reviews": 1458,
+            "rating": 4.31,
+            "shipping_fee": 1.02,
+            "weight": None,
+            "length": None,
+            "width": None,
+            "height": None
+        }
+        for key in target_product:
+            self.assertEqual(product[key], target_product[key])
 
-    #     print(product["description"])
-    #     self.assertNotIn("<h4>注意</h4>", product["description"])
-    #     self.assertIn("<th>機能</th>", product["description"])
-    #     StandardProduct(**product)
+        print(product["description"])
+        self.assertIn("<th>Yıkama Talimatı</th>", product["description"])
+        StandardProduct(**product)
 
     # def test_available_product_4(self):
     #     url = "https://www.monotaro.com/g/06201561/"

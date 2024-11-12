@@ -1,1 +1,9 @@
-{"isSuccess":true,"statusCode":200,"error":null,"result":"<div id=\"rich-content-wrapper\">\n <ul>\n  <li>Ürün kodu: Fot copier a4copier bond a4 fotokopi kağıdı 80gr-500'lü 1 koli 5 paket</li> \n </ul>\n <div>\n   Bu ilan \n  <strong>Entegrapi</strong> ile listelenmiştir! \n </div>\n</div>","headers":{"tysidecarcachable":"ttl=90"}}
+{
+    "isSuccess": true,
+    "statusCode": 200,
+    "error": null,
+    "result": "<div id=\"rich-content-wrapper\">\n <ul>\n  <li>Ürün kodu: Fot copier a4copier bond a4 fotokopi kağıdı 80gr-500'lü 1 koli 5 paket</li> \n </ul>\n <div>\n   Bu ilan \n  <strong>Entegrapi</strong> ile listelenmiştir! \n </div>\n</div>",
+    "headers": {
+        "tysidecarcachable": "ttl=90"
+    }
+}
