@@ -120,7 +120,6 @@ class MongoPipeLine3:
         del items_buffer
 
         if self.readys % self.batch_size == 0:
-            self.batch_no += 1
             uos = get_uos(exists_file)
             if bulk_write(uos, self.coll, self.max_tries):
                 spider.logger.info(f"Batch {self.batch_no} bulk_write (update) done")
@@ -157,6 +156,8 @@ class MongoPipeLine3:
                 else:
                     ni["item"]['description'] = descr_info if descr_info else None
                     self.write_new(ni["item"], spider)
+        else:
+            self.batch_no += 1
 
     def parse_descr_page(self, response: HtmlResponse, item: dict, video_id: str, spider: Spider):
         i = response.meta['cookiejar']
