@@ -122,8 +122,8 @@ class MongoPipeLine3:
         if self.readys % self.batch_size == 0:
             uos = get_uos(exists_file)
             if bulk_write(uos, self.coll, self.max_tries):
-                spider.logger.info(f"Batch {self.batch_no} bulk_write (update) done")
-                print(f"Stage {self.batch_no}: bulk_write (update) done")
+                spider.logger.info(f"Batch {self.batch_no+1} bulk_write (update) done")
+                print(f"Stage {self.batch_no+1}: bulk_write (update) done")
                 os.remove(exists_file)
             else:
                 print("bulk_write (update) fail")
@@ -190,7 +190,7 @@ class MongoPipeLine3:
             self.readys += 1
             json.dump(dat, fn, ensure_ascii=False)
             fn.write('\n')
-        
+
         if self.readys % self.batch_size == 0:
             self.batch_no += 1
             n_uos = get_uos(news_file)
