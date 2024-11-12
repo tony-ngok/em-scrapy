@@ -102,10 +102,12 @@ class MongoPipeLine3:
                 if line.strip():
                     items_buffer.append(json.loads(line.strip()))
         os.remove(batchfile)
+        print(len(items_buffer), "coming item(s)")
 
         # 该批次中已存在数据库中的商品号
         ids = [item['item']["product_id"] for item in items_buffer]
         ids_in_db = exists_ids(self.coll, ids)
+        print(len(ids_in_db), "existent id(s)")
 
         # 区分已存在及待创建的商品
         exists_file = self.exists_root.format(batch)
@@ -128,6 +130,8 @@ class MongoPipeLine3:
             os.remove(exists_file)
         else:
             print("bulk_write (update) fail")
+
+        print(len(news_items), "new item(s)")
 
         # 分情况处理下一步请求（要新建的商品）
         if news_items:
@@ -220,7 +224,7 @@ class MongoPipeLine3:
 
     def close_spider(self, spider: Spider):
         if not self.switch:
-            self.process_batch(spider)
+            self.process_batch(self.batch_no, spider)
 
         if not update_sold_out(self.coll, self.max_tries, self.days_bef):
             print("Update sold out fail")
