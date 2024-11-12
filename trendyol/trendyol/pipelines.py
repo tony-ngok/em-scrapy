@@ -148,7 +148,7 @@ class MongoPipeLine3:
                                           meta={ "cookiejar": item["i"] },
                                           callback=self.parse_descr_page,
                                           cb_kwargs={ "batch": batch, "item": ni["item"], "video_id": video_id, "spider": spider })
-                    spider.crawler.engine.crawl(req2)
+                    spider.crawler.engine.crawl(req2, spider)
                 elif video_id:
                     ni["item"]['description'] = descr_info if descr_info else None
                     headers = { **self.headers, "Referer": item['item']["url"] }
@@ -157,7 +157,7 @@ class MongoPipeLine3:
                                           meta={ "cookiejar": item["i"] },
                                           callback=self.parse_video,
                                           cb_kwargs={ "batch": batch, "item": ni["item"], "spider": spider })
-                    spider.crawler.engine.crawl(req3)
+                    spider.crawler.engine.crawl(req3, spider)
                 else:
                     ni["item"]['description'] = descr_info if descr_info else None
                     self.write_new(batch, ni["item"], spider)
@@ -182,7 +182,7 @@ class MongoPipeLine3:
                                   meta={ "cookiejar": i },
                                   callback=self.parse_video,
                                   cb_kwargs={ "batch": batch, "item": item, "spider": spider })
-            spider.crawler.engine.crawl(req3)
+            spider.crawler.engine.crawl(req3, spider)
         else:
             self.write_new(batch, item, spider)
 
