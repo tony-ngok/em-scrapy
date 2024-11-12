@@ -578,83 +578,67 @@ class TestProduct(unittest.TestCase):
         print(product["description"])
         StandardProduct(**product)
 
-    # def test_unavailable_product(self):
-    #     url = "https://www.monotaro.com/g/06431439/"
-    #     with open("trendyol_test/pages/AP-708209 お医者さんの(R)首サポーター Fit 1個 アルファックス 【通販モノタロウ】.html", "rb") as file:
-    #         body = file.read()
+    def test_unavailable_product(self):
+        url = "https://www.trendyol.com/panterdent/dis-beyazlatici-parlak-set-p-844126911"
+        with open("trendyol_test/pages/panterdent Diş Beyazlatıcı Parlak - Set Fiyatı, Yorumları - Trendyol.html", "rb") as file:
+            body = file.read()
+        resp1 = HtmlResponse(
+            url=url,
+            body=body,
+        )
+        res1 = list(self.spider.parse(resp1))
+        self.assertEqual(len(res1), 1)
+        prod1 = res1[0]["item"]
 
-    #     response = HtmlResponse(
-    #         url=url,
-    #         body=body,
-    #     )
-    #     result = list(self.spider.parse(response, 0, '06431439'))
-    #     self.assertEqual(len(result), 1)
-    #     product = result[0]
+        has_more_descr = res1[0]["has_more_descr"]
+        video_id = res1[0]["video_id"]
+        self.assertTrue(has_more_descr)
+        self.assertIsNone(video_id)
 
-    #     target_product = {
-    #         "url": url,
-    #         "product_id": "06431439",
-    #         "existence": False,
-    #         "title": "お医者さんの(R)首サポーター Fit",
-    #         "sku": "61690687",
-    #         "brand": "アルファックス",
-    #         "specifications": [
-    #             {
-    #                 "name": "質量(g)",
-    #                 "value": "100"
-    #             },
-    #             {
-    #                 "name": "寸法(cm)",
-    #                 "value": "縦8・横57.5・厚み1.7"
-    #             },
-    #             {
-    #                 "name": "首廻り(cm)",
-    #                 "value": "30～46"
-    #             },
-    #             {
-    #                 "name": "内容量",
-    #                 "value": "1個"
-    #             }
-    #         ],
-    #         "categories": "医療・介護用品 > ヘルスケア > サポーター・テーピング > サポーター > 首用 サポーター",
-    #         "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono61690687-240311-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono61690687-240311-04.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono61690687-240311-06.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono61690687-240311-08.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono61690687-240311-10.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono61690687-240311-12.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono61690687-240311-14.jpg",
-    #         "videos": None,
-    #         "price": 24.79,
-    #         "available_qty": 0,
-    #         "options": [{
-    #             "id": None,
-    #             "name": "品番"
-    #         }],
-    #         "variants": [{
-    #             "variant_id": "61690687",
-    #             "barcode": None,
-    #             "sku": "61690687",
-    #             "option_values": [{
-    #                 "option_id": None,
-    #                 "option_value_id": None,
-    #                 "option_name": "品番",
-    #                 "option_value": "AP-708209"
-    #             }],
-    #             "images": None,
-    #             "price": 24.79,
-    #             "available_qty": 0
-    #         }],
-    #         "reviews": None,
-    #         "rating": None,
-    #         "shipping_fee": 0.00,
-    #         "weight": 0.22,
-    #         "length": None,
-    #         "width": None,
-    #         "height": None,
-    #     }
-    #     for key in target_product:
-    #         self.assertEqual(product[key], target_product[key])
+        url2 = "https://apigw.trendyol.com/discovery-web-productgw-service/api/product-detail/844126911/html-content?channelId=1"
+        with open("trendyol_test/pages/844126911.json", "rb") as file2:
+            body2 = file2.read()
+        response = HtmlResponse(
+            url=url2,
+            body=body2
+        )
+        result = list(self.spider.parse_descr_page(response, prod1, video_id))
+        self.assertEqual(len(result), 1)
+        product = result[0]
 
-    #     print(product["description"])
-    #     self.assertNotIn("<h4>注意</h4>", product["description"])
-    #     self.assertIn("<th>用途</th>", product["description"])
-    #     self.assertIn("<th>材質</th>", product["description"])
-    #     StandardProduct(**product)
+        target_product = {
+            "url": url,
+            "product_id": "844126911",
+            "existence": False,
+            "title": "Diş Beyazlatıcı Parlak - Set",
+            "sku": "844126911",
+            "upc": "526598505",
+            "brand": "panterdent",
+            "specifications": [{
+                "name": "Form",
+                "value": "Beyazlatma Seti"
+            }],
+            "categories": "Kozmetik > Ağız Bakım",
+            "images": "https://cdn.dsmcdn.com/ty1521/product/media/images/prod/QC/20240903/21/64121aeb-8c39-3197-9155-6a8fca3c5ee7/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1523/product/media/images/prod/QC/20240903/21/483f9287-8acd-315c-ad35-9cd5d0845b8c/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1523/product/media/images/prod/QC/20240903/21/355987db-83b6-35d8-8b1b-087e8fabec3e/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1523/product/media/images/prod/QC/20240903/21/786a87ba-247e-3957-909b-d1087f22725d/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1521/product/media/images/prod/QC/20240903/21/53a8e389-a54a-332c-b288-a7dbeed8d632/1_org_zoom.jpg",
+            "videos": None,
+            "price": 46.51,
+            "available_qty": 0,
+            "options": None,
+            "variants": None,
+            "has_only_default_variant": True,
+            "reviews": 4,
+            "rating": 5.00,
+            "shipping_fee": 0.00,
+            "weight": None,
+            "length": None,
+            "width": None,
+            "height": None,
+        }
+        for key in target_product:
+            self.assertEqual(product[key], target_product[key])
+
+        print(product["description"])
+        StandardProduct(**product)
 
 
 if __name__ == '__main__':

@@ -1,0 +1,9 @@
+{
+    "isSuccess": true,
+    "statusCode": 200,
+    "error": null,
+    "result": "<div id=\"rich-content-wrapper\">\n <div>\n  <h1> <span> <span>Diş Beyazlatıcı set</span> </span> <br></h1> \n  <div> \n   <br>\n  </div>\n </div>\n</div>",
+    "headers": {
+        "tysidecarcachable": "ttl=90"
+    }
+}
