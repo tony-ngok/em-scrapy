@@ -163,31 +163,39 @@ class TrendyolProduit(scrapy.Spider):
             }
 
         specs = []
+        add_descr = ""
         weight = None
         length = None
         width = None
         height = None
         for spec in specs_infos:
             k = spec['key']['name']
-            v = spec['value']['name']
-            specs.append({
-                "name": k,
-                "value": v
-            })
+            if ('Talimatı' in k) or ('Talimatları' in k):
+                d = " ".join(spec['description'].strip().split())
+                if d:
+                    add_descr += f"<tr><th>{k}</th><td>{d}</td></tr>"
+            else:
+                v = spec['value']['name']
+                if k and v:
+                    specs.append({
+                        "name": k,
+                        "value": v
+                    })
 
-            kk = k.lower()
-            vv = v.lower()
-            if ('gramaj' in kk) or ('ağırlık' in kk):
-                weight = self.get_dim(vv, r'(\d+(?:\.\d+)?)\s?(g|kg|gr)\b')
-            elif ('derinlik' in kk):
-                length = self.get_dim(vv, r'(\d+(?:\.\d+)?)\s?(m|cm)\b')
-            elif ('genişlik' in kk):
-                width = self.get_dim(vv, r'(\d+(?:\.\d+)?)\s?(m|cm)\b')
-            elif ('yükseklik' in kk):
-                height = self.get_dim(vv, r'(\d+(?:\.\d+)?)\s?(m|cm)\b')
+                    kk = k.lower()
+                    vv = v.lower()
+                    if ('gramaj' in kk) or ('ağırlık' in kk):
+                        weight = self.get_dim(vv, r'(\d+(?:\.\d+)?)\s?(g|kg|gr)\b')
+                    elif ('derinlik' in kk):
+                        length = self.get_dim(vv, r'(\d+(?:\.\d+)?)\s?(m|cm)\b')
+                    elif ('genişlik' in kk):
+                        width = self.get_dim(vv, r'(\d+(?:\.\d+)?)\s?(m|cm)\b')
+                    elif ('yükseklik' in kk):
+                        height = self.get_dim(vv, r'(\d+(?:\.\d+)?)\s?(m|cm)\b')
 
         return {
             "specifications": specs if specs else None,
+            "add_descr": f'<table class="trendyol-descr">{add_descr}</table>' if add_descr else "",
             "weight": weight,
             "length": length,
             "width": width,
@@ -297,7 +305,7 @@ class TrendyolProduit(scrapy.Spider):
             "existence": existence,
             "title": prod_json['name'],
             "title_en": None,
-            "description": descr_info, # 稍后会变
+            "description": descr_info+spec_info["add_descr"], # 稍后会变
             "description_en": None,
             "summary": None,
             "sku": product_id,
@@ -305,7 +313,7 @@ class TrendyolProduit(scrapy.Spider):
             "brand": brand,
             "specifications": spec_info['specifications'],
             "categories": categories,
-            "images": ";".join(["https://cdn.dsmcdn.com/"+img for img in img_list]),
+            "images": ";".join(["https://cdn.dsmcdn.com"+img for img in img_list]),
             "videos": None, # 稍后会变
             "price": price,
             "available_qty": var_parse['available_qty'] if existence else 0,
