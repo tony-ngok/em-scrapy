@@ -189,14 +189,15 @@ class MongoPipeLine3:
             json.dump(dat, fn, ensure_ascii=False)
             fn.write('\n')
         
-        news_file = self.news_root.format(self.batch_no)
-        n_uos = get_uos(news_file)
-        if bulk_write(n_uos, self.coll, self.max_tries):
-            spider.logger.info(f"Batch {self.batch_no+1} create done")
-            print(f"Stage {self.batch_no+1}: create done")
-            os.remove(news_file)
-        else:
-            print("bulk_write (create) fail")
+        if self.readys % self.batch_size == 0:
+            news_file = self.news_root.format(self.batch_no)
+            n_uos = get_uos(news_file)
+            if bulk_write(n_uos, self.coll, self.max_tries):
+                spider.logger.info(f"Batch {self.batch_no+1} create done")
+                print(f"Stage {self.batch_no+1}: create done")
+                os.remove(news_file)
+            else:
+                print("bulk_write (create) fail")
 
     def process_item(self, item, spider: Spider):
         if self.switch:
