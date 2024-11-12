@@ -119,16 +119,16 @@ class MongoPipeLine3:
                     news_items.append(item)
         del items_buffer
 
-        if self.readys % self.batch_size == 0:
-            uos = get_uos(exists_file)
-            if bulk_write(uos, self.coll, self.max_tries):
-                spider.logger.info(f"Batch {self.batch_no+1} bulk_write (update) done")
-                print(f"Stage {self.batch_no+1}: bulk_write (update) done")
-                os.remove(exists_file)
-            else:
-                print("bulk_write (update) fail")
+        # 先更新已经存在的商品
+        uos = get_uos(exists_file)
+        if bulk_write(uos, self.coll, self.max_tries):
+            spider.logger.info(f"Batch {self.batch_no+1} bulk_write (update) done")
+            print(f"Stage {self.batch_no+1}: bulk_write (update) done")
+            os.remove(exists_file)
+        else:
+            print("bulk_write (update) fail")
 
-        # 分情况处理下一步请求
+        # 分情况处理下一步请求（要新建的商品）
         if news_items:
             for ni in news_items:
                 has_more_descr = ni["has_more_descr"]
@@ -140,26 +140,26 @@ class MongoPipeLine3:
                     headers = { **self.headers, "Referer": item['item']["url"] }
                     req_url2 = f"https://apigw.trendyol.com/discovery-web-productgw-service/api/product-detail/{pid}/html-content?channelId=1"
                     req2 = scrapy.Request(req_url2, headers=headers,
-                                        meta={ "cookiejar": item["i"] },
-                                        callback=self.parse_descr_page,
-                                        cb_kwargs={ "item": ni["item"], "video_id": video_id, "spider": spider })
+                                          meta={ "cookiejar": item["i"] },
+                                          callback=self.parse_descr_page,
+                                          cb_kwargs={ "batch": self.batch_no, "item": ni["item"], "video_id": video_id, "spider": spider })
                     spider.crawler.engine.crawl(req2)
                 elif video_id:
                     ni["item"]['description'] = descr_info if descr_info else None
                     headers = { **self.headers, "Referer": item['item']["url"] }
                     req_url3 = f'https://apigw.trendyol.com/discovery-web-websfxmediacenter-santral/video-content-by-id/{video_id}?channelId=1'
                     req3 = scrapy.Request(req_url3, headers=headers,
-                                        meta={ "cookiejar": item["i"] },
-                                        callback=self.parse_video,
-                                        cb_kwargs={ "item": ni["item"], "spider": spider })
+                                          meta={ "cookiejar": item["i"] },
+                                          callback=self.parse_video,
+                                          cb_kwargs={ "batch": self.batch_no, "item": ni["item"], "spider": spider })
                     spider.crawler.engine.crawl(req3)
                 else:
                     ni["item"]['description'] = descr_info if descr_info else None
-                    self.write_new(ni["item"], spider)
+                    self.write_new(self.batch_no, ni["item"], spider)
         else:
             self.batch_no += 1
 
-    def parse_descr_page(self, response: HtmlResponse, item: dict, video_id: str, spider: Spider):
+    def parse_descr_page(self, response: HtmlResponse, batch: int, item: dict, video_id: str, spider: Spider):
         i = response.meta['cookiejar']
         descr_info = item['description']
 
@@ -173,19 +173,19 @@ class MongoPipeLine3:
             req_url3 = f'https://apigw.trendyol.com/discovery-web-websfxmediacenter-santral/video-content-by-id/{video_id}?channelId=1'
             headers = { **self.headers, 'Referer': item["url"] }
             req3 = scrapy.Request(req_url3, headers=headers,
-                                meta={ "cookiejar": i },
-                                callback=self.parse_video,
-                                cb_kwargs={ "item": item, "spider": spider })
+                                  meta={ "cookiejar": i },
+                                  callback=self.parse_video,
+                                  cb_kwargs={ "batch": self.batch_no, "item": item, "spider": spider })
             spider.crawler.engine.crawl(req3)
         else:
-            self.write_new(item, spider)
+            self.write_new(batch, item, spider)
 
-    def parse_video(self, response: HtmlResponse, item: dict, spider: Spider):
+    def parse_video(self, response: HtmlResponse, batch: int, item: dict, spider: Spider):
         item['videos'] = response.json().get('result', {}).get('url')
-        self.write_new(item, spider)
+        self.write_new(batch, item, spider)
 
-    def write_new(self, dat: dict, spider: Spider):
-        news_file = self.news_root.format(self.batch_no)
+    def write_new(self, batch: int, dat: dict, spider: Spider):
+        news_file = self.news_root.format(batch)
         with open(news_file, 'a', encoding='utf-8') as fn:
             self.readys += 1
             json.dump(dat, fn, ensure_ascii=False)
