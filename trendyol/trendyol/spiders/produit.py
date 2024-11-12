@@ -368,7 +368,7 @@ class TrendyolProduit(scrapy.Spider):
         descr_info = item['description']
 
         descr_page = response.json()['result']
-        descr_page = '' if not descr_page else '<div class="trendyol-descr">'+descr_page.strip().replace("\n", "")+'</div>'
+        descr_page = '' if not descr_page else " ".join(descr_page.replace('id="rich-content-wrapper"', 'class="trendyol-descr"').strip().split())
 
         description = descr_info+descr_page
         item['description'] = description if description else None
