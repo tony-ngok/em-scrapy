@@ -90,8 +90,7 @@ class MongoPipeLine3:
         每批次中，将已存在（要更新）与不存在（要创建）的商品分开处理
         """
 
-        self.batch_no += 1
-        print("Stage", self.batch_no)
+        print("Stage", self.batch_no+1)
 
         # 将批次文件读入内存
         batchfile = self.file_root.format(self.batch_no)
@@ -120,8 +119,8 @@ class MongoPipeLine3:
 
         uos = get_uos(batchfile)
         if bulk_write(uos, self.coll, self.max_tries):
-            spider.logger.info(f"Batch {self.batch_no} bulk_write (update) done")
-            print(f"Stage {self.batch_no}: bulk_write (update) done")
+            spider.logger.info(f"Batch {self.batch_no+1} bulk_write (update) done")
+            print(f"Stage {self.batch_no+1}: bulk_write (update) done")
             os.remove(batchfile)
         else:
             print("bulk_write (update) fail")
@@ -153,14 +152,16 @@ class MongoPipeLine3:
             else:
                 ni["item"]['description'] = descr_info if descr_info else None
                 self.write_new(ni["item"])
-        
+
         n_uos = get_uos(batchfile)
         if bulk_write(n_uos, self.coll, self.max_tries):
-            spider.logger.info(f"Batch {self.batch_no} create done")
-            print(f"Stage {self.batch_no}: create done")
+            spider.logger.info(f"Batch {self.batch_no+1} create done")
+            print(f"Stage {self.batch_no+1}: create done")
             os.remove(batchfile)
         else:
             print("bulk_write (create) fail")
+
+        self.batch_no += 1
 
     def parse_descr_page(self, response: HtmlResponse, item: dict, video_id: str, spider: Spider):
         i = response.meta['cookiejar']
