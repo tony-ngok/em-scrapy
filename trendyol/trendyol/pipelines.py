@@ -163,14 +163,17 @@ class MongoPipeLine3:
                     self.write_new(batch, ni["item"], spider)
 
     def parse_descr_page(self, response: HtmlResponse, batch: int, item: dict, video_id: str, spider: Spider):
-        i = response.meta['cookiejar']
-        descr_info = item['description']
+        if response.status in range(200, 300):
+            i = response.meta['cookiejar']
+            descr_info = item['description']
 
-        descr_page = response.json()['result']
-        descr_page = '' if not descr_page else " ".join(descr_page.replace('id="rich-content-wrapper"', 'class="trendyol-descr"').strip().split())
+            descr_page = response.json()['result']
+            descr_page = '' if not descr_page else " ".join(descr_page.replace('id="rich-content-wrapper"', 'class="trendyol-descr"').strip().split())
 
-        description = descr_info+descr_page
-        item['description'] = description if description else None
+            description = descr_info+descr_page
+            item['description'] = description if description else None
+        else:
+            item['description'] = item['description'] if item['description'] else None
 
         if video_id:
             req_url3 = f'https://apigw.trendyol.com/discovery-web-websfxmediacenter-santral/video-content-by-id/{video_id}?channelId=1'
@@ -184,7 +187,8 @@ class MongoPipeLine3:
             self.write_new(batch, item, spider)
 
     def parse_video(self, response: HtmlResponse, batch: int, item: dict, spider: Spider):
-        item['videos'] = response.json().get('result', {}).get('url')
+        if response.status in range(200, 300):
+            item['videos'] = response.json().get('result', {}).get('url')
         self.write_new(batch, item, spider)
 
     def write_new(self, batch: int, dat: dict, spider: Spider):
