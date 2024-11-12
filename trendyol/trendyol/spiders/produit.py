@@ -186,7 +186,7 @@ class TrendyolProduit(scrapy.Spider):
                     vv = v.lower()
                     if ('gramaj' in kk) or ('ağırlık' in kk):
                         weight = self.get_dim(vv, r'(\d+(?:\.\d+)?)\s?(g|kg|gr)\b')
-                    elif ('derinlik' in kk):
+                    elif ('uzunluk' in kk):
                         length = self.get_dim(vv, r'(\d+(?:\.\d+)?)\s?(m|cm)\b')
                     elif ('genişlik' in kk):
                         width = self.get_dim(vv, r'(\d+(?:\.\d+)?)\s?(m|cm)\b')
