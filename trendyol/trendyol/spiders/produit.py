@@ -161,6 +161,7 @@ class TrendyolProduit(scrapy.Spider):
         if not specs_infos:
             return {
                 "specifications": None,
+                "add_descr": "",
                 "weight": None,
                 "length": None,
                 "width": None,
@@ -284,7 +285,6 @@ class TrendyolProduit(scrapy.Spider):
         descr_info = self.parse_descr_info(prod_json.get('descriptions', []))
         has_more_descr = prod_json.get('hasHtmlContent', False)
         spec_info = self.parse_specs(prod_json.get('attributes', []))
-        print(spec_info)
         video_id = prod_json.get('merchant', {}).get('videoContentId')
 
         var_info = prod_json.get('variants')
