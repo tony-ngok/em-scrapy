@@ -117,11 +117,11 @@ class MongoPipeLine3:
                     news_items.append(item)
         del items_buffer
 
-        uos = get_uos(batchfile)
+        uos = get_uos(exists_file)
         if bulk_write(uos, self.coll, self.max_tries):
             spider.logger.info(f"Batch {self.batch_no+1} bulk_write (update) done")
             print(f"Stage {self.batch_no+1}: bulk_write (update) done")
-            os.remove(batchfile)
+            os.remove(exists_file)
         else:
             print("bulk_write (update) fail")
 
@@ -153,11 +153,12 @@ class MongoPipeLine3:
                 ni["item"]['description'] = descr_info if descr_info else None
                 self.write_new(ni["item"])
 
-        n_uos = get_uos(batchfile)
+        news_file = self.news_root.format(self.batch_no)
+        n_uos = get_uos(news_file)
         if bulk_write(n_uos, self.coll, self.max_tries):
             spider.logger.info(f"Batch {self.batch_no+1} create done")
             print(f"Stage {self.batch_no+1}: create done")
-            os.remove(batchfile)
+            os.remove(news_file)
         else:
             print("bulk_write (create) fail")
 
