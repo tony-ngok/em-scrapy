@@ -86,7 +86,7 @@ class MongoPipeLine3:
         print("MongoDB connexion fail")
         spider.crawler.engine.close_spider("MongoDB connexion fail")
 
-    def process_batch(self, batch: int, spider: Spider):
+    def process_batch(self, batch: int):
         """
         每批次中，将已存在（要更新）与不存在（要创建）的商品分开处理
         """
@@ -125,7 +125,7 @@ class MongoPipeLine3:
         # 先更新已经存在的商品
         uos = get_uos(exists_file)
         if bulk_write(uos, self.coll, self.max_tries):
-            spider.logger.info(f"Batch {self.batch_no} bulk_write (update) done")
+            self.logger.info(f"Batch {self.batch_no} bulk_write (update) done")
             print(f"Stage {self.batch_no}: bulk_write (update) done")
             os.remove(exists_file)
         else:
@@ -147,8 +147,8 @@ class MongoPipeLine3:
                     req2 = scrapy.Request(req_url2, headers=headers,
                                           meta={ "cookiejar": item["i"] },
                                           callback=self.parse_descr_page,
-                                          cb_kwargs={ "batch": batch, "item": ni["item"], "video_id": video_id, "spider": spider })
-                    spider.crawler.engine.crawl(req2, spider)
+                                          cb_kwargs={ "batch": batch, "item": ni["item"], "video_id": video_id })
+                    self.crawler.engine.crawl(req2)
                 elif video_id:
                     ni["item"]['description'] = descr_info if descr_info else None
                     headers = { **self.headers, "Referer": item['item']["url"] }
@@ -156,13 +156,13 @@ class MongoPipeLine3:
                     req3 = scrapy.Request(req_url3, headers=headers,
                                           meta={ "cookiejar": item["i"] },
                                           callback=self.parse_video,
-                                          cb_kwargs={ "batch": batch, "item": ni["item"], "spider": spider })
-                    spider.crawler.engine.crawl(req3, spider)
+                                          cb_kwargs={ "batch": batch, "item": ni["item"] })
+                    self.crawler.engine.crawl(req3)
                 else:
                     ni["item"]['description'] = descr_info if descr_info else None
-                    self.write_new(batch, ni["item"], spider)
+                    self.write_new(batch, ni["item"])
 
-    def parse_descr_page(self, response: HtmlResponse, batch: int, item: dict, video_id: str, spider: Spider):
+    def parse_descr_page(self, response: HtmlResponse, batch: int, item: dict, video_id: str):
         if response.status in range(200, 300):
             i = response.meta['cookiejar']
             descr_info = item['description']
@@ -181,17 +181,17 @@ class MongoPipeLine3:
             req3 = scrapy.Request(req_url3, headers=headers,
                                   meta={ "cookiejar": i },
                                   callback=self.parse_video,
-                                  cb_kwargs={ "batch": batch, "item": item, "spider": spider })
-            spider.crawler.engine.crawl(req3, spider)
+                                  cb_kwargs={ "batch": batch, "item": item })
+            self.crawler.engine.crawl(req3)
         else:
-            self.write_new(batch, item, spider)
+            self.write_new(batch, item)
 
-    def parse_video(self, response: HtmlResponse, batch: int, item: dict, spider: Spider):
+    def parse_video(self, response: HtmlResponse, batch: int, item: dict):
         if response.status in range(200, 300):
             item['videos'] = response.json().get('result', {}).get('url')
-        self.write_new(batch, item, spider)
+        self.write_new(batch, item)
 
-    def write_new(self, batch: int, dat: dict, spider: Spider):
+    def write_new(self, batch: int, dat: dict):
         news_file = self.news_root.format(batch)
         with open(news_file, 'a', encoding='utf-8') as fn:
             self.readys += 1
@@ -201,7 +201,7 @@ class MongoPipeLine3:
         if self.readys % self.batch_size == 0:
             n_uos = get_uos(news_file)
             if bulk_write(n_uos, self.coll, self.max_tries):
-                spider.logger.info(f"Batch {self.batch_no} create done")
+                self.logger.info(f"Batch {self.batch_no} create done")
                 print(f"Stage {self.batch_no}: create done")
                 os.remove(news_file)
             else:
