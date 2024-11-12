@@ -104,82 +104,80 @@ class TestProduct(unittest.TestCase):
         print(product["description"])
         StandardProduct(**prod1)
 
-    # def test_available_product_2(self):
-    #     url = "https://www.trendyol.com/copierbond/ve-ge-a4-fotokopi-kagidi-80-g-500-lu-5-paket-2500ad-1-koli-p-6026206"
-    #     with open("trendyol_test/pages/Copier Bond A4 Kağıdı 80 g 5'li Paket 80 g 500 Yaprak 2500 Adet Fiyatı - Trendyol.html", "rb") as file:
-    #         body = file.read()
+    def test_available_product_2(self):
+        url = "https://www.trendyol.com/copierbond/ve-ge-a4-fotokopi-kagidi-80-g-500-lu-5-paket-2500ad-1-koli-p-6026206"
+        with open("trendyol_test/pages/Copier Bond A4 Kağıdı 80 g 5'li Paket 80 g 500 Yaprak 2500 Adet Fiyatı - Trendyol.html", "rb") as file:
+            body = file.read()
+        resp1 = HtmlResponse(
+            url=url,
+            body=body,
+        )
+        res1 = list(self.spider.parse(resp1))
+        self.assertEqual(len(res1), 1)
+        prod1 = res1[0]["item"]
 
-    #     response = HtmlResponse(
-    #         url=url,
-    #         body=body,
-    #     )
-    #     result = list(self.spider.parse(response, 0))
-    #     self.assertEqual(len(result), 1)
-    #     product = result[0]
+        has_more_descr = res1[0]["has_more_descr"]
+        video_id = res1[0]["video_id"]
+        self.assertTrue(has_more_descr)
+        self.assertIsNone(video_id)
 
-    #     target_product = {
-    #         "url": url,
-    #         "product_id": "01429775",
-    #         "existence": True,
-    #         "title": "A4ステーショナリーケース L型",
-    #         "sku": "23197143",
-    #         "brand": "和泉化成",
-    #         "specifications": [
-    #             {
-    #                 "name": "サイズ",
-    #                 "value": "A4"
-    #             },
-    #             {
-    #                 "name": "色",
-    #                 "value": "クリア"
-    #             },
-    #             {
-    #                 "name": "寸法(mm)",
-    #                 "value": "317×253×27"
-    #             },
-    #             {
-    #                 "name": "内容量",
-    #                 "value": "1個"
-    #             }
-    #         ],
-    #         "categories": "オフィスサプライ > 事務用品 > ファイリング > 収納ボックス/ケース > 書類ケース",
-    #         "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono23197143-160331-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono23197143-210302-02.jpg",
-    #         "videos": None,
-    #         "price": 1.17,
-    #         "available_qty": None,
-    #         "options": [{
-    #             "id": None,
-    #             "name": "品番"
-    #         }],
-    #         "variants": [{
-    #             "variant_id": "23197143",
-    #             "barcode": None,
-    #             "sku": "23197143",
-    #             "option_values": [{
-    #                 "option_id": None,
-    #                 "option_value_id": None,
-    #                 "option_name": "品番",
-    #                 "option_value": "3579"
-    #             }],
-    #             "images": None,
-    #             "price": 1.17,
-    #             "available_qty": None
-    #         }],
-    #         "reviews": 15,
-    #         "rating": 3.47,
-    #         "shipping_fee": 3.26,
-    #         "weight": None,
-    #         "length": 12.48,
-    #         "width": 9.96,
-    #         "height": 1.06
-    #     }
-    #     for key in target_product:
-    #         self.assertEqual(product[key], target_product[key])
+        url2 = "https://apigw.trendyol.com/discovery-web-productgw-service/api/product-detail/6026206/html-content?channelId=1"
+        with open("trendyol_test/pages/6026206.json", "rb") as file2:
+            body2 = file2.read()
+        response = HtmlResponse(
+            url=url2,
+            body=body2
+        )
+        result = list(self.spider.parse_descr_page(response, prod1, video_id))
+        self.assertEqual(len(result), 1)
+        product = result[0]
 
-    #     print(product["description"])
-    #     self.assertIn("<h4>注意</h4>", product["description"])
-    #     self.assertIn("<th>材質</th>", product["description"])
-    #     StandardProduct(**product)
+        target_product = {
+            "url": url,
+            "product_id": "6026206",
+            "existence": True,
+            "title": "Ve-ge A4 Fotokopi Kağıdı 80 G 500'lü 5 Paket 2500ad. 1 Koli.",
+            "sku": "6026206",
+            "upc": "8690460421297",
+            "brand": "Copierbond",
+            "specifications": [
+                {
+                    "name": "Kağıt Boyutu",
+                    "value": "A4"
+                },
+                {
+                    "name": "Gramaj",
+                    "value": "80 gr"
+                },
+                {
+                    "name": "Kağıt Tipi",
+                    "value": "Beyaz Fotokopi Kağıdı"
+                },
+                {
+                    "name": "Okula Dönüş",
+                    "value": "Ortaokul"
+                }
+            ],
+            "categories": "Copierbond > Kırtasiye Ofis Malzemeleri > Kırtasiye Kağıt Ürünleri > Fotokopi & Baskı Kağıtları",
+            "images": "https://cdn.dsmcdn.com/ty1591/prod/QC/20241023/11/94095151-57f3-3f6e-bf80-8f5d2cc441fb/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1590/prod/QC/20241023/11/e677a0db-1d21-351b-86e7-a26d38d2332d/1_org_zoom.jpg",
+            "videos": None,
+            "price": 14.53,
+            "available_qty": None,
+            "options": None,
+            "variants": None,
+            "reviews": 17531,
+            "rating": 4.70,
+            "shipping_fee": 0.00,
+            "weight": 0.18,
+            "length": None,
+            "width": None,
+            "height": None
+        }
+        for key in target_product:
+            self.assertEqual(product[key], target_product[key])
+
+        print(product["description"])
+        StandardProduct(**product)
 
     # def test_available_product_3(self):
     #     url = "https://www.monotaro.com/g/06199072/"
@@ -255,8 +253,8 @@ class TestProduct(unittest.TestCase):
     #                 "value": "1個"
     #             }
     #         ],
-    #         "categories": "測定・測量用品 > 測定用品 > 環境測定(自然環境/安全環境) > 酸素濃度計",
-    #         "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono44631495-230815-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono44631495-230815-04.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono44631495-230815-06.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono44631495-240318-04.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono44631495-240318-06.jpg",
+    #         "categories": "Copierbond > Kırtasiye Ofis Malzemeleri > Kırtasiye Kağıt Ürünleri > Fotokopi & Baskı Kağıtları",
+    #         "images": "",
     #         "videos": None,
     #         "price": 176.07,
     #         "available_qty": None,
