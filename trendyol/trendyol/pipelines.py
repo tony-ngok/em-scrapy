@@ -207,7 +207,7 @@ class MongoPipeLine3:
             else:
                 print("bulk_write (create) fail")
 
-    def process_item(self, item, spider: Spider):
+    def process_item(self, item, spider):
         if self.switch:
             self.switch = False
 
@@ -221,14 +221,14 @@ class MongoPipeLine3:
             f.write("\n")
 
         if self.records % self.batch_size == 0:
-            self.process_batch(self.batch_no, spider)
+            self.process_batch(self.batch_no)
             self.switch = True
 
         return item
 
-    def close_spider(self, spider: Spider):
+    def close_spider(self, spider):
         if not self.switch:
-            self.process_batch(self.batch_no, spider)
+            self.process_batch(self.batch_no)
 
         if not update_sold_out(self.coll, self.max_tries, self.days_bef):
             print("Update sold out fail")
