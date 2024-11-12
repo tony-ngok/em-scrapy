@@ -394,7 +394,7 @@ class TestProduct(unittest.TestCase):
                     "value": "Hacim Verici"
                 }
             ],
-            "categories": "オフィスサプライ > 食品・飲料 > 水/ミネラルウォーター > ミネラルウォーター",
+            "categories": "L'Oreal Paris > Kozmetik > Makyaj > Göz Makyajı > Maskara",
             "images": "https://cdn.dsmcdn.com/ty1535/product/media/images/prod/QC/20240910/11/327a3f0f-e206-3f1c-865a-b026f4db0d8d/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1534/product/media/images/prod/QC/20240910/11/f0d3b4d3-e13b-39aa-a375-1b09170c3f65/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1535/product/media/images/prod/QC/20240910/11/b9c94ff8-5a7a-33ea-8e22-c0ec7f0bb962/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1535/product/media/images/prod/QC/20240910/11/0b4f0b4a-0200-3543-93b3-640c4cc685df/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1534/product/media/images/prod/QC/20240910/11/28803917-4a40-3aa0-80c9-5857f5163260/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1535/product/media/images/prod/QC/20240910/11/cb3cc353-1927-3c73-9f9f-350c8a0a7c5f/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1535/product/media/images/prod/QC/20240910/11/3688cbf7-d349-3f73-8f73-7c2f753ab174/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1533/product/media/images/prod/QC/20240910/11/47ce4fd9-7225-3723-a7b9-c561dc11853b/1_org_zoom.jpg",
             "videos": None,
             "price": 11.96,
@@ -403,7 +403,7 @@ class TestProduct(unittest.TestCase):
             "variants": None,
             "reviews": 619,
             "rating": 4.22,
-            "shipping_fee": 1.16,
+            "shipping_fee": 0.00,
             "weight": None,
             "length": None,
             "width": None,
