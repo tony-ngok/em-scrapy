@@ -52,7 +52,7 @@ class MongoPipeLine3:
         self.headers = headers
 
         self.records = 0 # 抓取到的数据量
-        # self.ready = 0 # 已经处理好准备上传的数据
+        self.readys = 0 # 已经处理好准备上传的数据
         self.batch_no = 0
         self.switch = False # 开始批量处理前关闭，写入数据库后打开
 
@@ -112,40 +112,50 @@ class MongoPipeLine3:
         with open(exists_file, 'a', encoding='utf-8') as fe:
             for item in items_buffer: # 已存在的商品写入另一个文件
                 if item['item']["product_id"] in ids_in_db:
-                    # self.ready += 1
+                    self.readys += 1
                     json.dump(item['item'], fe, ensure_ascii=False)
                     fe.write('\n')
                 else:
                     news_items.append(item)
         del items_buffer
 
-        # 分情况处理下一步请求
-        for ni in news_items:
-            has_more_descr = ni["has_more_descr"]
-            video_id = ni["video_id"]
-            pid = ni["item"]["product_id"]
-            descr_info = ni["item"]["description"]
-
-            if has_more_descr:
-                headers = { **self.headers, "Referer": item['item']["url"] }
-                req_url2 = f"https://apigw.trendyol.com/discovery-web-productgw-service/api/product-detail/{pid}/html-content?channelId=1"
-                req2 = scrapy.Request(req_url2, headers=headers,
-                                      meta={ "cookiejar": item["i"] },
-                                      callback=self.parse_descr_page,
-                                      cb_kwargs={ "item": ni["item"], "video_id": video_id, "spider": spider })
-                spider.crawler.engine.crawl(req2)
-            elif video_id:
-                ni["item"]['description'] = descr_info if descr_info else None
-                headers = { **self.headers, "Referer": item['item']["url"] }
-                req_url3 = f'https://apigw.trendyol.com/discovery-web-websfxmediacenter-santral/video-content-by-id/{video_id}?channelId=1'
-                req3 = scrapy.Request(req_url3, headers=headers,
-                                     meta={ "cookiejar": item["i"] },
-                                     callback=self.parse_video,
-                                     cb_kwargs={ "item": ni["item"] })
-                spider.crawler.engine.crawl(req3)
+        if self.readys % self.batch_size == 0:
+            uos = get_uos(exists_file)
+            if bulk_write(uos, self.coll, self.max_tries):
+                spider.logger.info(f"Batch {self.batch_no+1} bulk_write (update) done")
+                print(f"Stage {self.batch_no+1}: bulk_write (update) done")
+                os.remove(exists_file)
             else:
-                ni["item"]['description'] = descr_info if descr_info else None
-                self.write_new(ni["item"])
+                print("bulk_write (update) fail")
+
+        # 分情况处理下一步请求
+        if news_items:
+            for ni in news_items:
+                has_more_descr = ni["has_more_descr"]
+                video_id = ni["video_id"]
+                pid = ni["item"]["product_id"]
+                descr_info = ni["item"]["description"]
+
+                if has_more_descr:
+                    headers = { **self.headers, "Referer": item['item']["url"] }
+                    req_url2 = f"https://apigw.trendyol.com/discovery-web-productgw-service/api/product-detail/{pid}/html-content?channelId=1"
+                    req2 = scrapy.Request(req_url2, headers=headers,
+                                        meta={ "cookiejar": item["i"] },
+                                        callback=self.parse_descr_page,
+                                        cb_kwargs={ "item": ni["item"], "video_id": video_id, "spider": spider })
+                    spider.crawler.engine.crawl(req2)
+                elif video_id:
+                    ni["item"]['description'] = descr_info if descr_info else None
+                    headers = { **self.headers, "Referer": item['item']["url"] }
+                    req_url3 = f'https://apigw.trendyol.com/discovery-web-websfxmediacenter-santral/video-content-by-id/{video_id}?channelId=1'
+                    req3 = scrapy.Request(req_url3, headers=headers,
+                                        meta={ "cookiejar": item["i"] },
+                                        callback=self.parse_video,
+                                        cb_kwargs={ "item": ni["item"], "spider": spider })
+                    spider.crawler.engine.crawl(req3)
+                else:
+                    ni["item"]['description'] = descr_info if descr_info else None
+                    self.write_new(ni["item"], spider)
 
     def parse_descr_page(self, response: HtmlResponse, item: dict, video_id: str, spider: Spider):
         i = response.meta['cookiejar']
@@ -163,32 +173,22 @@ class MongoPipeLine3:
             req3 = scrapy.Request(req_url3, headers=headers,
                                 meta={ "cookiejar": i },
                                 callback=self.parse_video,
-                                cb_kwargs={ "item": item })
+                                cb_kwargs={ "item": item, "spider": spider })
             spider.crawler.engine.crawl(req3)
         else:
-            self.write_new(item)
+            self.write_new(item, spider)
 
-    def parse_video(self, response: HtmlResponse, item: dict):
+    def parse_video(self, response: HtmlResponse, item: dict, spider: Spider):
         item['videos'] = response.json().get('result', {}).get('url')
-        self.write_new(item)
+        self.write_new(item, spider)
 
-    def write_new(self, dat: dict):
+    def write_new(self, dat: dict, spider: Spider):
         news_file = self.news_root.format(self.batch_no)
         with open(news_file, 'a', encoding='utf-8') as fn:
-            # self.ready += 1
+            self.readys += 1
             json.dump(dat, fn, ensure_ascii=False)
             fn.write('\n')
-
-    def upload_batch(self, spider: Spider):
-        exists_file = self.exists_root.format(self.batch_no)
-        uos = get_uos(exists_file)
-        if bulk_write(uos, self.coll, self.max_tries):
-            spider.logger.info(f"Batch {self.batch_no+1} bulk_write (update) done")
-            print(f"Stage {self.batch_no+1}: bulk_write (update) done")
-            os.remove(exists_file)
-        else:
-            print("bulk_write (update) fail")
-
+        
         news_file = self.news_root.format(self.batch_no)
         n_uos = get_uos(news_file)
         if bulk_write(n_uos, self.coll, self.max_tries):
@@ -197,8 +197,6 @@ class MongoPipeLine3:
             os.remove(news_file)
         else:
             print("bulk_write (create) fail")
-
-        self.batch_no += 1
 
     def process_item(self, item, spider: Spider):
         if self.switch:
@@ -215,7 +213,7 @@ class MongoPipeLine3:
 
         if self.records % self.batch_size == 0:
             self.process_batch(spider)
-            self.upload_batch(spider)
+            self.batch_no += 1
             self.switch = True
 
         return item
@@ -223,7 +221,6 @@ class MongoPipeLine3:
     def close_spider(self, spider: Spider):
         if not self.switch:
             self.process_batch(spider)
-            self.upload_batch(spider)
 
         if not update_sold_out(self.coll, self.max_tries, self.days_bef):
             print("Update sold out fail")
