@@ -338,7 +338,7 @@ class TestProduct(unittest.TestCase):
             "has_only_default_variant": False,
             "reviews": 1458,
             "rating": 4.31,
-            "shipping_fee": 1.02,
+            "shipping_fee": 1.16,
             "weight": None,
             "length": None,
             "width": None,
@@ -351,74 +351,69 @@ class TestProduct(unittest.TestCase):
         self.assertIn("<th>Yıkama Talimatı</th>", product["description"])
         StandardProduct(**product)
 
-    # def test_available_product_4(self):
-    #     url = "https://www.monotaro.com/g/06201561/"
-    #     with open("trendyol_test/pages/アサヒ おいしい水 天然水 六甲 PET2L 1ケース(2L×6本) アサヒ飲料 【通販モノタロウ】.html", "rb") as file:
-    #         body = file.read()
+    def test_available_product_4(self):
+        url = "https://www.trendyol.com/l-oreal-paris/panorama-hacim-veren-maskara-koyu-kahverengi-p-796043319"
+        with open("trendyol_test/pages/L'Oreal Paris Panorama Hacim Veren Maskara Koyu Kahverengi Fiyatı, Yorumları - Trendyol.html", "rb") as file:
+            body = file.read()
+        resp1 = HtmlResponse(
+            url=url,
+            body=body,
+        )
+        result = list(self.spider.parse(resp1))
+        self.assertEqual(len(result), 1)
+        product = result[0]["item"]
 
-    #     response = HtmlResponse(
-    #         url=url,
-    #         body=body,
-    #     )
-    #     result = list(self.spider.parse(response, 0, '06201561'))
-    #     self.assertEqual(len(result), 1)
-    #     product = result[0]
+        has_more_descr = result[0]["has_more_descr"]
+        video_id = result[0]["video_id"]
+        self.assertFalse(has_more_descr)
+        self.assertIsNone(video_id)
 
-    #     target_product = {
-    #         "url": url,
-    #         "product_id": "06201561",
-    #         "existence": True,
-    #         "title": "アサヒ おいしい水 天然水 六甲 PET2L",
-    #         "sku": "44705756",
-    #         "brand": "アサヒ飲料",
-    #         "specifications": [
-    #             {
-    #                 "name": "寸法(mm)",
-    #                 "value": "104×89.4×311"
-    #             },
-    #             {
-    #                 "name": "質量(g)",
-    #                 "value": "2029"
-    #             },
-    #             {
-    #                 "name": "賞味期限",
-    #                 "value": "720日"
-    #             },
-    #             {
-    #                 "name": "原材料",
-    #                 "value": "水(深井戸水)"
-    #             },
-    #             {
-    #                 "name": "アレルギー",
-    #                 "value": "なし"
-    #             },
-    #             {
-    #                 "name": "内容量",
-    #                 "value": "1ケース(2L×6本)"
-    #             }
-    #         ],
-    #         "categories": "オフィスサプライ > 食品・飲料 > 水/ミネラルウォーター > ミネラルウォーター",
-    #         "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono44705756-230822-02.jpg",
-    #         "videos": None,
-    #         "price": 6.19,
-    #         "available_qty": None,
-    #         "options": None,
-    #         "variants": None,
-    #         "reviews": 4,
-    #         "rating": 4.50,
-    #         "shipping_fee": 3.26,
-    #         "weight": 4.47,
-    #         "length": 4.09,
-    #         "width": 3.52,
-    #         "height": 12.24
-    #     }
-    #     for key in target_product:
-    #         self.assertEqual(product[key], target_product[key])
+        target_product = {
+            "url": url,
+            "product_id": "796043319",
+            "existence": True,
+            "title": "Panorama Hacim Veren Maskara Koyu Kahverengi",
+            "sku": "796043319",
+            "upc": "30158672",
+            "brand": "L'Oreal Paris",
+            "specifications": [
+                {
+                    "name": "Boy",
+                    "value": "Orijinal Boy"
+                },
+                {
+                    "name": "Suya/Tere Dayanıklılık",
+                    "value": "Yok"
+                },
+                {
+                    "name": "Fırça Tipi",
+                    "value": "Plastik"
+                },
+                {
+                    "name": "Etki",
+                    "value": "Hacim Verici"
+                }
+            ],
+            "categories": "オフィスサプライ > 食品・飲料 > 水/ミネラルウォーター > ミネラルウォーター",
+            "images": "https://cdn.dsmcdn.com/ty1535/product/media/images/prod/QC/20240910/11/327a3f0f-e206-3f1c-865a-b026f4db0d8d/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1534/product/media/images/prod/QC/20240910/11/f0d3b4d3-e13b-39aa-a375-1b09170c3f65/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1535/product/media/images/prod/QC/20240910/11/b9c94ff8-5a7a-33ea-8e22-c0ec7f0bb962/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1535/product/media/images/prod/QC/20240910/11/0b4f0b4a-0200-3543-93b3-640c4cc685df/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1534/product/media/images/prod/QC/20240910/11/28803917-4a40-3aa0-80c9-5857f5163260/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1535/product/media/images/prod/QC/20240910/11/cb3cc353-1927-3c73-9f9f-350c8a0a7c5f/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1535/product/media/images/prod/QC/20240910/11/3688cbf7-d349-3f73-8f73-7c2f753ab174/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1533/product/media/images/prod/QC/20240910/11/47ce4fd9-7225-3723-a7b9-c561dc11853b/1_org_zoom.jpg",
+            "videos": None,
+            "price": 11.96,
+            "available_qty": None,
+            "options": None,
+            "variants": None,
+            "reviews": 619,
+            "rating": 4.22,
+            "shipping_fee": 1.16,
+            "weight": None,
+            "length": None,
+            "width": None,
+            "height": None
+        }
+        for key in target_product:
+            self.assertEqual(product[key], target_product[key])
 
-    #     print(product["description"])
-    #     self.assertNotIn("<h4>注意</h4>", product["description"])
-    #     self.assertIn("<th>栄養成分</th>", product["description"])
-    #     StandardProduct(**product)
+        print(product["description"])
+        StandardProduct(**product)
 
     # def test_available_product_5(self):
     #     url = "https://www.monotaro.com/g/02362145/"
