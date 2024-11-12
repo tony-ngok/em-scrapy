@@ -268,7 +268,7 @@ class TrendyolProduit(scrapy.Spider):
             print("No images:", response.url)
             return
 
-        price_raw = prod_json.get('price', {}).get('sellingPrice', {}).get('value')
+        price_raw = prod_json.get('price', {}).get('discountedPrice', {}).get('value')
         if price_raw is None:
             print("No price:", response.url)
             return
