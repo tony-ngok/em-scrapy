@@ -52,7 +52,7 @@ class MongoPipeLine3:
         self.headers = headers
 
         self.records = 0 # 抓取到的数据量
-        self.ready = 0 # 已经处理好准备上传的数据
+        # self.ready = 0 # 已经处理好准备上传的数据
         self.batch_no = 0
         self.switch = False # 开始批量处理前关闭，写入数据库后打开
 
@@ -112,7 +112,7 @@ class MongoPipeLine3:
         with open(exists_file, 'a', encoding='utf-8') as fe:
             for item in items_buffer: # 已存在的商品写入另一个文件
                 if item['item']["product_id"] in ids_in_db:
-                    self.ready += 1
+                    # self.ready += 1
                     json.dump(item['item'], fe, ensure_ascii=False)
                     fe.write('\n')
                 else:
@@ -147,9 +147,6 @@ class MongoPipeLine3:
                 ni["item"]['description'] = descr_info if descr_info else None
                 self.write_new(ni["item"])
 
-        if self.records % 1000 == 0:
-            self.upload_news(spider)
-
     def parse_descr_page(self, response: HtmlResponse, item: dict, video_id: str, spider: Spider):
         i = response.meta['cookiejar']
         descr_info = item['description']
@@ -178,11 +175,11 @@ class MongoPipeLine3:
     def write_new(self, dat: dict):
         news_file = self.news_root.format(self.batch_no)
         with open(news_file, 'a', encoding='utf-8') as fn:
-            self.records += 1
+            # self.ready += 1
             json.dump(dat, fn, ensure_ascii=False)
             fn.write('\n')
 
-    def upload_news(self, spider: Spider):
+    def upload_batch(self, spider: Spider):
         exists_file = self.exists_root.format(self.batch_no)
         uos = get_uos(exists_file)
         if bulk_write(uos, self.coll, self.max_tries):
@@ -218,6 +215,7 @@ class MongoPipeLine3:
 
         if self.records % self.batch_size == 0:
             self.process_batch(spider)
+            self.upload_batch(spider)
             self.switch = True
 
         return item
@@ -225,6 +223,7 @@ class MongoPipeLine3:
     def close_spider(self, spider: Spider):
         if not self.switch:
             self.process_batch(spider)
+            self.upload_batch(spider)
 
         if not update_sold_out(self.coll, self.max_tries, self.days_bef):
             print("Update sold out fail")
