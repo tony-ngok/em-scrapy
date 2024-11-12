@@ -985,6 +985,118 @@ class TestProduct(unittest.TestCase):
         self.assertIn("<th>用途</th>", product["description"])
         StandardProduct(**product)
 
+    def test_available_product_8(self):
+        url = "https://www.monotaro.com/g/01398403/"
+        with open("monotaro_test/pages/ラミネートフィルム 150μm モノタロウ 【通販モノタロウ】.html", "rb") as file:
+            body = file.read()
+
+        response = HtmlResponse(
+            url=url,
+            body=body,
+        )
+        result = list(self.spider.parse(response, 0, '01398403'))
+        self.assertEqual(len(result), 1)
+        product = result[0]
+
+        target_product = {
+            "url": url,
+            "product_id": "01398403",
+            "existence": True,
+            "title": "ラミネートフィルム 150μm",
+            "sku": "21718472",
+            "brand": "モノタロウ",
+            "specifications": [
+                {
+                    "name": "タイプ",
+                    "value": "光沢"
+                },
+                {
+                    "name": "厚さ(μm)",
+                    "value": "150"
+                },
+                {
+                    "name": "内容量",
+                    "value": "1箱(100枚)"
+                }
+            ],
+            "categories": "オフィスサプライ > 事務用品 > オフィス機器 > ラミネーター > ラミネートフィルム",
+            "images": "https://jp.images-monotaro.com/Monotaro3/pi/full/mono21718472-231219-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono21718472-160713-04.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono21718472-231219-04.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono70248842-171205-04.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono70248842-231219-02.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono70248842-231219-04.jpg;https://jp.images-monotaro.com/Monotaro3/pi/full/mono70248842-231219-06.jpg",
+            "videos": "https://www.youtube.com/embed/J_iAmS6-ElI",
+            "price": 12.99,
+            "available_qty": None,
+            "options": [
+                {
+                    "id": None,
+                    "name": "品番"
+                },
+                {
+                    "id": None,
+                    "name": "サイズ"
+                }
+            ],
+            "variants": [
+                {
+                    "variant_id": "21718472",
+                    "barcode": None,
+                    "sku": "21718472",
+                    "option_values": [
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "品番",
+                            "option_value": "LF-15A4"
+                        },
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "サイズ",
+                            "option_value": "A4"
+                        }
+                    ],
+                    "images": None,
+                    "price": 12.99,
+                    "available_qty": None
+                },
+                {
+                    "variant_id": "70248842",
+                    "barcode": None,
+                    "sku": "70248842",
+                    "option_values": [
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "品番",
+                            "option_value": "-"
+                        },
+                        {
+                            "option_id": None,
+                            "option_value_id": None,
+                            "option_name": "サイズ",
+                            "option_value": "A3"
+                        }
+                    ],
+                    "images": None,
+                    "price": 23.43,
+                    "available_qty": None
+                }
+            ],
+            "reviews": 41,
+            "rating": 4.61,
+            "shipping_fee": 3.26,
+            "weight": None,
+            "length": None,
+            "width": None,
+            "height": None
+        }
+        for key in target_product:
+            self.assertEqual(product[key], target_product[key])
+
+        print(product["description"])
+        self.assertIn("<h4>注意</h4>", product["description"])
+        self.assertIn("<th>用途</th>", product["description"])
+        self.assertIn("<th>材質</th>", product["description"])
+        StandardProduct(**product)
+
     def test_unavailable_product(self):
         url = "https://www.monotaro.com/g/06431439/"
         with open("monotaro_test/pages/AP-708209 お医者さんの(R)首サポーター Fit 1個 アルファックス 【通販モノタロウ】.html", "rb") as file:
