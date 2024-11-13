@@ -13,10 +13,9 @@ import time
 from itemadapter import ItemAdapter
 import pymongo
 from pymongo.errors import ConnectionFailure, NetworkTimeout
-import scrapy
 from scrapy import Spider
-from scrapy.crawler import Crawler
-from scrapy.http import HtmlResponse
+from scrapy.crawler import Crawler, CrawlerProcess
+from scrapy.utils.project import get_project_settings
 
 from utils.mongodb.mongo_utils import bulk_write, exists_ids, get_uos, update_sold_out
 
@@ -38,7 +37,7 @@ class MongoPipeLine3:
     news_root = "news{}.txt"
 
     def __init__(self, uri: str, db_name: str, coll_name: str, batch_size: int, max_tries: int, days_bef: int,
-                 has_vars: bool, has_recensions: bool, has_ship_fee: bool, has_ship_date: bool, headers: dict):
+                 has_vars: bool, has_recensions: bool, has_ship_fee: bool, has_ship_date: bool):
         self.uri = uri
         self.db_name = db_name
         self.coll_name = coll_name
@@ -49,7 +48,6 @@ class MongoPipeLine3:
         self.has_recensions = has_recensions
         self.has_ship_fee = has_ship_fee
         self.has_ship_date = has_ship_date
-        self.headers = headers
 
         self.records = 0 # 抓取到的数据量
         self.readys = 0 # 已经处理好准备上传的数据
@@ -69,7 +67,6 @@ class MongoPipeLine3:
             has_recensions=crawler.settings.getbool("HAS_RECENSIONS", False),
             has_ship_fee=crawler.settings.getbool("HAS_SHIP_FEE", False),
             has_ship_date=crawler.settings.getbool("HAS_SHIP_DATE", False), # 是否有送达日期（意味着配送日数会变）
-            headers=crawler.settings.getdict("HEADERS", {})
         )
 
     def open_spider(self, spider: Spider):
@@ -115,12 +112,12 @@ class MongoPipeLine3:
         exists_file = self.exists_root.format(batch)
         news_items = []
         with open(exists_file, 'a', encoding='utf-8') as fe:
-            for item in items_buffer: # 已存在的商品写入另一个文件
-                if item['item']["product_id"] in ids_in_db:
+            for item in items_buffer: # 无需更多请求（已存在或一次已提取完全）的商品写入一个临时文件
+                if (item['item']["product_id"] in ids_in_db) or (not (item["video_id"] or item["has_more_descr"])):
                     self.readys += 1
                     json.dump(item['item'], fe, ensure_ascii=False)
                     fe.write('\n')
-                else:
+                else: # 其他数据进入另一个临时文件
                     news_items.append(item)
         del items_buffer
 
@@ -137,78 +134,10 @@ class MongoPipeLine3:
 
         # 分情况处理下一步请求（要新建的商品）
         if news_items:
-            for ni in news_items:
-                has_more_descr = ni["has_more_descr"]
-                video_id = ni["video_id"]
-                pid = ni["item"]["product_id"]
-                descr_info = ni["item"]["description"]
-
-                if has_more_descr:
-                    headers = { **self.headers, "Referer": item['item']["url"] }
-                    req_url2 = f"https://apigw.trendyol.com/discovery-web-productgw-service/api/product-detail/{pid}/html-content?channelId=1"
-                    req2 = scrapy.Request(req_url2, headers=headers,
-                                          meta={ "cookiejar": item["i"] },
-                                          callback=self.parse_descr_page,
-                                          cb_kwargs={ "batch": batch, "item": ni["item"], "video_id": video_id })
-                    self.spider.crawler.engine.crawl(req2)
-                elif video_id:
-                    ni["item"]['description'] = descr_info if descr_info else None
-                    headers = { **self.headers, "Referer": item['item']["url"] }
-                    req_url3 = f'https://apigw.trendyol.com/discovery-web-websfxmediacenter-santral/video-content-by-id/{video_id}?channelId=1'
-                    req3 = scrapy.Request(req_url3, headers=headers,
-                                          meta={ "cookiejar": item["i"] },
-                                          callback=self.parse_video,
-                                          cb_kwargs={ "batch": batch, "item": ni["item"] })
-                    self.spider.crawler.engine.crawl(req3)
-                else:
-                    ni["item"]['description'] = descr_info if descr_info else None
-                    self.write_new(batch, ni["item"])
-
-    def parse_descr_page(self, response: HtmlResponse, batch: int, item: dict, video_id: str):
-        if response.status in range(200, 300):
-            i = response.meta['cookiejar']
-            descr_info = item['description']
-
-            descr_page = response.json()['result']
-            descr_page = '' if not descr_page else " ".join(descr_page.replace('id="rich-content-wrapper"', 'class="trendyol-descr"').strip().split())
-
-            description = descr_info+descr_page
-            item['description'] = description if description else None
-        else:
-            item['description'] = item['description'] if item['description'] else None
-
-        if video_id:
-            req_url3 = f'https://apigw.trendyol.com/discovery-web-websfxmediacenter-santral/video-content-by-id/{video_id}?channelId=1'
-            headers = { **self.headers, 'Referer': item["url"] }
-            req3 = scrapy.Request(req_url3, headers=headers,
-                                  meta={ "cookiejar": i },
-                                  callback=self.parse_video,
-                                  cb_kwargs={ "batch": batch, "item": item })
-            self.spider.crawler.engine.crawl(req3)
-        else:
-            self.write_new(batch, item)
-
-    def parse_video(self, response: HtmlResponse, batch: int, item: dict):
-        if response.status in range(200, 300):
-            item['videos'] = response.json().get('result', {}).get('url')
-        self.write_new(batch, item)
-
-    def write_new(self, batch: int, dat: dict):
-        news_file = self.news_root.format(batch)
-        with open(news_file, 'a', encoding='utf-8') as fn:
-            self.readys += 1
-            json.dump(dat, fn, ensure_ascii=False)
-            fn.write('\n')
-
-        if self.readys % self.batch_size == 0:
-            print("self.readys", self.readys)
-            n_uos = get_uos(news_file)
-            if bulk_write(n_uos, self.coll, self.max_tries):
-                self.spider.logger.info(f"Batch {self.batch_no} create done")
-                print(f"Stage {self.batch_no}: create done")
-                os.remove(news_file)
-            else:
-                print("bulk_write (create) fail")
+            settings = { **get_project_settings(), 'LOG_FILE': 'trendyol_news.log' }
+            process = CrawlerProcess(settings)
+            process.crawl('trendyol_prod_dat', batch=batch, referer=item['item']['url'], start_urls=news_items)
+            process.start()
 
     def process_item(self, item, spider):
         if self.switch:
@@ -224,9 +153,7 @@ class MongoPipeLine3:
             f.write("\n")
 
         if self.records % self.batch_size == 0:
-            self.spider.crawler.engine.pause()
             self.process_batch(self.batch_no)
-            self.spider.crawler.engine.unpause()
             self.switch = True
 
         return item
@@ -237,5 +164,80 @@ class MongoPipeLine3:
 
         if not update_sold_out(self.coll, self.max_tries, self.days_bef):
             print("Update sold out fail")
+
+        self.client.close()
+
+
+class MongoNewsPipeLine:
+    file_root = "news{}.txt"
+
+    def __init__(self, uri: str, db_name: str, coll_name: str, batch_size: int, max_tries: int, days_bef: int,
+                 has_vars: bool, has_recensions: bool, has_ship_fee: bool, has_ship_date: bool, batch: int):
+        self.uri = uri
+        self.db_name = db_name
+        self.coll_name = coll_name
+        self.batch_size = batch_size
+        self.max_tries = max_tries
+        self.days_bef = days_bef # 数据每隔数日更新一次
+        self.has_vars = has_vars
+        self.has_recensions = has_recensions
+        self.has_ship_fee = has_ship_fee
+        self.has_ship_date = has_ship_date
+
+    @classmethod
+    def from_crawler(cls, crawler: Crawler):
+        return cls(
+            uri=crawler.settings.get("MONGO_URI"),
+            db_name=crawler.settings.get("MONGO_DB_NAME"),
+            coll_name=crawler.settings.get("MONGO_COLL_NAME", "products"),
+            batch_size=crawler.settings.getint("MONGO_BATCH_SIZE", 1000),
+            max_tries=crawler.settings.getint("MONGO_MAX_TRIES", 10),
+            days_bef=crawler.settings.getint("DAYS_BEF", 7),
+            has_vars=crawler.settings.getbool("HAS_VARS", False),
+            has_recensions=crawler.settings.getbool("HAS_RECENSIONS", False),
+            has_ship_fee=crawler.settings.getbool("HAS_SHIP_FEE", False),
+            has_ship_date=crawler.settings.getbool("HAS_SHIP_DATE", False), # 是否有送达日期（意味着配送日数会变）
+        )
+
+    def open_spider(self, spider: Spider):
+        for i in range(1, self.max_tries+1):
+            try:
+                self.client = pymongo.MongoClient(self.uri, serverSelectionTimeoutMS=60000)
+                self.coll = self.client[self.db_name][self.coll_name]
+                print(f"Database connexion: {self.db_name}.{self.coll_name}" )
+                return
+            except (ConnectionFailure, NetworkTimeout) as c_err:
+                spider.logger.error(f"{repr(c_err)} ({i}/{self.max_tries})")
+                time.sleep(2)
+
+        print("MongoDB connexion fail")
+        spider.crawler.engine.close_spider("MongoDB connexion fail")
+
+    def process_item(self, item, spider: Spider):
+        dat = ItemAdapter(item).asdict()
+
+        batch = spider.batch
+
+        # 连续写1000条记录到文件
+        batchfile = self.file_root.format(batch)
+        with open(batchfile, 'a', encoding='utf-8') as f:
+            json.dump(dat, f, ensure_ascii=False)
+            f.write("\n")
+
+        return item
+
+    def close_spider(self, spider: Spider):
+        batch = spider.batch
+        print("Stage", batch+1)
+        batchfile = self.file_root.format(batch)
+
+        uos = get_uos(batchfile, self.has_vars, self.has_recensions, self.has_ship_fee, self.has_ship_date)
+        if bulk_write(uos, self.coll, self.max_tries):
+            spider.logger.info(f"Batch {batch+1} done")
+            print("Stage", batch+1, "done")
+            os.remove(batchfile)
+        else:
+            print("bulk_write fail")
+        self.switch = True
 
         self.client.close()
