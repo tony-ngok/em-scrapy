@@ -152,7 +152,7 @@ class MongoPipeLine3:
                     ni["item"]['description'] = descr_info if descr_info else None
                     self.write_new(ni["item"], self.pending_news)
 
-    def parse_descr_page(self, response: HtmlResponse, item: dict, video_id: str, news_count: int):
+    def parse_descr_page(self, response: HtmlResponse, item: dict, video_id: str):
         i = response.meta['cookiejar']
         print(f"{(i+1):_}".replace("_", "."), response.url)
 
@@ -173,18 +173,18 @@ class MongoPipeLine3:
             req3 = scrapy.Request(req_url3, headers=headers,
                                   meta={ "cookiejar": i },
                                   callback=self.parse_video,
-                                  cb_kwargs={ "item": item, "news_count": news_count })
+                                  cb_kwargs={ "item": item })
             self.spider.crawler.engine.crawl(req3)
         else:
-            self.write_new(item, news_count)
+            self.write_new(item)
 
-    def parse_video(self, response: HtmlResponse, item: dict, news_count: int):
+    def parse_video(self, response: HtmlResponse, item: dict):
         i = response.meta['cookiejar']
         print(f"{(i+1):_}".replace("_", "."), response.url)
 
         if response.status in range(200, 300):
             item['videos'] = response.json().get('result', {}).get('url')
-        self.write_new(item, news_count)
+        self.write_new(item)
 
     def write_new(self, dat: dict):
         self.new_buffer.append(dat)
