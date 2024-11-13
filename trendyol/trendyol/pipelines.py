@@ -188,6 +188,7 @@ class MongoPipeLine3:
 
     def write_new(self, dat: dict, news_count: int):
         self.new_buffer.append(dat)
+        print(self.batch_no, len(self.new_buffer))
 
         # 每抓完一批就处理
         if len(self.new_buffer) >= news_count:
