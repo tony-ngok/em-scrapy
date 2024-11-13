@@ -185,19 +185,20 @@ class MongoPipeLine3:
         self.write_new(item)
 
     def write_new(self, dat: dict):
-        self.new_buffer.append(dat)
+        with self.lock:
+            self.new_buffer.append(dat)
 
-        # 每抓完一批就处理
-        if len(self.new_buffer) >= self.batch_size:
-            new_buffer = self.new_buffer
-            self.new_buffer = []
+            # 每抓完一批就处理
+            if len(self.new_buffer) >= self.batch_size:
+                new_buffer = self.new_buffer
+                self.new_buffer = []
 
-            n_uos = get_uos(new_buffer)
-            if bulk_write(n_uos, self.coll, self.max_tries):
-                self.spider.logger.info(f"Batch {self.batch_no} create done")
-                print(f"Stage {self.batch_no}: create done")
-            else:
-                print("bulk_write (create) fail")
+                n_uos = get_uos(new_buffer)
+                if bulk_write(n_uos, self.coll, self.max_tries):
+                    self.spider.logger.info(f"Batch {self.batch_no} create done")
+                    print(f"Stage {self.batch_no}: create done")
+                else:
+                    print("bulk_write (create) fail")
 
     def process_item(self, item, spider):
         dat = ItemAdapter(item).asdict()
@@ -212,6 +213,14 @@ class MongoPipeLine3:
     def close_spider(self):
         if self.item_buffer:
             self.process_batch()
+        
+        if self.new_buffer:
+            n_uos = get_uos(self.new_buffer)
+            if bulk_write(n_uos, self.coll, self.max_tries):
+                self.spider.logger.info(f"Batch {self.batch_no} create done")
+                print(f"Stage {self.batch_no}: create done")
+            else:
+                print("bulk_write (create) fail")
 
         if not update_sold_out(self.coll, self.max_tries, self.days_bef):
             print("Update sold out fail")
