@@ -223,7 +223,9 @@ class MongoPipeLine3:
             f.write("\n")
 
         if self.records % self.batch_size == 0:
+            self.spider.crawler.engine.pause()
             self.process_batch(self.batch_no)
+            self.spider.crawler.engine.unpause()
             self.switch = True
 
         return item

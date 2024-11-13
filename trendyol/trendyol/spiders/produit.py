@@ -263,7 +263,7 @@ class TrendyolProduit(scrapy.Spider):
     def parse(self, response: HtmlResponse):
         i = response.meta['cookiejar']
         print(f"{(i+1):_}/{len(self.start_urls):_}".replace("_", "."), response.url)
-        
+
         if response.status == 404:
             print("Product not found", response.url)
             return
