@@ -201,6 +201,7 @@ class MongoPipeLine3:
             fn.write('\n')
 
         if self.readys % self.batch_size == 0:
+            print("self.readys", self.readys)
             n_uos = get_uos(news_file)
             if bulk_write(n_uos, self.coll, self.max_tries):
                 self.spider.logger.info(f"Batch {self.batch_no} create done")
