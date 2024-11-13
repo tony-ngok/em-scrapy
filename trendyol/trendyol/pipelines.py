@@ -49,7 +49,6 @@ class MongoPipeLine3:
         self.item_buffer = [] # 数据缓冲区
         self.new_buffer = [] # 要上传的新数据
         self.lock = Lock()
-        self.pending_news = 0
 
     @classmethod
     def from_crawler(cls, crawler: Crawler):
@@ -123,8 +122,7 @@ class MongoPipeLine3:
 
         # 分情况处理下一步请求（要新建的商品）
         if news:
-            self.pending_news += len(news)
-            print(self.pending_news, "new item(s)")
+            print(len(news), "new item(s)")
             for ni in news:
                 has_more_descr = ni["has_more_descr"]
                 video_id = ni["video_id"]
@@ -190,7 +188,7 @@ class MongoPipeLine3:
         self.new_buffer.append(dat)
 
         # 每抓完一批就处理
-        if len(self.new_buffer) >= self.pending_news:
+        if len(self.new_buffer) >= self.batch_size:
             new_buffer = self.new_buffer
             self.new_buffer = []
 
