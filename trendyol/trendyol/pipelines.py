@@ -233,11 +233,11 @@ class MongoNewsPipeLine:
 
         uos = get_uos(batchfile, self.has_vars, self.has_recensions, self.has_ship_fee, self.has_ship_date)
         if bulk_write(uos, self.coll, self.max_tries):
-            spider.logger.info(f"Batch {batch+1} done")
+            spider.logger.info(f"Batch {batch+1} (create) done")
             print("Stage", batch+1, "done")
             os.remove(batchfile)
         else:
-            print("bulk_write fail")
+            print("bulk_write (create) fail")
         self.switch = True
 
         self.client.close()
