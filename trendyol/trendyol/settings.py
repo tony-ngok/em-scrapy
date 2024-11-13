@@ -99,7 +99,7 @@ HTTPERROR_ALLOWED_CODES = [400, 404]
 RETRY_TIMES = 10000
 
 # https://docs.scrapy.org/en/2.11/topics/downloader-middleware.html?highlight=retry
-RETRY_HTTP_CODES = [301, 401, 403, 408, 429, 500, 502, 503, 504, 522, 524]
+RETRY_HTTP_CODES = [401, 403, 408, 429, 500, 502, 503, 504, 522, 524]
 
 MONGO_URI = "mongodb://mongouser:XSzY1nHbxi@34.172.204.102:27017"
 MONGO_DB_NAME = "trendyol"

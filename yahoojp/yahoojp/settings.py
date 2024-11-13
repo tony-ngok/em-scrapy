@@ -26,8 +26,6 @@ ROBOTSTXT_OBEY = False
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
 DOWNLOAD_DELAY = 1
-RETRY_TIMES = 10000
-RETRY_HTTP_CODES = [489, 403, 500, 504]
 # The download delay setting will honor only one of:
 #CONCURRENT_REQUESTS_PER_DOMAIN = 16
 #CONCURRENT_REQUESTS_PER_IP = 16
@@ -94,9 +92,19 @@ REQUEST_FINGERPRINTER_IMPLEMENTATION = "2.7"
 TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 FEED_EXPORT_ENCODING = "utf-8"
 
-FEED_EXPORTERS = {
-    'csv': 'yahoojp.exporters.CsvCustomSeperator'
-}
+HTTPERROR_ALLOWED_CODES = [400, 404]
+RETRY_TIMES = 10000
 
-LOG_FILE = 'scrapy.log'
-LOG_LEVEL = 'DEBUG'
+# https://docs.scrapy.org/en/2.11/topics/downloader-middleware.html?highlight=retry
+RETRY_HTTP_CODES = [401, 403, 408, 429, 489, 500, 502, 503, 504, 522, 524]
+
+MONGO_URI = "mongodb://mongouser:XSzY1nHbxi@34.172.204.102:27017"
+MONGO_DB_NAME = "muji"
+# DAYS_BEF = 1
+
+HAS_VARS = True
+HAS_RECENSIONS = True
+HAS_SHIP_FEE = True
+
+LOG_FILE = 'muji.log'
+LOG_LEVEL = 'INFO'
