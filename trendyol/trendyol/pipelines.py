@@ -150,7 +150,7 @@ class MongoPipeLine3:
                     self.spider.crawler.engine.crawl(req3)
                 else:
                     ni["item"]['description'] = descr_info if descr_info else None
-                    self.write_new(ni["item"], self.pending_news)
+                    self.write_new(ni["item"])
 
     def parse_descr_page(self, response: HtmlResponse, item: dict, video_id: str):
         i = response.meta['cookiejar']
