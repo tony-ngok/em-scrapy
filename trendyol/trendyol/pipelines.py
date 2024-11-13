@@ -153,8 +153,10 @@ class MongoPipeLine3:
                     self.write_new(ni["item"], news_count)
 
     def parse_descr_page(self, response: HtmlResponse, item: dict, video_id: str, news_count: int):
+        i = response.meta['cookiejar']
+        print(f"{(i+1):_}".replace("_", "."), response.url)
+
         if response.status in range(200, 300):
-            i = response.meta['cookiejar']
             descr_info = item['description']
 
             descr_page = response.json()['result']
@@ -177,6 +179,9 @@ class MongoPipeLine3:
             self.write_new(item, news_count)
 
     def parse_video(self, response: HtmlResponse, item: dict, news_count: int):
+        i = response.meta['cookiejar']
+        print(f"{(i+1):_}".replace("_", "."), response.url)
+
         if response.status in range(200, 300):
             item['videos'] = response.json().get('result', {}).get('url')
         self.write_new(item, news_count)
