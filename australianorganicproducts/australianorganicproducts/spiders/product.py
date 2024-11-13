@@ -140,6 +140,8 @@ class AopProduct(scrapy.Spider):
 
         if not existence:
             available_qty = 0
+            if variants:
+                variants[0]['available_qty'] = 0
         else:
             available_qty = var_list[0].get('inventory_quantity') or None
             if isinstance(available_qty, int) and available_qty < 0:
