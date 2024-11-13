@@ -172,7 +172,7 @@ class MongoNewsPipeLine:
     file_root = "news{}.txt"
 
     def __init__(self, uri: str, db_name: str, coll_name: str, batch_size: int, max_tries: int, days_bef: int,
-                 has_vars: bool, has_recensions: bool, has_ship_fee: bool, has_ship_date: bool, batch: int):
+                 has_vars: bool, has_recensions: bool, has_ship_fee: bool, has_ship_date: bool):
         self.uri = uri
         self.db_name = db_name
         self.coll_name = coll_name
