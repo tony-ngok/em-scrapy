@@ -45,17 +45,22 @@ def gen_uo(dat: dict, has_vars: bool = False, has_recensions: bool = False, has_
     return UpdateOne(query, {"$set": updates, "$setOnInsert": dat }, upsert=True)
 
 
-def get_uos(dateiname: str, has_vars: bool = False, has_recensions: bool = False, has_ship_fee: bool = False, has_ship_date: bool = False):
+def get_uos(dateiname: str | list[dict], has_vars: bool = False, has_recensions: bool = False, has_ship_fee: bool = False, has_ship_date: bool = False):
     """
     积累所有upsert操作，以便批量处理
     """
 
-    if os.path.exists(dateiname):
-        with open(dateiname, 'r', encoding='utf-8') as f:
-            ops = [gen_uo(json.loads(line.strip()), has_vars, has_recensions, has_ship_fee, has_ship_date)
-                   for line in f if line.strip()]
-        return ops
-    return []
+    if isinstance(dateiname, str):
+        if os.path.exists(dateiname):
+            with open(dateiname, 'r', encoding='utf-8') as f:
+                ops = [gen_uo(json.loads(line.strip()), has_vars, has_recensions, has_ship_fee, has_ship_date)
+                    for line in f if line.strip()]
+            return ops
+        return []
+    elif isinstance(dateiname, list):
+        if dateiname:
+            return [gen_uo(dat, has_vars, has_recensions, has_ship_fee, has_ship_date) for dat in dateiname]
+        return []
 
 
 def bulk_write(ops: list[UpdateOne], coll: Collection, max_tries: int) -> bool:
