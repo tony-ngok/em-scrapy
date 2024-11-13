@@ -93,7 +93,7 @@ TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 FEED_EXPORT_ENCODING = "utf-8"
 
 LOG_FILE = 'trendyol.log'
-LOG_LEVEL = 'DEBUG'
+LOG_LEVEL = 'INFO'
 
 HTTPERROR_ALLOWED_CODES = [400, 404]
 RETRY_TIMES = 10000
