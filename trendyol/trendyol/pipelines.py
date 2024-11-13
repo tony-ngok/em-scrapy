@@ -7,6 +7,7 @@
 # useful for handling different item types with a single interface
 
 import time
+from threading import Lock
 
 from itemadapter import ItemAdapter
 import pymongo
@@ -30,11 +31,6 @@ class MongoPipeLine3:
     更新商品时，仅需发送商品URL本身请求即可
     """
 
-    # 临时存取抓到的批量数据
-    file_root = "products{}.txt"
-    exists_root = "exists{}.txt"
-    news_root = "news{}.txt"
-
     def __init__(self, uri: str, db_name: str, coll_name: str, batch_size: int, max_tries: int, days_bef: int,
                  has_vars: bool, has_recensions: bool, has_ship_fee: bool, has_ship_date: bool, headers: dict):
         self.uri = uri
@@ -52,6 +48,8 @@ class MongoPipeLine3:
         self.batch_no = 0
         self.item_buffer = [] # 数据缓冲区
         self.new_buffer = [] # 要上传的新数据
+        self.lock = Lock()
+        self.pending_news = 0
 
     @classmethod
     def from_crawler(cls, crawler: Crawler):
@@ -90,14 +88,15 @@ class MongoPipeLine3:
         每批次中，将已存在（要更新）与不存在（要创建）的商品分开处理
         """
 
-        if not self.item_buffer:
-            return
+        with self.lock:
+            if not self.item_buffer:
+                return
 
-        self.batch_no += 1
-        print("Stage", self.batch_no)
+            self.batch_no += 1
+            print("Stage", self.batch_no)
 
-        item_buffer = self.item_buffer
-        self.item_buffer = [] # 清空缓冲区以备下一批
+            item_buffer = self.item_buffer
+            self.item_buffer = [] # 清空缓冲区以备下一批
 
         # 该批次中已存在数据库中的商品号
         ids = [item['item']["product_id"] for item in item_buffer]
@@ -114,17 +113,18 @@ class MongoPipeLine3:
                 news.append(item)
 
         # 先更新已经存在的商品
-        uos = get_uos(exists, self.has_vars, self.has_recensions, self.has_ship_fee)
-        if bulk_write(uos, self.coll, self.max_tries):
-            self.spider.logger.info(f"Batch {self.batch_no} bulk_write (update) done")
-            print(f"Stage {self.batch_no}: bulk_write (update) done")
-        else:
-            print("bulk_write (update) fail")
+        if exists:
+            uos = get_uos(exists, self.has_vars, self.has_recensions, self.has_ship_fee)
+            if bulk_write(uos, self.coll, self.max_tries):
+                self.spider.logger.info(f"Batch {self.batch_no} bulk_write (update) done")
+                print(f"Stage {self.batch_no}: bulk_write (update) done")
+            else:
+                print("bulk_write (update) fail")
 
         # 分情况处理下一步请求（要新建的商品）
-        news_count = len(news)
-        print(news_count, "new item(s)")
         if news:
+            self.pending_news += len(news)
+            print(self.pending_news, "new item(s)")
             for ni in news:
                 has_more_descr = ni["has_more_descr"]
                 video_id = ni["video_id"]
@@ -137,7 +137,7 @@ class MongoPipeLine3:
                     req2 = scrapy.Request(req_url2, headers=headers,
                                           meta={ "cookiejar": item["i"] },
                                           callback=self.parse_descr_page,
-                                          cb_kwargs={ "item": ni["item"], "video_id": video_id, "news_count": news_count })
+                                          cb_kwargs={ "item": ni["item"], "video_id": video_id })
                     self.spider.crawler.engine.crawl(req2)
                 elif video_id:
                     ni["item"]['description'] = descr_info if descr_info else None
@@ -146,11 +146,11 @@ class MongoPipeLine3:
                     req3 = scrapy.Request(req_url3, headers=headers,
                                           meta={ "cookiejar": item["i"] },
                                           callback=self.parse_video,
-                                          cb_kwargs={ "item": ni["item"], "news_count": news_count })
+                                          cb_kwargs={ "item": ni["item"] })
                     self.spider.crawler.engine.crawl(req3)
                 else:
                     ni["item"]['description'] = descr_info if descr_info else None
-                    self.write_new(ni["item"], news_count)
+                    self.write_new(ni["item"], self.pending_news)
 
     def parse_descr_page(self, response: HtmlResponse, item: dict, video_id: str, news_count: int):
         i = response.meta['cookiejar']
@@ -186,12 +186,11 @@ class MongoPipeLine3:
             item['videos'] = response.json().get('result', {}).get('url')
         self.write_new(item, news_count)
 
-    def write_new(self, dat: dict, news_count: int):
+    def write_new(self, dat: dict):
         self.new_buffer.append(dat)
-        print(self.batch_no, len(self.new_buffer), len(self.item_buffer))
 
         # 每抓完一批就处理
-        if len(self.new_buffer) >= news_count:
+        if len(self.new_buffer) >= self.pending_news:
             new_buffer = self.new_buffer
             self.new_buffer = []
 
@@ -204,7 +203,8 @@ class MongoPipeLine3:
 
     def process_item(self, item, spider):
         dat = ItemAdapter(item).asdict()
-        self.item_buffer.append(dat)
+        with self.lock:
+            self.item_buffer.append(dat)
 
         if len(self.item_buffer) >= self.batch_size:
             self.process_batch()
