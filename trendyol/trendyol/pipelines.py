@@ -209,7 +209,7 @@ class MongoPipeLine3:
             else:
                 print("bulk_write (create) fail")
 
-    def process_item(self, item):
+    def process_item(self, item, spider):
         if self.switch:
             self.switch = False
 
