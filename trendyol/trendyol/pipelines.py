@@ -9,6 +9,7 @@
 import json
 import os
 import time
+from threading import Lock
 
 from bs4 import BeautifulSoup, Tag
 from itemadapter import ItemAdapter
@@ -62,6 +63,7 @@ class MongoPipeLine3:
         self.switch = False # 开始批量处理前关闭，写入数据库后打开
         self.switch_exist = False
         self.switch_new = False
+        self.lock = Lock()
 
     @classmethod
     def from_crawler(cls, crawler: Crawler):
@@ -109,7 +111,7 @@ class MongoPipeLine3:
             for line in fb:
                 if line.strip():
                     items_buffer.append(json.loads(line.strip()))
-        os.remove(batchfile)
+        # os.remove(batchfile)
 
         # 该批次中已存在数据库中的商品号
         ids = [item['item']["product_id"] for item in items_buffer]
@@ -118,39 +120,47 @@ class MongoPipeLine3:
         # 区分已存在及待创建的商品
         news_items = []
         for item in items_buffer: # 已存在的商品写入另一个文件
-            if item['item']["product_id"] in ids_in_db:
+            if (item['item']["product_id"] in ids_in_db) or (not (item['video_id'] or item['has_more_descr'])):
                 self.write_exist(item['item'])
             else:
                 news_items.append(item)
+        del items_buffer
 
         # 分情况处理下一步请求（要新建的商品）
         if news_items:
-            for ni in news_items:
+            print("Process new items...")
+            for j, ni in enumerate(news_items):
                 has_more_descr = ni["has_more_descr"]
                 video_id = ni["video_id"]
                 pid = ni["item"]["product_id"]
                 descr_info = ni["item"]["description"]
 
                 if has_more_descr:
+                    print(j, "has_more_descr")
                     headers = { **self.headers, "Referer": item['item']["url"] }
                     req_url2 = f"https://apigw.trendyol.com/discovery-web-productgw-service/api/product-detail/{pid}/html-content?channelId=1"
                     req2 = scrapy.Request(req_url2, headers=headers,
                                           meta={ "cookiejar": item["i"] },
                                           callback=self.parse_descr_page,
-                                          cb_kwargs={ "item": ni["item"], "video_id": video_id })
-                    self.spider.crawler.engine.crawl(req2)
+                                          cb_kwargs={ "item": ni["item"], "video_id": video_id, "frm": "process_batch", "j": j })
+                    with self.lock:
+                        self.spider.crawler.engine.crawl(req2)
                 elif video_id:
+                    print(j, "video_id")
                     ni["item"]['description'] = descr_info if descr_info else None
                     headers = { **self.headers, "Referer": item['item']["url"] }
                     req_url3 = f'https://apigw.trendyol.com/discovery-web-websfxmediacenter-santral/video-content-by-id/{video_id}?channelId=1'
                     req3 = scrapy.Request(req_url3, headers=headers,
                                           meta={ "cookiejar": item["i"] },
                                           callback=self.parse_video,
-                                          cb_kwargs={ "item": ni["item"] })
-                    self.spider.crawler.engine.crawl(req3)
+                                          cb_kwargs={ "item": ni["item"], "frm": "process_batch", "j": j })
+                    with self.lock:
+                        self.spider.crawler.engine.crawl(req3)
                 else:
+                    print(j)
                     ni["item"]['description'] = descr_info if descr_info else None
-                    self.write_new(ni["item"])
+                    self.write_new(ni["item"], "process_batch", j)
+        print("process_batch done")
 
     def write_exist(self, dat: dict):
         if self.switch_exist:
@@ -176,7 +186,8 @@ class MongoPipeLine3:
                 print("Update: bulk_write fail")
             self.switch_exist = True
 
-    def parse_descr_page(self, response: HtmlResponse, item: dict, video_id: str):
+    def parse_descr_page(self, response: HtmlResponse, item: dict, video_id: str, frm: str, j: int):
+        print(j, frm, "parse_descr_page")
         if response.status in range(200, 300):
             i = response.meta['cookiejar']
             descr_info = item['description']
@@ -194,10 +205,11 @@ class MongoPipeLine3:
             req3 = scrapy.Request(req_url3, headers=headers,
                                   meta={ "cookiejar": i },
                                   callback=self.parse_video,
-                                  cb_kwargs={ "item": item })
-            self.spider.crawler.engine.crawl(req3)
+                                  cb_kwargs={ "item": item, "frm": "parse_descr_page", "j": j })
+            with self.lock:
+                self.spider.crawler.engine.crawl(req3)
         else:
-            self.write_new(item)
+            self.write_new(item, "parse_descr_page", j)
 
     def clean_descr(self, descr_txt):
         descr = ""
@@ -223,12 +235,14 @@ class MongoPipeLine3:
 
         return descr
 
-    def parse_video(self, response: HtmlResponse, item: dict):
+    def parse_video(self, response: HtmlResponse, item: dict, frm: str, j: int):
+        print(j, frm, "parse_video")
         if response.status in range(200, 300):
             item['videos'] = response.json().get('result', {}).get('url')
-        self.write_new(item)
+        self.write_new(item, "parse_video", j)
 
-    def write_new(self, dat: dict):
+    def write_new(self, dat: dict, frm: str, j: int):
+        print(j, frm, "write_new")
         if self.switch_new:
             self.switch_new = False
 
@@ -236,7 +250,6 @@ class MongoPipeLine3:
         self.news += 1
 
         with open(news_file, 'a', encoding='utf-8') as fn:
-            self.news += 1
             json.dump(dat, fn, ensure_ascii=False)
             fn.write('\n')
 
