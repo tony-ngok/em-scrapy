@@ -122,6 +122,7 @@ class MongoPipeLine3:
                 self.write_exist(item['item'])
             else:
                 news_items.append(item)
+        del items_buffer
 
         # 分情况处理下一步请求（要新建的商品）
         if news_items:
