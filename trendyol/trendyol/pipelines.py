@@ -9,6 +9,7 @@
 import json
 import os
 import time
+from threading import Lock
 
 from bs4 import BeautifulSoup, Tag
 from itemadapter import ItemAdapter
@@ -62,6 +63,7 @@ class MongoPipeLine3:
         self.switch = False # 开始批量处理前关闭，写入数据库后打开
         self.switch_exist = False
         self.switch_new = False
+        self.lock = Lock()
 
     @classmethod
     def from_crawler(cls, crawler: Crawler):
@@ -141,7 +143,8 @@ class MongoPipeLine3:
                                           meta={ "cookiejar": item["i"] },
                                           callback=self.parse_descr_page,
                                           cb_kwargs={ "item": ni["item"], "video_id": video_id, "frm": "process_batch", "j": j })
-                    self.spider.crawler.engine.crawl(req2)
+                    with self.lock:
+                        self.spider.crawler.engine.crawl(req2)
                 elif video_id:
                     print(j, "video_id")
                     ni["item"]['description'] = descr_info if descr_info else None
@@ -151,7 +154,8 @@ class MongoPipeLine3:
                                           meta={ "cookiejar": item["i"] },
                                           callback=self.parse_video,
                                           cb_kwargs={ "item": ni["item"], "frm": "process_batch", "j": j })
-                    self.spider.crawler.engine.crawl(req3)
+                    with self.lock:
+                        self.spider.crawler.engine.crawl(req3)
                 else:
                     print(j)
                     ni["item"]['description'] = descr_info if descr_info else None
