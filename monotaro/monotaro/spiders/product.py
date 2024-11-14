@@ -75,7 +75,9 @@ class MonotaroProduct(scrapy.Spider):
                 elif child.name == 'br':
                     basic_descr += '<br>'
                 else:
-                    basic_descr += self.get_basic_descr(child)
+                    sub_descr = self.get_basic_descr(child)
+                    if sub_descr:
+                        basic_descr += f'<{child.name}>{sub_descr}</{child.name}>'
 
         return basic_descr
 
