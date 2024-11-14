@@ -10,6 +10,7 @@ import json
 import os
 import time
 
+from bs4 import BeautifulSoup, Tag
 from itemadapter import ItemAdapter
 import pymongo
 from pymongo.errors import ConnectionFailure, NetworkTimeout
@@ -181,8 +182,7 @@ class MongoPipeLine3:
             descr_info = item['description']
 
             descr_page = response.json()['result']
-            descr_page = '' if not descr_page else " ".join(descr_page.replace('id="rich-content-wrapper"', 'class="trendyol-descr"').strip().split())
-
+            descr_page = self.clean_descr(BeautifulSoup(descr_page, 'html.parser')) if descr_page else ""
             description = descr_info+descr_page
             item['description'] = description if description else None
         else:
@@ -198,6 +198,30 @@ class MongoPipeLine3:
             self.spider.crawler.engine.crawl(req3)
         else:
             self.write_new(item)
+
+    def clean_descr(self, descr_txt):
+        descr = ""
+        if isinstance(descr_txt, BeautifulSoup):
+            descr_txt = descr_txt.div
+
+        for child in descr_txt.children:
+            if isinstance(child, str):
+                descr += " ".join(child.strip().split())
+            elif isinstance(child, Tag):
+                if child.name in {'a', 'script', 'data-src'}:
+                    continue
+                elif child.name == 'img':
+                    src = child.get('data_src', '').replace("{{cdn_url}}", "https://cdn.dsmcdn.com")
+                    if src:
+                        descr += f'<img src="{src}">'
+                elif child.name == 'br':
+                    descr += '<br>'
+                else:
+                    sub_descr = self.clean_descr(child)
+                    if sub_descr:
+                        descr += f'<{child.name}>{sub_descr}</{child.name}>'
+
+        return descr
 
     def parse_video(self, response: HtmlResponse, item: dict):
         if response.status in range(200, 300):
