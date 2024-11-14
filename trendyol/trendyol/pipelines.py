@@ -128,7 +128,6 @@ class MongoPipeLine3:
         if news_items:
             print("Process new items...")
             for i, ni in enumerate(news_items):
-                print(i)
                 has_more_descr = ni["has_more_descr"]
                 video_id = ni["video_id"]
                 pid = ni["item"]["product_id"]
@@ -140,7 +139,7 @@ class MongoPipeLine3:
                     req2 = scrapy.Request(req_url2, headers=headers,
                                           meta={ "cookiejar": item["i"] },
                                           callback=self.parse_descr_page,
-                                          cb_kwargs={ "item": ni["item"], "video_id": video_id })
+                                          cb_kwargs={ "item": ni["item"], "video_id": video_id, "i": i })
                     self.spider.crawler.engine.crawl(req2)
                 elif video_id:
                     ni["item"]['description'] = descr_info if descr_info else None
@@ -149,14 +148,15 @@ class MongoPipeLine3:
                     req3 = scrapy.Request(req_url3, headers=headers,
                                           meta={ "cookiejar": item["i"] },
                                           callback=self.parse_video,
-                                          cb_kwargs={ "item": ni["item"] })
+                                          cb_kwargs={ "item": ni["item"], "i": i })
                     self.spider.crawler.engine.crawl(req3)
                 else:
                     ni["item"]['description'] = descr_info if descr_info else None
-                    self.write_new(ni["item"])
+                    self.write_new(ni["item"], i)
         print("process_batch done")
 
-    def write_exist(self, dat: dict):
+    def write_exist(self, dat: dict, i: int):
+        print(i, "write_exist")
         if self.switch_exist:
             self.switch_exist = False
 
@@ -180,7 +180,8 @@ class MongoPipeLine3:
                 print("Update: bulk_write fail")
             self.switch_exist = True
 
-    def parse_descr_page(self, response: HtmlResponse, item: dict, video_id: str):
+    def parse_descr_page(self, response: HtmlResponse, item: dict, video_id: str, i: int):
+        print(i, "parse_descr_page")
         if response.status in range(200, 300):
             i = response.meta['cookiejar']
             descr_info = item['description']
@@ -232,7 +233,8 @@ class MongoPipeLine3:
             item['videos'] = response.json().get('result', {}).get('url')
         self.write_new(item)
 
-    def write_new(self, dat: dict):
+    def write_new(self, dat: dict, i: int):
+        print(i, "write_new")
         if self.switch_new:
             self.switch_new = False
 
