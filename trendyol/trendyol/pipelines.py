@@ -237,7 +237,6 @@ class MongoPipeLine3:
         self.news += 1
 
         with open(news_file, 'a', encoding='utf-8') as fn:
-            self.news += 1
             json.dump(dat, fn, ensure_ascii=False)
             fn.write('\n')
 
