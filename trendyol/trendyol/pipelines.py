@@ -206,7 +206,8 @@ class MongoPipeLine3:
                                   meta={ "cookiejar": i },
                                   callback=self.parse_video,
                                   cb_kwargs={ "item": item, "frm": "parse_descr_page", "j": j })
-            self.spider.crawler.engine.crawl(req3)
+            with self.lock:
+                self.spider.crawler.engine.crawl(req3)
         else:
             self.write_new(item, "parse_descr_page", j)
 
