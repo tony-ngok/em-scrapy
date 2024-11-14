@@ -81,7 +81,7 @@ class MongoPipeLine1:
             self.batch_no += 1
             print("Stage", self.batch_no)
 
-            uos = get_uos(batchfile)
+            uos = get_uos(batchfile, self.has_vars, self.has_recensions, self.has_ship_fee, self.has_ship_date)
             if bulk_write(uos, self.coll, self.max_tries):
                 spider.logger.info(f"Batch {self.batch_no} done")
                 print("Stage", self.batch_no, "done")
@@ -98,14 +98,14 @@ class MongoPipeLine1:
             self.batch_no += 1
             print("Stage", self.batch_no)
 
-            uos = get_uos(batchfile)
+            uos = get_uos(batchfile, self.has_vars, self.has_recensions, self.has_ship_fee, self.has_ship_date)
             if bulk_write(uos, self.coll, self.max_tries):
                 spider.logger.info(f"Batch {self.batch_no} done")
                 print("Stage", self.batch_no, "done")
                 os.remove(batchfile)
             else:
                 spider.logger.error(f"Batch {self.batch_no} fail")
-                print("Bulk write fail")
+                print("bulk_write fail")
 
         if not update_sold_out(self.coll, self.max_tries, self.days_bef):
             print("Update sold out fail")

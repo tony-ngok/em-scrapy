@@ -128,7 +128,9 @@ class MujiProduct(scrapy.Spider):
         for i, pu in enumerate(self.start_urls, start=1):
             url = 'https://www.muji.com/jp/ja/store/cmdty/detail/'+pu
             print(f"{i:_}".replace('_', '.'), 'https://www.muji.com/jp/ja/store/cmdty/detail/'+pu)
-            yield scrapy.Request(url, headers=self.headers, callback=self.parse)
+            yield scrapy.Request(url, headers=self.headers,
+                                 meta={ 'handle_httpstatus_list': [301, 404] },
+                                 callback=self.parse)
 
     def parse(self, response: HtmlResponse):
         if response.status == 404:

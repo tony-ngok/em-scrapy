@@ -98,7 +98,7 @@ LOG_LEVEL = 'INFO'
 HTTPERROR_ALLOWED_CODES = [400, 404]
 
 # https://docs.scrapy.org/en/2.11/topics/downloader-middleware.html?highlight=retry
-RETRY_HTTP_CODES = [401, 403, 408, 429, 500, 502, 503, 504, 522, 524]
+RETRY_HTTP_CODES = [302, 401, 403, 408, 429, 500, 502, 503, 504, 522, 524]
 RETRY_TIMES = 10000
 
 MONGO_URI = "mongodb://mongouser:XSzY1nHbxi@34.172.204.102:27017"
