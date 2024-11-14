@@ -6,8 +6,9 @@
 
 # useful for handling different item types with a single interface
 
+import json
+import os
 import time
-from threading import Lock
 
 from itemadapter import ItemAdapter
 import pymongo
@@ -31,6 +32,11 @@ class MongoPipeLine3:
     更新商品时，仅需发送商品URL本身请求即可
     """
 
+    # 临时存取抓到的批量数据
+    file_root = "products{}.txt"
+    exists_root = "exists{}.txt"
+    news_root = "news{}.txt"
+
     def __init__(self, uri: str, db_name: str, coll_name: str, batch_size: int, max_tries: int, days_bef: int,
                  has_vars: bool, has_recensions: bool, has_ship_fee: bool, has_ship_date: bool, headers: dict):
         self.uri = uri
@@ -45,10 +51,16 @@ class MongoPipeLine3:
         self.has_ship_date = has_ship_date
         self.headers = headers
 
+        self.records = 0 # 抓取到的数据量
         self.batch_no = 0
-        self.item_buffer = [] # 数据缓冲区
-        self.new_buffer = [] # 要上传的新数据
-        self.lock = Lock()
+        self.exists = 0 # 一次请求即可上传（包括数据库中已存在）的数据
+        self.batch_exist = 0
+        self.news = 0 # 需要更多请求的数据
+        self.batch_new = 0
+
+        self.switch = False # 开始批量处理前关闭，写入数据库后打开
+        self.switch_exist = False
+        self.switch_new = False
 
     @classmethod
     def from_crawler(cls, crawler: Crawler):
@@ -82,48 +94,37 @@ class MongoPipeLine3:
         print("MongoDB connexion fail")
         self.spider.crawler.engine.close_spider("MongoDB connexion fail")
 
-    def process_batch(self):
+    def process_batch(self, batchfile: str):
         """
         每批次中，将已存在（要更新）与不存在（要创建）的商品分开处理
         """
 
-        with self.lock:
-            if not self.item_buffer:
-                return
+        self.batch_no += 1
+        print("Stage", self.batch_no)
 
-            self.batch_no += 1
-            print("Stage", self.batch_no)
-
-            item_buffer = self.item_buffer
-            self.item_buffer = [] # 清空缓冲区以备下一批
+        # 将批次文件读入内存
+        items_buffer = []
+        with open(batchfile, 'r', encoding='utf-8') as fb:
+            for line in fb:
+                if line.strip():
+                    items_buffer.append(json.loads(line.strip()))
+        os.remove(batchfile)
 
         # 该批次中已存在数据库中的商品号
-        ids = [item['item']["product_id"] for item in item_buffer]
+        ids = [item['item']["product_id"] for item in items_buffer]
         ids_in_db = exists_ids(self.coll, ids)
-        print(len(ids_in_db), "existent id(s)")
 
-        # 每批区分两类商品
-        exists = [] # 可以直接更新的（包括数据库中已存在的及单次请求即可创建的数据）
-        news = [] # 需要进一步请求的
-        for item in item_buffer:
-            if (item['item']["product_id"] in ids_in_db) or (not (item['has_more_descr'] or item['video_id'])):
-                exists.append(item['item'])
+        # 区分已存在及待创建的商品
+        news_items = []
+        for item in items_buffer: # 已存在的商品写入另一个文件
+            if item['item']["product_id"] in ids_in_db:
+                self.write_exist(item['item'])
             else:
-                news.append(item)
-
-        # 先更新已经存在的商品
-        if exists:
-            uos = get_uos(exists, self.has_vars, self.has_recensions, self.has_ship_fee)
-            if bulk_write(uos, self.coll, self.max_tries):
-                self.spider.logger.info(f"Batch {self.batch_no} bulk_write (update) done")
-                print(f"Stage {self.batch_no}: bulk_write (update) done")
-            else:
-                print("bulk_write (update) fail")
+                news_items.append(item)
 
         # 分情况处理下一步请求（要新建的商品）
-        if news:
-            print(len(news), "new item(s)")
-            for ni in news:
+        if news_items:
+            for ni in news_items:
                 has_more_descr = ni["has_more_descr"]
                 video_id = ni["video_id"]
                 pid = ni["item"]["product_id"]
@@ -150,11 +151,33 @@ class MongoPipeLine3:
                     ni["item"]['description'] = descr_info if descr_info else None
                     self.write_new(ni["item"])
 
-    def parse_descr_page(self, response: HtmlResponse, item: dict, video_id: str):
-        i = response.meta['cookiejar']
-        print(f"{(i+1):_}".replace("_", "."), response.url)
+    def write_exist(self, dat: dict):
+        if self.switch_exist:
+            self.switch_exist = False
 
+        exists_file = self.exists_root.format(self.batch_exist)
+        self.exists += 1
+
+        with open(exists_file, 'a', encoding='utf-8') as fe:
+            json.dump(dat, fe, ensure_ascii=False)
+            fe.write('\n')
+
+        if self.exists % self.batch_size == 0:
+            self.batch_exist += 1
+            print("Update stage", self.batch_exist)
+
+            e_uos = get_uos(exists_file)
+            if bulk_write(e_uos, self.coll, self.max_tries):
+                self.spider.logger.info(f"Update batch {self.batch_exist} done")
+                print(f"Update stage {self.batch_exist} done")
+                os.remove(exists_file)
+            else:
+                print("Update: bulk_write fail")
+            self.switch_exist = True
+
+    def parse_descr_page(self, response: HtmlResponse, item: dict, video_id: str):
         if response.status in range(200, 300):
+            i = response.meta['cookiejar']
             descr_info = item['description']
 
             descr_page = response.json()['result']
@@ -177,50 +200,86 @@ class MongoPipeLine3:
             self.write_new(item)
 
     def parse_video(self, response: HtmlResponse, item: dict):
-        i = response.meta['cookiejar']
-        print(f"{(i+1):_}".replace("_", "."), response.url)
-
         if response.status in range(200, 300):
             item['videos'] = response.json().get('result', {}).get('url')
         self.write_new(item)
 
     def write_new(self, dat: dict):
-        with self.lock:
-            self.new_buffer.append(dat)
+        if self.switch_new:
+            self.switch_new = False
 
-            # 每抓完一批就处理
-            if len(self.new_buffer) >= self.batch_size:
-                new_buffer = self.new_buffer
-                self.new_buffer = []
+        news_file = self.news_root.format(self.batch_new)
+        self.news += 1
 
-                n_uos = get_uos(new_buffer)
-                if bulk_write(n_uos, self.coll, self.max_tries):
-                    self.spider.logger.info(f"Batch {self.batch_no} create done")
-                    print(f"Stage {self.batch_no}: create done")
-                else:
-                    print("bulk_write (create) fail")
+        with open(news_file, 'a', encoding='utf-8') as fn:
+            self.news += 1
+            json.dump(dat, fn, ensure_ascii=False)
+            fn.write('\n')
+
+        if self.news % self.batch_size == 0:
+            self.batch_new += 1
+            print("Create stage", self.batch_new)
+
+            n_uos = get_uos(news_file)
+            if bulk_write(n_uos, self.coll, self.max_tries):
+                self.spider.logger.info(f"Create batch {self.batch_new} done")
+                print(f"Create stage {self.batch_new} done")
+                os.remove(news_file)
+            else:
+                print("Create: bulk_write fail")
+            self.switch_new = True
 
     def process_item(self, item, spider):
-        dat = ItemAdapter(item).asdict()
-        with self.lock:
-            self.item_buffer.append(dat)
+        if self.switch:
+            self.switch = False
 
-        if len(self.item_buffer) >= self.batch_size:
-            self.process_batch()
+        dat = ItemAdapter(item).asdict()
+        self.records += 1
+
+        # 连续写1000条记录到文件
+        batchfile = self.file_root.format(self.batch_no)
+        with open(batchfile, 'a', encoding='utf-8') as f:
+            json.dump(dat, f, ensure_ascii=False)
+            f.write("\n")
+
+        if self.records % self.batch_size == 0:
+            self.process_batch(batchfile)
+            self.switch = True
 
         return item
 
-    def close_spider(self):
-        if self.item_buffer:
-            self.process_batch()
-        
-        if self.new_buffer:
-            n_uos = get_uos(self.new_buffer)
+    def close_spider(self, spider: Spider):
+        if not self.switch:
+            batchfile = self.file_root.format(self.batch_no)
+            self.process_batch(batchfile)
+
+        if not self.switch_exist:
+            bf_exist = self.file_root.format(self.batch_exist)
+            self.batch_exist += 1
+            print("Update stage", self.batch_exist)
+
+            n_uos = get_uos(bf_exist, self.has_vars, self.has_recensions, self.has_ship_fee, self.has_ship_date)
             if bulk_write(n_uos, self.coll, self.max_tries):
-                self.spider.logger.info(f"Batch {self.batch_no} create done")
-                print(f"Stage {self.batch_no}: create done")
+                spider.logger.info(f"Update batch {self.batch_exist} done")
+                print("Update stage", self.batch_exist, "done")
+                os.remove(bf_exist)
             else:
-                print("bulk_write (create) fail")
+                spider.logger.error(f"Update batch {self.batch_exist} fail")
+                print("Update: bulk_write fail")
+
+        if not self.switch_new:
+            bf_new = self.file_root.format(self.batch_new)
+            self.batch_new += 1
+            print("Create stage", self.batch_new)
+
+            n_uos = get_uos(bf_new, self.has_vars, self.has_recensions, self.has_ship_fee, self.has_ship_date)
+            if bulk_write(n_uos, self.coll, self.max_tries):
+                spider.logger.info(f"Create batch {self.batch_new} done")
+                print("Create stage", self.batch_new, "done")
+                os.remove(bf_new)
+            else:
+                spider.logger.error(f"Batch {self.batch_new} fail")
+                print("Create: bulk_write fail")
 
         if not update_sold_out(self.coll, self.max_tries, self.days_bef):
             print("Update sold out fail")

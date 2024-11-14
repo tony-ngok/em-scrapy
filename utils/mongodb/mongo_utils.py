@@ -45,7 +45,7 @@ def gen_uo(dat: dict, has_vars: bool = False, has_recensions: bool = False, has_
     return UpdateOne(query, {"$set": updates, "$setOnInsert": dat }, upsert=True)
 
 
-def get_uos(dateiname: str | list[dict], has_vars: bool = False, has_recensions: bool = False, has_ship_fee: bool = False, has_ship_date: bool = False):
+def get_uos(dateiname, has_vars: bool = False, has_recensions: bool = False, has_ship_fee: bool = False, has_ship_date: bool = False):
     """
     积累所有upsert操作，以便批量处理
     """
