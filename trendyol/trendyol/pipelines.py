@@ -127,7 +127,8 @@ class MongoPipeLine3:
         # 分情况处理下一步请求（要新建的商品）
         if news_items:
             print("Process new items...")
-            for ni in news_items:
+            for i, ni in enumerate(news_items):
+                print(i)
                 has_more_descr = ni["has_more_descr"]
                 video_id = ni["video_id"]
                 pid = ni["item"]["product_id"]
@@ -153,6 +154,7 @@ class MongoPipeLine3:
                 else:
                     ni["item"]['description'] = descr_info if descr_info else None
                     self.write_new(ni["item"])
+        print("process_batch done")
 
     def write_exist(self, dat: dict):
         if self.switch_exist:
