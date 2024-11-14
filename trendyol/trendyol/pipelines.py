@@ -155,8 +155,7 @@ class MongoPipeLine3:
                     self.write_new(ni["item"], i)
         print("process_batch done")
 
-    def write_exist(self, dat: dict, i: int):
-        print(i, "write_exist")
+    def write_exist(self, dat: dict):
         if self.switch_exist:
             self.switch_exist = False
 
