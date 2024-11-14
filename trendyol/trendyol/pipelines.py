@@ -118,7 +118,7 @@ class MongoPipeLine3:
         # 区分已存在及待创建的商品
         news_items = []
         for item in items_buffer: # 已存在的商品写入另一个文件
-            if item['item']["product_id"] in ids_in_db:
+            if (item['item']["product_id"] in ids_in_db) or (not (item['video_id'] or item['has_more_descr'])):
                 self.write_exist(item['item'])
             else:
                 news_items.append(item)
