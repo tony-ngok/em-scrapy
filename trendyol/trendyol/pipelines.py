@@ -134,6 +134,7 @@ class MongoPipeLine3:
                 descr_info = ni["item"]["description"]
 
                 if has_more_descr:
+                    print(j, "has_more_descr")
                     headers = { **self.headers, "Referer": item['item']["url"] }
                     req_url2 = f"https://apigw.trendyol.com/discovery-web-productgw-service/api/product-detail/{pid}/html-content?channelId=1"
                     req2 = scrapy.Request(req_url2, headers=headers,
@@ -142,6 +143,7 @@ class MongoPipeLine3:
                                           cb_kwargs={ "item": ni["item"], "video_id": video_id, "frm": "process_batch", "j": j })
                     self.spider.crawler.engine.crawl(req2)
                 elif video_id:
+                    print(j, "video_id")
                     ni["item"]['description'] = descr_info if descr_info else None
                     headers = { **self.headers, "Referer": item['item']["url"] }
                     req_url3 = f'https://apigw.trendyol.com/discovery-web-websfxmediacenter-santral/video-content-by-id/{video_id}?channelId=1'
@@ -151,6 +153,7 @@ class MongoPipeLine3:
                                           cb_kwargs={ "item": ni["item"], "frm": "process_batch", "j": j })
                     self.spider.crawler.engine.crawl(req3)
                 else:
+                    print(j)
                     ni["item"]['description'] = descr_info if descr_info else None
                     self.write_new(ni["item"], "process_batch", j)
         print("process_batch done")
