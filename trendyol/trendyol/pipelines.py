@@ -139,7 +139,7 @@ class MongoPipeLine3:
                     req2 = scrapy.Request(req_url2, headers=headers,
                                           meta={ "cookiejar": item["i"] },
                                           callback=self.parse_descr_page,
-                                          cb_kwargs={ "item": ni["item"], "video_id": video_id, "frm": "process_batch", "i": j })
+                                          cb_kwargs={ "item": ni["item"], "video_id": video_id, "frm": "process_batch", "j": j })
                     self.spider.crawler.engine.crawl(req2)
                 elif video_id:
                     ni["item"]['description'] = descr_info if descr_info else None
@@ -148,7 +148,7 @@ class MongoPipeLine3:
                     req3 = scrapy.Request(req_url3, headers=headers,
                                           meta={ "cookiejar": item["i"] },
                                           callback=self.parse_video,
-                                          cb_kwargs={ "item": ni["item"], "frm": "process_batch", "i": j })
+                                          cb_kwargs={ "item": ni["item"], "frm": "process_batch", "j": j })
                     self.spider.crawler.engine.crawl(req3)
                 else:
                     ni["item"]['description'] = descr_info if descr_info else None
@@ -180,7 +180,7 @@ class MongoPipeLine3:
             self.switch_exist = True
 
     def parse_descr_page(self, response: HtmlResponse, item: dict, video_id: str, frm: str, j: int):
-        print(j, "parse_descr_page")
+        print(j, frm, "parse_descr_page")
         if response.status in range(200, 300):
             i = response.meta['cookiejar']
             descr_info = item['description']
@@ -198,7 +198,7 @@ class MongoPipeLine3:
             req3 = scrapy.Request(req_url3, headers=headers,
                                   meta={ "cookiejar": i },
                                   callback=self.parse_video,
-                                  cb_kwargs={ "item": item, "frm": "parse_descr_page", "i": i })
+                                  cb_kwargs={ "item": item, "frm": "parse_descr_page", "j": j })
             self.spider.crawler.engine.crawl(req3)
         else:
             self.write_new(item, "parse_descr_page", j)
