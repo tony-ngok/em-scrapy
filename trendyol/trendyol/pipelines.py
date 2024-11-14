@@ -109,7 +109,7 @@ class MongoPipeLine3:
             for line in fb:
                 if line.strip():
                     items_buffer.append(json.loads(line.strip()))
-        os.remove(batchfile)
+        # os.remove(batchfile)
 
         # 该批次中已存在数据库中的商品号
         ids = [item['item']["product_id"] for item in items_buffer]
