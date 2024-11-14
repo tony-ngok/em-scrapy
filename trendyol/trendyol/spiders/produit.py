@@ -7,6 +7,7 @@ import re
 from datetime import datetime
 
 # import requests
+from bs4 import BeautifulSoup, Tag
 import scrapy
 from scrapy.http import HtmlResponse
 from scrapy.selector import SelectorList
@@ -373,13 +374,36 @@ class TrendyolProduit(scrapy.Spider):
         #     item['description'] = descr_info if descr_info else None
         #     yield item
 
+    def clean_descr(self, descr_txt):
+        descr = ""
+        if isinstance(descr_txt, BeautifulSoup):
+            descr_txt = descr_txt.div
+
+        for child in descr_txt.children:
+            if isinstance(child, str):
+                descr += " ".join(child.strip().split())
+            elif isinstance(child, Tag):
+                if child.name in {'a', 'script', 'data-src'}:
+                    continue
+                elif child.name == 'img':
+                    src = child.get('data_src', '').replace("{{cdn_url}}", "https://cdn.dsmcdn.com")
+                    if src:
+                        descr += f'<img src="{src}">'
+                elif child.name == 'br':
+                    descr += '<br>'
+                else:
+                    sub_descr = self.clean_descr(child)
+                    if sub_descr:
+                        descr += f'<{child.name}>{sub_descr}</{child.name}>'
+
+        return descr
+
     def parse_descr_page(self, response: HtmlResponse, item, video_id):
         # url = item['url']
         descr_info = item['description']
 
         descr_page = response.json()['result']
-        descr_page = '' if not descr_page else " ".join(descr_page.replace('id="rich-content-wrapper"', 'class="trendyol-descr"').strip().split())
-
+        descr_page = self.clean_descr(BeautifulSoup(descr_page, 'html.parser')) if descr_page else ""
         description = descr_info+descr_page
         item['description'] = description if description else None
 
