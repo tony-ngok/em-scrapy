@@ -126,6 +126,7 @@ class MongoPipeLine3:
 
         # 分情况处理下一步请求（要新建的商品）
         if news_items:
+            print("Process new items...")
             for ni in news_items:
                 has_more_descr = ni["has_more_descr"]
                 video_id = ni["video_id"]
