@@ -386,7 +386,7 @@ class TrendyolProduit(scrapy.Spider):
                 if child.name in {'a', 'script', 'data-src'}:
                     continue
                 elif child.name == 'img':
-                    src = child.get('data_src', '').replace("{{cdn_url}}", "https://cdn.dsmcdn.com")
+                    src = child.get('data-src', '').replace("{cdn_url}", "https://cdn.dsmcdn.com")
                     if src:
                         descr += f'<img src="{src}">'
                 elif child.name == 'br':
