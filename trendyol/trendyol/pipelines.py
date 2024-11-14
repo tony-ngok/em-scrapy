@@ -139,7 +139,7 @@ class MongoPipeLine3:
                     req2 = scrapy.Request(req_url2, headers=headers,
                                           meta={ "cookiejar": item["i"] },
                                           callback=self.parse_descr_page,
-                                          cb_kwargs={ "item": ni["item"], "video_id": video_id, "i": i })
+                                          cb_kwargs={ "item": ni["item"], "video_id": video_id, "frm": "process_batch", "i": i })
                     self.spider.crawler.engine.crawl(req2)
                 elif video_id:
                     ni["item"]['description'] = descr_info if descr_info else None
@@ -148,11 +148,11 @@ class MongoPipeLine3:
                     req3 = scrapy.Request(req_url3, headers=headers,
                                           meta={ "cookiejar": item["i"] },
                                           callback=self.parse_video,
-                                          cb_kwargs={ "item": ni["item"], "i": i })
+                                          cb_kwargs={ "item": ni["item"], "frm": "process_batch", "i": i })
                     self.spider.crawler.engine.crawl(req3)
                 else:
                     ni["item"]['description'] = descr_info if descr_info else None
-                    self.write_new(ni["item"], i)
+                    self.write_new(ni["item"], "process_batch", i)
         print("process_batch done")
 
     def write_exist(self, dat: dict):
@@ -179,7 +179,7 @@ class MongoPipeLine3:
                 print("Update: bulk_write fail")
             self.switch_exist = True
 
-    def parse_descr_page(self, response: HtmlResponse, item: dict, video_id: str, i: int):
+    def parse_descr_page(self, response: HtmlResponse, item: dict, video_id: str, frm: str, i: int):
         print(i, "parse_descr_page")
         if response.status in range(200, 300):
             i = response.meta['cookiejar']
@@ -198,10 +198,10 @@ class MongoPipeLine3:
             req3 = scrapy.Request(req_url3, headers=headers,
                                   meta={ "cookiejar": i },
                                   callback=self.parse_video,
-                                  cb_kwargs={ "item": item, "i": i })
+                                  cb_kwargs={ "item": item, "frm": "parse_descr_page", "i": i })
             self.spider.crawler.engine.crawl(req3)
         else:
-            self.write_new(item, i)
+            self.write_new(item, "parse_descr_page", i)
 
     def clean_descr(self, descr_txt):
         descr = ""
@@ -227,13 +227,14 @@ class MongoPipeLine3:
 
         return descr
 
-    def parse_video(self, response: HtmlResponse, item: dict, i: int):
+    def parse_video(self, response: HtmlResponse, item: dict, frm: str, i: int):
+        print(i, frm, "parse_video")
         if response.status in range(200, 300):
             item['videos'] = response.json().get('result', {}).get('url')
-        self.write_new(item, i)
+        self.write_new(item, "parse_video", i)
 
-    def write_new(self, dat: dict, i: int):
-        print(i, "write_new")
+    def write_new(self, dat: dict, frm: str, i: int):
+        print(i, frm, "write_new")
         if self.switch_new:
             self.switch_new = False
 
