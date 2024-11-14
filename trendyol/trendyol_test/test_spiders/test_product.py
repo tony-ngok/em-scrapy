@@ -578,6 +578,135 @@ class TestProduct(unittest.TestCase):
         print(product["description"])
         StandardProduct(**product)
 
+    def test_available_product_7(self):
+        url = "https://www.trendyol.com/talay/ortodontik-parantez-egri-dis-duzeltme-seti-d1-yumusak-d2-orta-d3-sert-p-260796603"
+        with open("trendyol_test/pages/TALAY Ortodontik Parantez Eğri Diş Düzeltme Seti D1 Yumuşak D2 Orta D3 Sert Fiyatı, Yorumları - Trendyol.html", "rb") as file:
+            body = file.read()
+        resp1 = HtmlResponse(
+            url=url,
+            body=body,
+        )
+        res1 = list(self.spider.parse(resp1))
+        self.assertEqual(len(res1), 1)
+        prod1 = res1[0]["item"]
+
+        has_more_descr = res1[0]["has_more_descr"]
+        video_id = res1[0]["video_id"]
+        self.assertTrue(has_more_descr)
+        self.assertIsNone(video_id)
+
+        url2 = "https://apigw.trendyol.com/discovery-web-productgw-service/api/product-detail/260796603/html-content?channelId=1"
+        with open("trendyol_test/pages/260796603.json", "rb") as file2:
+            body2 = file2.read()
+        response = HtmlResponse(
+            url=url2,
+            body=body2
+        )
+        result = list(self.spider.parse_descr_page(response, prod1, video_id))
+        self.assertEqual(len(result), 1)
+        product = result[0]
+
+        target_product = {
+            "url": url,
+            "product_id": "260796603",
+            "existence": True,
+            "title": "Ortodontik Parantez Eğri Diş Düzeltme Seti D1 Yumuşak D2 Orta D3 Sert",
+            "sku": "260796603",
+            "upc": "7732555736114",
+            "brand": "TALAY",
+            "specifications": None,
+            "categories": "Kozmetik > Ağız Bakım",
+            "images": "https://cdn.dsmcdn.com/ty359/product/media/images/20220312/21/68836360/413993781/1/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty359/product/media/images/20220312/21/68836360/413993781/2/2_org_zoom.jpg;https://cdn.dsmcdn.com/ty358/product/media/images/20220312/21/68836360/413993781/3/3_org_zoom.jpg;https://cdn.dsmcdn.com/ty358/product/media/images/20220312/21/68836360/413993781/4/4_org_zoom.jpg;https://cdn.dsmcdn.com/ty357/product/media/images/20220312/21/68836360/413993781/5/5_org_zoom.jpg;https://cdn.dsmcdn.com/ty357/product/media/images/20220312/21/68836360/413993781/6/6_org_zoom.jpg",
+            "videos": None,
+            "price": 65.83,
+            "available_qty": 2,
+            "options": None,
+            "variants": None,
+            "has_only_default_variant": True,
+            "reviews": 3,
+            "rating": 3.00,
+            "shipping_fee": 0.00,
+            "weight": None,
+            "length": None,
+            "width": None,
+            "height": None
+        }
+        for key in target_product:
+            self.assertEqual(product[key], target_product[key])
+
+        print(product["description"])
+        self.assertIn('<img src="https://cdn.dsmcdn.com/ty359/product/media/html-images/20220312/18/260796603/8507992c-cf90-4da7-a2c2-1c8959944fcc.jpg">', product["description"])
+        StandardProduct(**prod1)
+
+    def test_available_product_8(self):
+        url = "https://www.trendyol.com/denthauz/sensetive-ekstra-yumusak-oral-b-uyumlu-dis-fircasi-basligi-4-adet-yedek-baslik-p-791519286"
+        with open("trendyol_test/pages/Denthauz Sensetive - Ekstra Yumuşak Oral-B Uyumlu Diş Fırçası Başlığı - 4 Adet Yedek Başlık Fiyatı, Yorumları - Trendyol.html", "rb") as file:
+            body = file.read()
+        resp1 = HtmlResponse(
+            url=url,
+            body=body,
+        )
+        res1 = list(self.spider.parse(resp1))
+        self.assertEqual(len(res1), 1)
+        prod1 = res1[0]["item"]
+
+        has_more_descr = res1[0]["has_more_descr"]
+        video_id = res1[0]["video_id"]
+        self.assertTrue(has_more_descr)
+        self.assertIsNone(video_id)
+
+        url2 = "https://apigw.trendyol.com/discovery-web-productgw-service/api/product-detail/791519286/html-content?channelId=1"
+        with open("trendyol_test/pages/791519286.json", "rb") as file2:
+            body2 = file2.read()
+        response = HtmlResponse(
+            url=url2,
+            body=body2
+        )
+        result = list(self.spider.parse_descr_page(response, prod1, video_id))
+        self.assertEqual(len(result), 1)
+        product = result[0]
+
+        target_product = {
+            "url": url,
+            "product_id": "791519286",
+            "existence": True,
+            "title": "Sensetive - Ekstra Yumuşak Oral-B Uyumlu Diş Fırçası Başlığı - 4 Adet Yedek Başlık",
+            "sku": "791519286",
+            "upc": "0783191877162",
+            "brand": "Denthauz",
+            "specifications": [
+                {
+                    "name": "Paket İçeriği",
+                    "value": "4'lü"
+                },
+                {
+                    "name": "Kullanım Amacı",
+                    "value": "Komple Ağız Temizliği"
+                }
+            ],
+            "categories": "Kozmetik > Ağız Bakım",
+            "images": "https://cdn.dsmcdn.com/ty1440/product/media/images/prod/QC/20240725/15/e900faaa-7283-3e8e-a2a6-d7a8410679bf/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1440/product/media/images/prod/QC/20240725/15/a72441c4-8b2c-3e67-b17b-89f7d013791b/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1440/product/media/images/prod/QC/20240725/15/7179a849-583c-3297-bb9d-f2440a9c253f/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1442/product/media/images/prod/QC/20240725/15/43f60bdb-6cdb-37cf-9650-c47900864cb3/1_org_zoom.jpg;https://cdn.dsmcdn.com/ty1440/product/media/images/prod/QC/20240725/15/d738dda6-004f-3281-811d-148299893ee1/1_org_zoom.jpg",
+            "videos": None,
+            "price": 5.82,
+            "available_qty": None,
+            "options": None,
+            "variants": None,
+            "has_only_default_variant": True,
+            "reviews": 22,
+            "rating": 4.68,
+            "shipping_fee": 0.00,
+            "weight": None,
+            "length": None,
+            "width": None,
+            "height": None
+        }
+        for key in target_product:
+            self.assertEqual(product[key], target_product[key])
+
+        print(product["description"])
+        self.assertNotIn('</a>', product["description"])
+        StandardProduct(**prod1)
+
     def test_unavailable_product(self):
         url = "https://www.trendyol.com/panterdent/dis-beyazlatici-parlak-set-p-844126911"
         with open("trendyol_test/pages/panterdent Diş Beyazlatıcı Parlak - Set Fiyatı, Yorumları - Trendyol.html", "rb") as file:
